@@ -35,7 +35,7 @@ const navItems = [
   { title: "Concursos Abertos", url: "/aluno/materiais", icon: BellRing },
   { title: "Editais", url: "/aluno/desempenho", icon: NotepadText },
   { title: "Notícias", url: "/aluno/materiais", icon: Megaphone },
-  { title: "Aulas", url: "/aluno/materiais", icon: Video },
+  { title: "Aulas", url: "/aluno/aulas", icon: Video },
 ];
 
 const navItems2 = [
@@ -59,8 +59,7 @@ export function AlunoSidebar() {
   };
 
   return (
-    <Sidebar className="border-r border-gray-100 bg-white">
-      {/* CABEÇALHO COM A LOGO */}
+    <Sidebar className="border-r border-gray-100 bg-neutral-100/60 backdrop-blur-sm">
       <SidebarHeader className="p-5 border-b border-gray-100 flex flex-row items-center">
         <Link
           className="flex items-center justify-center gap-3 hover:scale-[1.02] duration-300 w-full"
@@ -97,7 +96,7 @@ export function AlunoSidebar() {
                   <SidebarMenuItem
                     className={`my-1 active:scale-[0.98] p-1 font-medium duration-200 rounded-lg cursor-pointer shadow-sm ${
                       isActive
-                        ? "bg-green-50 hover:bg-green-50 text-green-700 shadow-green-100/50 hover:text-green-700"
+                        ? "bg-green-50 hover:bg-green-50 text-green-700 hover:text-green-700 shadow-md shadow-neutral-200"
                         : "bg-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-900 shadow-transparent"
                     }`}
                     key={item.title}

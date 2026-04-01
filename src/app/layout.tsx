@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { Toaster } from "@/components/ui/sonner";
 import { Montserrat } from "next/font/google";
 import "./globals.css";
+import FloatingScrollbar from "@/components/ui/FloatingScroll";
 
 // 2. Configuramos a fonte
 const montserrat = Montserrat({
@@ -32,6 +33,7 @@ export default function RootLayout({
         className={`${montserrat.className}  min-h-full flex flex-col`}
         suppressHydrationWarning
       >
+        <FloatingScrollbar />
         {children}
         <Toaster position="top-right" />
       </body>

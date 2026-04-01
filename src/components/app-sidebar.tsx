@@ -31,6 +31,7 @@ const nav2Items = [
   { title: "Gerenciar Bancas", url: "/admin/bancas", icon: Library },
   { title: "Gerenciar Matérias", url: "/admin/materias", icon: Layers },
   { title: "Gerenciar Assuntos", url: "/admin/assuntos", icon: BookOpen },
+  { title: "Gerenciar Aulas", url: "/admin/aulas", icon: BookOpen },
 ];
 
 export function AppSidebar() {

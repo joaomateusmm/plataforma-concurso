@@ -1,41 +1,63 @@
 // src/app/page.tsx
+"use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
+
+// 1. IMPORTAÇÃO DINÂMICA: Desativamos o SSR para o WebGL funcionar no Next.js
+const SpiralGallery = dynamic(() => import("@/components/SpiralGallery"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-full w-full">
+      <p className="text-gray-500 animate-pulse font-medium">
+        Carregando Galeria 3D...
+      </p>
+    </div>
+  ),
+});
 
 export default function Home() {
   return (
-    // O container principal agora ocupa a tela toda (min-h-screen), mas sem p-24 e justify-center
-    <div className="flex flex-col min-h-screen bg-white">
-      <main className="flex flex-1 flex-col  items-center justify-center p-8">
-        {/* Título principal da plataforma */}
-        <h1 className="text-4xl font-bold text-green-600 mb-4 text-center">
-          Plataforma de Aprovação
+    <div className="flex flex-col min-h-screen bg-white overflow-hidden relative">
+      {/* SEÇÃO HERO (Textos e Botões no Topo) */}
+      <main className="flex flex-col items-center justify-start pt-24 px-8 z-10 relative">
+        {/* Adicionei um design mais "Apple" para a tipografia, inspirado no seu print */}
+        <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 mb-6 text-center max-w-3xl leading-tight">
+          Acelere a sua <span className="text-green-600">Aprovação</span>
         </h1>
 
-        {/* Subtítulo explicando a metodologia */}
-        <p className="text-lg text-gray-700 mb-8 text-center">
-          Futura Landing Page
+        <p className="text-lg md:text-xl text-gray-500 mb-10 text-center max-w-2xl">
+          Acelere a construção do seu conhecimento com simulados inteligentes e
+          materiais de alto nível. Uma experiência de estudo impecável.
         </p>
 
-        {/* Container para os nossos botões de navegação inicial */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          {/* Botão que futuramente levará ao painel do aluno */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-16">
           <Link href="/aluno">
-            {" "}
-            {/* <-- Link atualizado para a futura área do aluno */}
-            <button className="w-full sm:w-auto px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors">
+            <button className="w-full sm:w-auto px-8 py-4 bg-green-600 text-white font-bold rounded-full hover:bg-green-700 transition-all shadow-lg shadow-green-600/20 hover:-translate-y-0.5">
               Área do Aluno
             </button>
           </Link>
 
-          {/* Botão que leva ao painel de administração (inserção de questões) */}
           <Link href="/admin">
-            <button className="w-full sm:w-auto px-6 py-3 bg-gray-800 text-white font-semibold rounded-lg hover:bg-gray-900 transition-colors">
+            <button className="w-full sm:w-auto px-8 py-4 bg-gray-900 text-white font-bold rounded-full hover:bg-black transition-all shadow-lg hover:-translate-y-0.5">
               Painel Admin
             </button>
           </Link>
         </div>
       </main>
+
+      <div className="relative w-full h-130 -translate-y-12">
+        <div className="absolute inset-0 bg-green-400/10 blur-[120px] rounded-full scale-150 translate-y-1/3"></div>
+
+        <SpiralGallery
+          showText={true}
+          bend={4.5}
+          textColor="#101828"
+          borderRadius={0.1}
+          autoSpeed={0.013}
+          startIndex={4}
+        />
+      </div>
     </div>
   );
 }

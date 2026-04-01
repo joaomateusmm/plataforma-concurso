@@ -30,6 +30,15 @@ export const assuntos = pgTable("assuntos", {
   nome: varchar("nome", { length: 255 }).notNull(),
 });
 
+// NOVA TABELA: Aulas (Aulas do YouTube por Assunto)
+export const aulas = pgTable("aulas", {
+  id: serial("id").primaryKey(),
+  materiaId: integer("materia_id").references(() => materias.id),
+  assuntoId: integer("assunto_id").references(() => assuntos.id),
+  titulo: varchar("titulo", { length: 255 }).notNull(), // Nome da aula (Ex: "Teoria Geral - Parte 1")
+  videoUrl: text("video_url").notNull(), // O link do YouTube
+});
+
 // Tabela 4: Questões (O coração da plataforma)
 export const questoes = pgTable("questoes", {
   id: serial("id").primaryKey(),
@@ -52,7 +61,6 @@ export const user = pgTable("user", {
   email: text("email").notNull().unique(),
   emailVerified: boolean("emailVerified").notNull(),
   image: text("image"),
-  // AQUI: Adicionamos o campo role com "user" como padrão
   role: text("role").default("user").notNull(),
   createdAt: timestamp("createdAt").notNull(),
   updatedAt: timestamp("updatedAt").notNull(),
