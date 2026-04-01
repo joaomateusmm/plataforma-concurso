@@ -3,13 +3,13 @@
 
 import {
   LayoutDashboard,
-  BrainCircuit,
-  TrendingUp,
-  Library,
   LogOut,
   GraduationCap,
   CopyPlus,
   Megaphone,
+  Video,
+  BellRing,
+  NotepadText,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -31,12 +31,18 @@ import {
 
 // Links de navegação exclusivos do Aluno
 const navItems = [
-  { title: "Painel de Estudos", url: "/aluno", icon: LayoutDashboard },
-  { title: "Criar Simulado", url: "/aluno/simulados", icon: CopyPlus },
-  { title: "Concursos Abertos", url: "/aluno/materiais", icon: Library },
-  { title: "Editais", url: "/aluno/desempenho", icon: TrendingUp },
+  { title: "Painel do Aluno", url: "/aluno", icon: LayoutDashboard },
+  { title: "Concursos Abertos", url: "/aluno/materiais", icon: BellRing },
+  { title: "Editais", url: "/aluno/desempenho", icon: NotepadText },
   { title: "Notícias", url: "/aluno/materiais", icon: Megaphone },
-  { title: "Aulas", url: "/aluno/materiais", icon: Library },
+  { title: "Aulas", url: "/aluno/materiais", icon: Video },
+];
+
+const navItems2 = [
+  { title: "Criar Simulado", url: "/aluno/simulados", icon: CopyPlus },
+  { title: "Matérias", url: "/aluno/simulados", icon: CopyPlus },
+  { title: "Assuntos", url: "/aluno/simulados", icon: CopyPlus },
+  { title: "Questões", url: "/aluno/simulados", icon: CopyPlus },
 ];
 
 export function AlunoSidebar() {
@@ -55,29 +61,28 @@ export function AlunoSidebar() {
   return (
     <Sidebar className="border-r border-gray-100 bg-white">
       {/* CABEÇALHO COM A LOGO */}
-      <SidebarHeader className="p-5 border-b border-gray-50 flex flex-row items-center">
+      <SidebarHeader className="p-5 border-b border-gray-100 flex flex-row items-center">
         <Link
           className="flex items-center justify-center gap-3 hover:scale-[1.02] duration-300 w-full"
           href="/"
         >
-          <div className="w-10 h-10 bg-blue-600 rounded-xl shadow-md shadow-blue-600/20 flex items-center justify-center text-white">
+          <div className="w-10 h-10 bg-green-600 rounded-xl shadow-md shadow-green-600/20 flex items-center justify-center text-white">
             <GraduationCap strokeWidth={2.5} className="w-6 h-6" />
           </div>
           <div className="flex flex-col items-start">
             <span className="text-lg font-extrabold text-gray-800 leading-tight">
               +Aprovado
             </span>
-            <span className="text-[10px] font-bold tracking-widest text-blue-500 uppercase">
+            <span className="text-[10px] font-bold tracking-widest text-green-500 uppercase">
               Área do Aluno
             </span>
           </div>
         </Link>
       </SidebarHeader>
 
-      {/* ÁREA DE NAVEGAÇÃO CENTRAL */}
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-xs font-semibold text-gray-400 uppercase tracking-wider mt-4 mb-2 px-4">
+          <SidebarGroupLabel className="text-xs font-semibold text-gray-400 uppercase tracking-wider mt-1 mb-2 px-4">
             Menu Principal
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -90,10 +95,10 @@ export function AlunoSidebar() {
 
                 return (
                   <SidebarMenuItem
-                    className={`my-1 active:scale-[0.98] p-1 font-medium duration-200 rounded-lg shadow-sm ${
+                    className={`my-1 active:scale-[0.98] p-1 font-medium duration-200 rounded-lg cursor-pointer shadow-sm ${
                       isActive
-                        ? "bg-blue-50 text-blue-700 shadow-blue-100/50"
-                        : "bg-transparent text-gray-600 hover:bg-gray-50 hover:text-gray-900 shadow-transparent"
+                        ? "bg-green-50 hover:bg-green-50 text-green-700 shadow-green-100/50 hover:text-green-700"
+                        : "bg-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-900 shadow-transparent"
                     }`}
                     key={item.title}
                   >
@@ -103,7 +108,45 @@ export function AlunoSidebar() {
                         className="flex items-center gap-3 px-3 py-2"
                       >
                         <item.icon
-                          className={`w-5 h-5 ${isActive ? "text-blue-600" : "text-gray-400"}`}
+                          className={`w-5 h-5 ${isActive ? "text-green-600" : "text-gray-400"}`}
+                        />
+                        <span className="text-sm">{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-4">
+            Ferramentas
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu className="px-2">
+              {navItems2.map((item) => {
+                const isActive =
+                  item.url === "/aluno"
+                    ? pathname === "/aluno"
+                    : pathname?.startsWith(item.url);
+
+                return (
+                  <SidebarMenuItem
+                    className={`my-1 active:scale-[0.98] p-1 font-medium duration-200 rounded-lg cursor-pointer shadow-sm ${
+                      isActive
+                        ? "bg-green-50 hover:bg-green-50 text-green-700 shadow-green-100/50 hover:text-green-700"
+                        : "bg-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-900 shadow-transparent"
+                    }`}
+                    key={item.title}
+                  >
+                    <SidebarMenuButton asChild>
+                      <Link
+                        href={item.url}
+                        className="flex items-center gap-3 px-3 py-2"
+                      >
+                        <item.icon
+                          className={`w-5 h-5 ${isActive ? "text-green-600" : "text-gray-400"}`}
                         />
                         <span className="text-sm">{item.title}</span>
                       </Link>
@@ -130,7 +173,7 @@ export function AlunoSidebar() {
         ) : user ? (
           // 2. LOGADO: Card do Perfil
           <div className="flex items-center gap-3 p-2 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold overflow-hidden relative ring-2 ring-white">
+            <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold overflow-hidden relative ring-2 ring-white">
               {user.image ? (
                 <Image
                   src={user.image}
@@ -166,12 +209,12 @@ export function AlunoSidebar() {
           </div>
         ) : (
           // 3. DESLOGADO: Banner Bonitão para Convite
-          <div className="flex flex-col gap-3 p-4 bg-linear-to-br from-blue-50 to-indigo-50/50 rounded-xl border border-blue-100/50">
+          <div className="flex flex-col gap-3 p-4 bg-linear-to-br from-green-50 to-indigo-50/50 rounded-xl border border-green-100/50">
             <div className="flex flex-col">
-              <span className="text-sm font-bold text-blue-900">
+              <span className="text-sm font-bold text-green-900">
                 Acesse sua conta
               </span>
-              <span className="text-[11px] text-blue-600/80 mt-0.5 leading-tight">
+              <span className="text-[11px] text-green-600/80 mt-0.5 leading-tight">
                 Faça login para salvar seus simulados e acompanhar seu
                 progresso!
               </span>
@@ -180,8 +223,8 @@ export function AlunoSidebar() {
             <div className="flex flex-col gap-2 mt-1">
               {/* Botão Principal: Entrar */}
               <Link
-                href="/login"
-                className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-colors text-center shadow-sm shadow-blue-600/20"
+                href="/aluno/login"
+                className="w-full py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-lg transition-colors text-center shadow-sm shadow-green-600/20"
               >
                 Entrar agora
               </Link>
@@ -190,8 +233,8 @@ export function AlunoSidebar() {
               <p className="text-[10px] text-center text-gray-500">
                 Não tem conta?{" "}
                 <Link
-                  href="/login"
-                  className="text-blue-600 font-bold hover:underline"
+                  href="/aluno/login"
+                  className="text-green-600 font-bold hover:underline"
                 >
                   Cadastre-se grátis
                 </Link>

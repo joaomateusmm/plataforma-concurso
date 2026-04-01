@@ -29,7 +29,7 @@ export default function RootLayout({
       className={`${montserrat.variable} h-full antialiased`}
     >
       <body
-        className={`${montserrat.className} min-h-full flex flex-col`}
+        className={`${montserrat.className}  min-h-full flex flex-col`}
         suppressHydrationWarning
       >
         {children}

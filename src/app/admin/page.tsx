@@ -15,12 +15,12 @@ export default function AdminDashboard() {
 
       {/* Pequenos Cards de atalho visual para o futuro */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-        <div className="p-6 bg-blue-50 rounded-lg border border-blue-100">
-          <h2 className="text-xl font-semibold text-blue-800">
+        <div className="p-6 bg-green-50 rounded-lg border border-green-100">
+          <h2 className="text-xl font-semibold text-green-800">
             Questões no Banco
           </h2>
           {/* No futuro, podemos puxar esse número dinamicamente do Drizzle */}
-          <p className="text-3xl font-bold text-blue-600 mt-2">1</p>
+          <p className="text-3xl font-bold text-green-600 mt-2">1</p>
         </div>
       </div>
     </div>

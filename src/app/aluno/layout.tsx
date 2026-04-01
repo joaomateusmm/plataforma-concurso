@@ -2,6 +2,7 @@
 
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AlunoSidebar } from "@/components/aluno-sidebar";
+import Notice from "@/components/Notice";
 
 export default function AlunoLayout({
   children,
@@ -10,8 +11,8 @@ export default function AlunoLayout({
 }) {
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-gray-50/50">
-        {/* A Sidebar linda que acabamos de criar */}
+      <div className="flex min-h-screen w-full bg-white">
+        <Notice />
         <AlunoSidebar />
 
         {/* O Conteúdo Central da Área do Aluno */}
