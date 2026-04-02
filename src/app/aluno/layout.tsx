@@ -2,8 +2,7 @@
 
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AlunoSidebar } from "@/components/aluno-sidebar";
-import Notice from "@/components/Notice";
-import Header from "@/components/Header";
+import TopNavbar from "@/components/TopNavbar";
 
 export default function AlunoLayout({
   children,
@@ -12,33 +11,20 @@ export default function AlunoLayout({
 }) {
   return (
     <SidebarProvider>
-      {/* CONTAINER PRINCIPAL: Uma coluna vertical que ocupa a tela toda */}
-      <div className="flex flex-col min-h-screen w-full bg-[#070707]">
-        {/* TOPO ABSOLUTO: O Banner ocupa a primeira "linha" da tela */}
-        <Notice />
+      <div className="flex min-h-screen w-full bg-[#070707]">
+        <TopNavbar />
 
-        {/* CONTAINER INFERIOR: O resto da tela, dividido lado a lado (Sidebar + Resto) */}
-        <div className="flex flex-1 overflow-hidden">
-          {/* LADO ESQUERDO: A Sidebar (ela ocupará toda a altura a partir debaixo do Notice) */}
-          <AlunoSidebar />
-
-          {/* LADO DIREITO: O conteúdo central (Header + Páginas) */}
-          <div className="flex flex-col flex-1 overflow-hidden">
-            <Header />
-
-            {/* Cabeçalho mobile (aparece só em telas pequenas) */}
-            <header className="flex h-14 items-center border-b border-neutral-800 bg-neutral-950 px-4 lg:hidden">
-              <SidebarTrigger className="text-neutral-400 hover:text-emerald-500 transition-colors" />
-              <span className="ml-4 font-bold text-neutral-200">
-                Área do Aluno
-              </span>
-            </header>
-
-            {/* CONTEÚDO DA PÁGINA (Aulas, Simulados, etc): Rola de forma independente */}
-            <main className="flex-1 overflow-y-auto p-6 lg:p-10">
-              {children}
-            </main>
-          </div>
+        <AlunoSidebar />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <header className="h-14 border-b border-neutral-800 bg-neutral-950 flex items-center px-4 lg:hidden mt-23">
+            <SidebarTrigger className="text-neutral-400 hover:text-emerald-500" />
+            <span className="ml-4 font-bold text-neutral-200">
+              Área do Aluno
+            </span>
+          </header>
+          <main className="flex-1 overflow-y-auto p-6 pt-28 lg:p-10 lg:pt-28">
+            {children}
+          </main>
         </div>
       </div>
     </SidebarProvider>

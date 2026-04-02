@@ -11,6 +11,9 @@ import {
   BellRing,
   NotepadText,
   Sword,
+  Layers,
+  BookOpenCheck,
+  Library,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -39,9 +42,9 @@ const navItems = [
 
 const navItems2 = [
   { title: "Criar Simulado", url: "/aluno/simulados", icon: CopyPlus },
-  { title: "Matérias", url: "/aluno/simulados", icon: CopyPlus },
-  { title: "Assuntos", url: "/aluno/simulados", icon: CopyPlus },
-  { title: "Questões", url: "/aluno/simulados", icon: CopyPlus },
+  { title: "Matérias", url: "/aluno/simulados", icon: Layers },
+  { title: "Assuntos", url: "/aluno/simulados", icon: Library },
+  { title: "Questões", url: "/aluno/simulados", icon: BookOpenCheck },
 ];
 
 export function AlunoSidebar() {

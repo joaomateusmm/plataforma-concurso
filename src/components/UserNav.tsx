@@ -1,3 +1,4 @@
+// src/components/UserNav.tsx
 "use client";
 
 import {
@@ -25,23 +26,23 @@ export default function UserNav() {
     await authClient.signOut({
       fetchOptions: {
         onSuccess: () => {
-          router.push("/login"); // Redireciona para a nossa página de login
+          router.push("/login");
         },
       },
     });
   };
 
-  // Alterna o menu (útil para mobile)
   const toggleMenu = () => setIsOpen(!isOpen);
 
   if (isPending)
     return (
-      <div className="mr-3 h-8 w-8 animate-pulse rounded-full bg-neutral-900" />
+      <div className="h-8 w-8 animate-pulse rounded-full bg-neutral-900" />
     );
 
   return (
+    // Removi a margem à direita (mr-3) que podia estar a causar bug visual
     <div
-      className="relative z-[110] mr-3"
+      className="relative z-[100]"
       onMouseEnter={() => setIsOpen(true)}
       onMouseLeave={() => setIsOpen(false)}
     >
@@ -55,27 +56,27 @@ export default function UserNav() {
         }`}
       >
         {session ? (
-          <div className="relative flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-800 text-[10px] font-bold text-white ring-1 ring-neutral-700">
+          <div className="relative flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-800 text-[10px] font-bold text-white ring-1 ring-neutral-700">
             {session.user.image ? (
               <Image
                 src={session.user.image}
                 alt={session.user.name || "Avatar"}
                 fill
                 className="object-cover"
-                sizes="24px"
+                sizes="28px"
               />
             ) : (
               session.user.name?.charAt(0).toUpperCase()
             )}
           </div>
         ) : (
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-neutral-800 text-neutral-400 ring-1 ring-neutral-700">
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-neutral-800 text-neutral-400 ring-1 ring-neutral-700">
             <UserRound size={14} />
           </div>
         )}
 
         <ChevronDown
-          className={`h-3 w-3 text-neutral-500 transition-transform duration-300 ${
+          className={`h-3.5 w-3.5 text-neutral-500 transition-transform duration-300 ${
             isOpen ? "rotate-180 text-white" : ""
           }`}
         />
@@ -159,7 +160,7 @@ export default function UserNav() {
                     Entrar
                   </Link>
                   <Link
-                    href="/login" // Use a rota correta do seu projeto se usar tab/query params para signup
+                    href="/login"
                     onClick={() => setIsOpen(false)}
                     className="flex items-center justify-center gap-2 rounded-lg bg-emerald-600 py-2 text-[11px] font-bold text-white duration-300 hover:bg-emerald-500"
                   >

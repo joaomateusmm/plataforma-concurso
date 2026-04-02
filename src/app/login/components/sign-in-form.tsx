@@ -167,25 +167,12 @@ export default function SignInForm({
         <div className="grow border-t border-neutral-800"></div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <button
-          type="button"
-          disabled={loading || !!socialLoading}
-          onClick={() => handleSocialSignIn("github")}
-          className="flex h-12 items-center justify-center gap-2 rounded-lg border border-neutral-800 bg-neutral-900 font-medium text-white transition-all hover:border-neutral-700 hover:bg-neutral-800 disabled:opacity-50"
-        >
-          {socialLoading === "github" ? (
-            <Loader2 className="h-5 w-5 animate-spin text-neutral-500" />
-          ) : (
-            <span>GitHub</span>
-          )}
-        </button>
-
+      <div className="flex items-center justify-center">
         <button
           type="button"
           disabled={loading || !!socialLoading}
           onClick={() => handleSocialSignIn("google")}
-          className="flex h-12 items-center justify-center gap-2 rounded-lg border border-neutral-800 bg-neutral-900 font-medium text-white transition-all hover:border-neutral-700 hover:bg-neutral-800 disabled:opacity-50"
+          className="flex h-12 px-12 items-center justify-center gap-2 rounded-lg border border-neutral-800 bg-neutral-900 font-medium text-white transition-all hover:border-neutral-700 hover:bg-neutral-800 disabled:opacity-50"
         >
           {socialLoading === "google" ? (
             <Loader2 className="h-5 w-5 animate-spin text-neutral-500" />
