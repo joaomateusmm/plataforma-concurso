@@ -5,7 +5,7 @@ import Grainient from "@/components/Grainient";
 
 export default function Banner() {
   return (
-    <div className="fixed top-0 right-0 left-0 flex h-12 items-center justify-center overflow-hidden border-b border-neutral-100 bg-neutral-50 px-4">
+    <div className="fixed top-0 right-0 left-0 flex z-99 h-9 items-center justify-center overflow-hidden bg-neutral-950 px-4">
       {/* --- BACKGROUND: Grainient --- */}
       <div className="absolute inset-0 z-0 opacity-70">
         <div style={{ width: "100%", height: "100%", position: "relative" }}>

@@ -23,9 +23,6 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarFooter,
 } from "@/components/ui/sidebar";
 
@@ -49,7 +46,6 @@ export function AlunoSidebar() {
   const pathname = usePathname();
   const router = useRouter();
 
-  // Puxamos os dados da conta logada
   const { data, isPending } = useSession();
   const user = data?.user;
 
@@ -58,190 +54,178 @@ export function AlunoSidebar() {
     router.push("/");
   };
 
+  const isActive = (url: string) =>
+    url === "/aluno" ? pathname === "/aluno" : pathname?.startsWith(url);
+
   return (
-    <Sidebar className="border-r border-gray-100 bg-neutral-100/60 backdrop-blur-sm">
-      <SidebarHeader className="p-5 border-b border-gray-100 flex flex-row items-center">
-        <Link
-          className="flex items-center justify-center gap-3 hover:scale-[1.02] duration-300 w-full"
-          href="/"
-        >
-          <div className="w-10 h-10 bg-green-600 rounded-xl shadow-md shadow-green-600/20 flex items-center justify-center text-white">
-            <GraduationCap strokeWidth={2.5} className="w-6 h-6" />
-          </div>
-          <div className="flex flex-col items-start">
-            <span className="text-lg font-extrabold text-gray-800 leading-tight">
+    <>
+      {/* CSS para esconder a scrollbar nativa, mantendo a aparência limpa da SwordTools */}
+      <style>{`
+        .hide-native-scroll::-webkit-scrollbar {
+          display: none !important;
+          width: 0 !important;
+          height: 0 !important;
+        }
+        .hide-native-scroll {
+          scrollbar-width: none !important;
+          -ms-overflow-style: none !important;
+        }
+      `}</style>
+
+      {/* Aplicamos o fundo dark neutral-950 e bordas neutral-800 na raiz da Sidebar */}
+      <Sidebar className="border-r z-100 border-neutral-800 bg-neutral-950 text-neutral-300">
+        {/* CABEÇALHO */}
+        <SidebarHeader className="py-[21.5px] border-b border-neutral-800 flex flex-row items-start">
+          <Link
+            className="flex items-center justify-center gap-2 hover:opacity-80 transition-opacity w-full"
+            href="/"
+          >
+            <div className="w-12 h-12 bg-neutral-900 border border-neutral-800 rounded-xl flex items-center justify-center text-emerald-500 shadow-sm">
+              <GraduationCap strokeWidth={2.5} className="w-5 h-5" />
+            </div>
+            <span className="text-xl font-bold text-white tracking-tight leading-tight">
               +Aprovado
             </span>
-            <span className="text-[10px] font-bold tracking-widest text-green-500 uppercase">
-              Área do Aluno
-            </span>
-          </div>
-        </Link>
-      </SidebarHeader>
+          </Link>
+        </SidebarHeader>
 
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-xs font-semibold text-gray-400 uppercase tracking-wider mt-1 mb-2 px-4">
-            Menu Principal
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu className="px-2">
-              {navItems.map((item) => {
-                const isActive =
-                  item.url === "/aluno"
-                    ? pathname === "/aluno"
-                    : pathname?.startsWith(item.url);
+        {/* CONTEÚDO COM SCROLL LIMPO */}
+        <SidebarContent className="hide-native-scroll overflow-y-auto px-4 py-8">
+          {/* MENU PRINCIPAL */}
+          <SidebarGroup className="mb-8 p-0">
+            <SidebarGroupLabel className="mb-3 px-0 text-xs font-bold tracking-widest text-neutral-500 uppercase bg-transparent hover:bg-transparent">
+              Menu Principal
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              {/* O segredo do design: borda esquerda branca com baixa opacidade */}
+              <ul className="ml-2 flex flex-col gap-1 border-l border-white/10 text-sm">
+                {navItems.map((item) => {
+                  const active = isActive(item.url);
 
-                return (
-                  <SidebarMenuItem
-                    className={`my-1 active:scale-[0.98] p-1 font-medium duration-200 rounded-lg cursor-pointer shadow-sm ${
-                      isActive
-                        ? "bg-green-50 hover:bg-green-50 text-green-700 hover:text-green-700 shadow-md shadow-neutral-200"
-                        : "bg-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-900 shadow-transparent"
-                    }`}
-                    key={item.title}
-                  >
-                    <SidebarMenuButton asChild>
-                      <Link
-                        href={item.url}
-                        className="flex items-center gap-3 px-3 py-2"
+                  return (
+                    <Link href={item.url} key={item.title}>
+                      <li
+                        className={`group relative -ml-px flex cursor-pointer items-center gap-3 py-2 pr-2 pl-4 transition-all duration-200 before:absolute before:top-1/2 before:left-0 before:h-4 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:transition-colors hover:text-white ${
+                          active
+                            ? "font-medium text-green-400 before:bg-white"
+                            : "text-neutral-400 before:bg-transparent hover:before:bg-neutral-500"
+                        }`}
                       >
-                        <item.icon
-                          className={`w-5 h-5 ${isActive ? "text-green-600" : "text-gray-400"}`}
-                        />
-                        <span className="text-sm">{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-4">
-            Ferramentas
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu className="px-2">
-              {navItems2.map((item) => {
-                const isActive =
-                  item.url === "/aluno"
-                    ? pathname === "/aluno"
-                    : pathname?.startsWith(item.url);
+                        <item.icon className="w-4 h-4 shrink-0" />
+                        <span className="truncate">{item.title}</span>
+                      </li>
+                    </Link>
+                  );
+                })}
+              </ul>
+            </SidebarGroupContent>
+          </SidebarGroup>
 
-                return (
-                  <SidebarMenuItem
-                    className={`my-1 active:scale-[0.98] p-1 font-medium duration-200 rounded-lg cursor-pointer shadow-sm ${
-                      isActive
-                        ? "bg-green-50 hover:bg-green-50 text-green-700 shadow-green-100/50 hover:text-green-700"
-                        : "bg-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-900 shadow-transparent"
-                    }`}
-                    key={item.title}
-                  >
-                    <SidebarMenuButton asChild>
-                      <Link
-                        href={item.url}
-                        className="flex items-center gap-3 px-3 py-2"
+          {/* FERRAMENTAS */}
+          <SidebarGroup className="p-0">
+            <SidebarGroupLabel className="mb-3 px-0 text-xs font-bold tracking-widest text-neutral-500 uppercase bg-transparent hover:bg-transparent">
+              Ferramentas
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <ul className="ml-2 flex flex-col gap-1 border-l border-white/10 text-sm">
+                {navItems2.map((item) => {
+                  const active = isActive(item.url);
+
+                  return (
+                    <Link href={item.url} key={item.title}>
+                      <li
+                        className={`group relative -ml-px flex cursor-pointer items-center gap-3 py-2 pr-2 pl-4 transition-all duration-200 before:absolute before:top-1/2 before:left-0 before:h-4 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:transition-colors hover:text-white ${
+                          active
+                            ? "font-medium text-white before:bg-white"
+                            : "text-neutral-400 before:bg-transparent hover:before:bg-neutral-500"
+                        }`}
                       >
-                        <item.icon
-                          className={`w-5 h-5 ${isActive ? "text-green-600" : "text-gray-400"}`}
-                        />
-                        <span className="text-sm">{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
+                        <item.icon className="w-4 h-4 shrink-0" />
+                        <span className="truncate">{item.title}</span>
+                      </li>
+                    </Link>
+                  );
+                })}
+              </ul>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
 
-      {/* RODAPÉ COM PERFIL DO USUÁRIO OU CALL TO ACTION */}
-      <SidebarFooter className="p-4 border-t border-gray-100 bg-gray-50/50">
-        {isPending ? (
-          // 1. CARREGANDO: Efeito Skeleton
-          <div className="flex items-center gap-3 animate-pulse px-2 py-1">
-            <div className="w-10 h-10 rounded-full bg-gray-200" />
-            <div className="flex-1 space-y-2">
-              <div className="h-3 bg-gray-200 rounded w-full" />
-              <div className="h-3 bg-gray-200 rounded w-2/3" />
+        {/* RODAPÉ DARK/SLEEK */}
+        <SidebarFooter className="p-5 border-t border-neutral-900 bg-neutral-950">
+          {isPending ? (
+            // Skeleton Dark
+            <div className="flex items-center gap-3 animate-pulse">
+              <div className="w-10 h-10 rounded-full bg-neutral-800" />
+              <div className="flex-1 space-y-2">
+                <div className="h-3 bg-neutral-800 rounded w-full" />
+                <div className="h-3 bg-neutral-800 rounded w-2/3" />
+              </div>
             </div>
-          </div>
-        ) : user ? (
-          // 2. LOGADO: Card do Perfil
-          <div className="flex items-center gap-3 p-2 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-            <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold overflow-hidden relative ring-2 ring-white">
-              {user.image ? (
-                <Image
-                  src={user.image}
-                  alt="Avatar"
-                  fill
-                  className="object-cover"
-                />
-              ) : (
-                user.name?.charAt(0).toUpperCase() || "U"
-              )}
-            </div>
-            <div className="flex-1 flex flex-col overflow-hidden">
-              <span
-                className="text-sm font-bold text-gray-800 truncate"
-                title={user.name}
+          ) : user ? (
+            // Perfil Logado (Dark Card)
+            <div className="flex items-center gap-3 p-2.5 bg-neutral-900/50 rounded-xl border border-neutral-800 shadow-sm">
+              <div className="w-9 h-9 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-300 font-bold overflow-hidden relative ring-1 ring-neutral-700">
+                {user.image ? (
+                  <Image
+                    src={user.image}
+                    alt="Avatar"
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  user.name?.charAt(0).toUpperCase() || "U"
+                )}
+              </div>
+              <div className="flex-1 flex flex-col overflow-hidden">
+                <span className="text-[13px] font-bold text-neutral-200 truncate">
+                  {user.name}
+                </span>
+                <span className="text-[10px] text-neutral-500 truncate">
+                  {user.email}
+                </span>
+              </div>
+              <button
+                onClick={handleLogout}
+                title="Sair da conta"
+                className="p-2 text-neutral-500 hover:text-red-400 hover:bg-neutral-800 rounded-lg transition-colors group"
               >
-                {user.name}
-              </span>
-              <span
-                className="text-[11px] text-gray-500 truncate"
-                title={user.email}
-              >
-                {user.email}
-              </span>
+                <LogOut className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+              </button>
             </div>
-            <button
-              onClick={handleLogout}
-              title="Sair da conta"
-              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors group"
-            >
-              <LogOut className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-            </button>
-          </div>
-        ) : (
-          // 3. DESLOGADO: Banner Bonitão para Convite
-          <div className="flex flex-col gap-3 p-4 bg-linear-to-br from-green-50 to-indigo-50/50 rounded-xl border border-green-100/50">
-            <div className="flex flex-col">
-              <span className="text-sm font-bold text-green-900">
-                Acesse sua conta
-              </span>
-              <span className="text-[11px] text-green-600/80 mt-0.5 leading-tight">
-                Faça login para salvar seus simulados e acompanhar seu
-                progresso!
-              </span>
-            </div>
+          ) : (
+            // Banner Deslogado (Dark Mode)
+            <div className="flex flex-col gap-3 p-4 bg-neutral-900/50 rounded-xl border border-neutral-800">
+              <div className="flex flex-col">
+                <span className="text-[13px] font-bold text-neutral-200">
+                  Acesse sua conta
+                </span>
+                <span className="text-[11px] text-neutral-500 mt-1 leading-tight">
+                  Faça login para salvar simulados e ver progresso.
+                </span>
+              </div>
 
-            <div className="flex flex-col gap-2 mt-1">
-              {/* Botão Principal: Entrar */}
-              <Link
-                href="/aluno/login"
-                className="w-full py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-lg transition-colors text-center shadow-sm shadow-green-600/20"
-              >
-                Entrar agora
-              </Link>
-
-              {/* Link Secundário: Criar Conta */}
-              <p className="text-[10px] text-center text-gray-500">
-                Não tem conta?{" "}
+              <div className="flex flex-col gap-2 mt-2">
                 <Link
-                  href="/aluno/login"
-                  className="text-green-600 font-bold hover:underline"
+                  href="/aluno"
+                  className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg transition-colors text-center shadow-sm"
                 >
-                  Cadastre-se grátis
+                  Entrar agora
                 </Link>
-              </p>
+                <p className="text-[10px] text-center text-neutral-500 mt-1">
+                  Não tem conta?{" "}
+                  <Link
+                    href="/aluno"
+                    className="text-emerald-500 hover:text-emerald-400 font-bold hover:underline"
+                  >
+                    Cadastre-se
+                  </Link>
+                </p>
+              </div>
             </div>
-          </div>
-        )}
-      </SidebarFooter>
-    </Sidebar>
+          )}
+        </SidebarFooter>
+      </Sidebar>
+    </>
   );
 }
