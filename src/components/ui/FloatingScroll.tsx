@@ -44,13 +44,15 @@ export default function FloatingScrollbar({
 
     const isGlobalScroll =
       parent.tagName === "BODY" || parent.tagName === "HTML";
-    setIsGlobal(isGlobalScroll);
 
     const target = isGlobalScroll ? window : parent;
     let timeoutId: NodeJS.Timeout;
     let ticking = false;
 
     const updateScroll = () => {
+      // 1. Correção: Atualizar o estado de forma assíncrona (dentro do frame de animação)
+      setIsGlobal(isGlobalScroll);
+
       const currentScroll = isGlobalScroll ? window.scrollY : parent.scrollTop;
       const scrollHeight = isGlobalScroll
         ? document.documentElement.scrollHeight
@@ -88,6 +90,7 @@ export default function FloatingScrollbar({
       pill.style.top = `${percentage}%`;
       pill.style.transform = `translateY(-${percentage}%)`;
       setIsVisible(true);
+
       clearTimeout(timeoutId);
       timeoutId = setTimeout(() => setIsVisible(false), timeoutRef.current);
 
@@ -101,9 +104,13 @@ export default function FloatingScrollbar({
       }
     };
 
-    updateScroll();
+    // Chamamos a primeira atualização envelopada num requestAnimationFrame
+    // Isso evita o erro de setar estado sincronicamente no hook
+    window.requestAnimationFrame(updateScroll);
+
     target.addEventListener("scroll", handleScroll, { passive: true });
     window.addEventListener("resize", handleScroll, { passive: true });
+
     return () => {
       target.removeEventListener("scroll", handleScroll);
       window.removeEventListener("resize", handleScroll);
@@ -114,9 +121,10 @@ export default function FloatingScrollbar({
   return (
     <div
       ref={scrollbarRef}
-      className={`pointer-events-none z-[9999] flex justify-center ${
+      // 2. Correção: Trocamos o z-[9999] por z-9999 conforme sugerido pelo Tailwind
+      className={`pointer-events-none z-9999 flex justify-center ${
         useMixBlendDifference ? "mix-blend-difference" : ""
-      } ${isGlobal ? "fixed top-0 bottom-0 items-center" : "absolute top-0"}`}
+      } ${isGlobal ? "fixed bottom-0 top-0 items-center" : "absolute top-0"}`}
       style={{
         right: `${rightMargin}px`,
         width: `${Math.max(12, pillWidth)}px`,

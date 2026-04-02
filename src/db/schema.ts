@@ -30,7 +30,6 @@ export const assuntos = pgTable("assuntos", {
   nome: varchar("nome", { length: 255 }).notNull(),
 });
 
-// NOVA TABELA: Aulas (Aulas do YouTube por Assunto)
 export const aulas = pgTable("aulas", {
   id: serial("id").primaryKey(),
   materiaId: integer("materia_id").references(() => materias.id),
@@ -39,7 +38,22 @@ export const aulas = pgTable("aulas", {
   videoUrl: text("video_url").notNull(), // O link do YouTube
 });
 
-// Tabela 4: Questões (O coração da plataforma)
+export const concursos = pgTable("concursos", {
+  id: serial("id").primaryKey(),
+  orgao: varchar("orgao", { length: 255 }).notNull(),
+  cargo: varchar("cargo", { length: 255 }).notNull(),
+  banca: varchar("banca", { length: 255 }).notNull(),
+  descricao: text("descricao"),
+  vagas: varchar("vagas", { length: 100 }),
+  salario: varchar("salario", { length: 100 }),
+  escolaridade: varchar("escolaridade", { length: 100 }),
+  status: varchar("status", { length: 50 }).notNull(),
+  linkEdital: text("link_edital"), 
+  linkInscricao: text("link_inscricao"), 
+  periodoInscricao: varchar("periodo_inscricao", { length: 255 }),
+  periodoIsencao: varchar("periodo_isencao", { length: 255 }),
+});
+
 export const questoes = pgTable("questoes", {
   id: serial("id").primaryKey(),
   tipo: varchar("tipo", { length: 50 }).notNull(), // Objetiva, Discursiva, Certo/Errado

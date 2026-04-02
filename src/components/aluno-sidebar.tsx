@@ -29,10 +29,11 @@ import {
 // Links de navegação exclusivos do Aluno
 const navItems = [
   { title: "Painel do Aluno", url: "/aluno", icon: LayoutDashboard },
-  { title: "Concursos Abertos", url: "/aluno/materiais", icon: BellRing },
+  { title: "Concursos Abertos", url: "/aluno/concursos", icon: BellRing },
   { title: "Editais", url: "/aluno/desempenho", icon: NotepadText },
-  { title: "Notícias", url: "/aluno/materiais", icon: Megaphone },
+  { title: "Notícias", url: "/aluno/noticias", icon: Megaphone },
   { title: "Aulas", url: "/aluno/aulas", icon: Video },
+  { title: "Desafio", url: "/aluno/aulas", icon: Video },
 ];
 
 const navItems2 = [
