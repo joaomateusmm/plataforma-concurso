@@ -10,6 +10,7 @@ import {
   Video,
   BellRing,
   NotepadText,
+  Sword,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -33,7 +34,7 @@ const navItems = [
   { title: "Editais", url: "/aluno/desempenho", icon: NotepadText },
   { title: "Notícias", url: "/aluno/noticias", icon: Megaphone },
   { title: "Aulas", url: "/aluno/aulas", icon: Video },
-  { title: "Desafio", url: "/aluno/aulas", icon: Video },
+  { title: "Desafio", url: "/aluno/desafio", icon: Sword },
 ];
 
 const navItems2 = [

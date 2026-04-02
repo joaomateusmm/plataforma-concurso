@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { Montserrat } from "next/font/google";
 import "./globals.css";
 import FloatingScrollbar from "@/components/ui/FloatingScroll";
+import SmoothScroll from "@/components/ui/SmoothScroll";
 
 // 2. Configuramos a fonte
 const montserrat = Montserrat({
@@ -33,9 +34,11 @@ export default function RootLayout({
         className={`${montserrat.className}  min-h-full flex flex-col`}
         suppressHydrationWarning
       >
-        <FloatingScrollbar />
-        {children}
-        <Toaster position="top-right" />
+        <SmoothScroll lerp={0.08} duration={1.2} wheelMultiplier={1}>
+          <FloatingScrollbar />
+          {children}
+          <Toaster position="top-right" />
+        </SmoothScroll>
       </body>
     </html>
   );
