@@ -117,7 +117,7 @@ export default async function GerenciarAssuntosPage(props: {
           <div className="flex gap-2">
             <button
               type="submit"
-              className="px-8 py-3 bg-blue-600 text-white font-bold rounded-md hover:bg-blue-700 transition"
+              className="px-8 py-3 bg-blue-600 active:scale-95 cursor-pointer hover:scale-105 text-white font-bold rounded-md hover:bg-blue-700 transition"
             >
               {assuntoEditando ? "Atualizar" : "Salvar"}
             </button>
