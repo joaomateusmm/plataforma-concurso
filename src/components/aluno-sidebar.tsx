@@ -41,10 +41,7 @@ const navItems = [
 ];
 
 const navItems2 = [
-  { title: "Criar Simulado", url: "/aluno/simulados", icon: CopyPlus },
-  { title: "Matérias", url: "/aluno/simulados", icon: Layers },
-  { title: "Assuntos", url: "/aluno/simulados", icon: Library },
-  { title: "Questões", url: "/aluno/simulados", icon: BookOpenCheck },
+  { title: "Criar Simulado", url: "/aluno/simulados/novo", icon: CopyPlus },
 ];
 
 export function AlunoSidebar() {

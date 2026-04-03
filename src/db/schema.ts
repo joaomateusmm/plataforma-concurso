@@ -27,7 +27,7 @@ export const materias = pgTable("materias", {
 export const assuntos = pgTable("assuntos", {
   id: serial("id").primaryKey(),
   materiaId: integer("materia_id").references(() => materias.id), // Liga o assunto à matéria
-  nome: varchar("nome", { length: 255 }).notNull(),
+  nome: varchar("nome", { length: 355 }).notNull(),
 });
 
 export const aulas = pgTable("aulas", {
@@ -48,8 +48,8 @@ export const concursos = pgTable("concursos", {
   salario: varchar("salario", { length: 100 }),
   escolaridade: varchar("escolaridade", { length: 100 }),
   status: varchar("status", { length: 50 }).notNull(),
-  linkEdital: text("link_edital"), 
-  linkInscricao: text("link_inscricao"), 
+  linkEdital: text("link_edital"),
+  linkInscricao: text("link_inscricao"),
   periodoInscricao: varchar("periodo_inscricao", { length: 255 }),
   periodoIsencao: varchar("periodo_isencao", { length: 255 }),
 });
@@ -118,4 +118,28 @@ export const verification = pgTable("verification", {
   expiresAt: timestamp("expiresAt").notNull(),
   createdAt: timestamp("createdAt").notNull(),
   updatedAt: timestamp("updatedAt").notNull(),
+});
+
+export const simulados = pgTable("simulados", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id), // Link com o usuário do Better Auth
+  titulo: varchar("titulo", { length: 255 }).notNull(), // Ex: "Treino Polícia Civil"
+  quantidadeQuestoes: integer("quantidade_questoes").notNull(),
+  status: varchar("status", { length: 50 }).default("Pendente").notNull(), // Pendente, Em Andamento, Concluido
+  acertos: integer("acertos").default(0),
+  criadoEm: timestamp("criado_em").defaultNow(),
+});
+
+export const simuladoQuestoes = pgTable("simulado_questoes", {
+  id: serial("id").primaryKey(),
+  simuladoId: integer("simulado_id")
+    .notNull()
+    .references(() => simulados.id, { onDelete: "cascade" }),
+  questaoId: integer("questao_id")
+    .notNull()
+    .references(() => questoes.id),
+  respostaUsuario: text("resposta_usuario"), // A alternativa que o aluno marcou
+  isCorreta: boolean("is_correta"), // Se ele acertou ou errou (null se ainda não respondeu)
 });

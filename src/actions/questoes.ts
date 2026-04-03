@@ -5,6 +5,7 @@ import { db } from "../db/index";
 import { questoes } from "../db/schema";
 import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
+import { materias, assuntos, bancas } from "../db/schema";
 
 export async function salvarQuestao(formData: FormData) {
   const tipo = formData.get("tipo") as string;
@@ -53,4 +54,45 @@ export async function deletarQuestao(formData: FormData) {
       error: "Ocorreu um erro ao tentar excluir esta questão.",
     };
   }
+}
+
+export async function importarQuestoesJson(jsonData: string) {
+  try {
+    // Transforma o texto do arquivo de volta em um objeto JavaScript
+    const questoesArray = JSON.parse(jsonData);
+
+    if (!Array.isArray(questoesArray) || questoesArray.length === 0) {
+      return {
+        error: "O arquivo JSON deve conter uma lista (array) de questões.",
+      };
+    }
+
+    // O Drizzle é super poderoso. Se passarmos um array, ele faz um "Bulk Insert"!
+    // Ele insere milhares de linhas em uma única operação super rápida.
+    await db.insert(questoes).values(questoesArray);
+
+    revalidatePath("/admin/questoes");
+    return { success: true, count: questoesArray.length };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
+    console.error("Erro na importação:", error);
+    return {
+      error:
+        "Erro ao processar o arquivo. Verifique se a estrutura está correta.",
+    };
+  }
+}
+
+export async function exportarDicionarioIds() {
+  // Busca tudo diretamente do banco de dados
+  const listaMaterias = await db.select().from(materias);
+  const listaAssuntos = await db.select().from(assuntos);
+  const listaBancas = await db.select().from(bancas);
+
+  // Retorna um objeto limpo e organizado
+  return {
+    bancas: listaBancas,
+    materias: listaMaterias,
+    assuntos: listaAssuntos,
+  };
 }
