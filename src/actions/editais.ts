@@ -5,10 +5,12 @@ import { editais, editalAssuntos } from "../db/schema";
 import { revalidatePath } from "next/cache";
 import { eq, desc } from "drizzle-orm";
 
+// 1. Adicionamos a thumbnailUrl na tipagem
 interface CriarEditalParams {
   titulo: string;
   descricao: string;
   banca: string;
+  thumbnailUrl?: string; // <-- AQUI
   assuntosMapeados: { basico: number[]; especifico: number[] };
   status: "Rascunho" | "Publicado";
 }
@@ -45,10 +47,10 @@ export async function criarEditalAdmin(params: CriarEditalParams) {
       titulo: params.titulo,
       descricao: params.descricao,
       banca: params.banca,
+      thumbnailUrl: params.thumbnailUrl, // <-- SALVANDO A IMAGEM NO BANCO
       status: params.status,
     });
 
-    // Mapeia os arrays separadamente com o seu respectivo "tipo"
     const vinculacoesBasicas = params.assuntosMapeados.basico.map(
       (assuntoId) => ({
         editalId: editalId,
@@ -93,7 +95,6 @@ export async function obterEditaisAdmin() {
 
 export async function deletarEditalAdmin(id: string) {
   try {
-    // Como usamos onDelete: 'cascade' no schema, os assuntos vinculados serão apagados sozinhos!
     await db.delete(editais).where(eq(editais.id, id));
 
     revalidatePath("/admin/editais");
@@ -104,7 +105,6 @@ export async function deletarEditalAdmin(id: string) {
   }
 }
 
-// Adicione no final do seu src/actions/editais.ts
 export async function obterEditaisPublicados() {
   try {
     const lista = await db
@@ -127,7 +127,6 @@ export async function atualizarEditalAdmin(
   try {
     if (!params.titulo) return { error: "O título do edital é obrigatório." };
 
-    // AQUI ESTAVA O ERRO! Precisamos usar a nova lógica "assuntosMapeados"
     const totalAssuntos =
       params.assuntosMapeados.basico.length +
       params.assuntosMapeados.especifico.length;
@@ -138,26 +137,27 @@ export async function atualizarEditalAdmin(
       };
     }
 
-    // 1. Atualiza os dados básicos do Edital
+    // 1. Atualiza os dados básicos do Edital (INCLUINDO A THUMBNAIL)
     await db
       .update(editais)
       .set({
         titulo: params.titulo,
         descricao: params.descricao,
         banca: params.banca,
+        thumbnailUrl: params.thumbnailUrl, // <-- ATUALIZANDO A IMAGEM
         status: params.status,
       })
       .where(eq(editais.id, id));
 
-    // 2. Remove as vinculações antigas de assuntos
+    // 2. Remove as vinculações antigas
     await db.delete(editalAssuntos).where(eq(editalAssuntos.editalId, id));
 
-    // 3. Insere as novas vinculações atualizadas com os TIPOS corretos (Básico ou Específico)
+    // 3. Insere as novas vinculações
     const vinculacoesBasicas = params.assuntosMapeados.basico.map(
       (assuntoId) => ({
         editalId: id,
         assuntoId: assuntoId,
-        tipoConhecimento: "Básico", // Define como básico
+        tipoConhecimento: "Básico",
       }),
     );
 
@@ -165,7 +165,7 @@ export async function atualizarEditalAdmin(
       (assuntoId) => ({
         editalId: id,
         assuntoId: assuntoId,
-        tipoConhecimento: "Específico", // Define como específico
+        tipoConhecimento: "Específico",
       }),
     );
 

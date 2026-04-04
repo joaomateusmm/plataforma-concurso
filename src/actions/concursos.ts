@@ -58,6 +58,7 @@ export async function deletarConcurso(formData: FormData) {
     revalidatePath("/admin/concursos");
     revalidatePath("/aluno/concursos");
     return { success: true };
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
     return { error: "Erro ao excluir concurso." };
   }

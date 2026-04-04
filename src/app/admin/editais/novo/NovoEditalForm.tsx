@@ -15,8 +15,14 @@ import {
   Layers,
   BookMarked,
   BookOpen,
+  ImageIcon,
+  X,
 } from "lucide-react";
 import { criarEditalAdmin } from "@/actions/editais";
+
+// AJUSTE ESTE IMPORT DE ACORDO COM A SUA CONFIGURAÇÃO DO UPLOADTHING!
+// Geralmente fica em "@/utils/uploadthing" ou "@/lib/uploadthing"
+import { UploadDropzone } from "@/utils/uploadthing";
 
 export default function NovoEditalForm({
   assuntosDb = [],
@@ -28,6 +34,9 @@ export default function NovoEditalForm({
   const [titulo, setTitulo] = useState("");
   const [banca, setBanca] = useState("");
   const [descricao, setDescricao] = useState("");
+  // NOVO ESTADO: Guarda a URL da imagem carregada
+  const [thumbnailUrl, setThumbnailUrl] = useState("");
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedMaterias, setExpandedMaterias] = useState<string[]>([]);
@@ -115,7 +124,7 @@ export default function NovoEditalForm({
       titulo,
       banca,
       descricao,
-      // Passamos o novo formato de dados!
+      thumbnailUrl, // Passamos a URL da Imagem para a Action!
       assuntosMapeados: {
         basico: assuntosBasicos,
         especifico: assuntosEspecificos,
@@ -160,10 +169,10 @@ export default function NovoEditalForm({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-8">
-          {/* COLUNA ESQUERDA: INFORMAÇÕES */}
-          <div className="space-y-6">
-            <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* COLUNA ESQUERDA: INFORMAÇÕES E BOTÕES */}
+          <div className="space-y-6 flex flex-col">
+            <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm flex-1">
               <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
                 <FileText className="w-5 h-5 text-emerald-600" /> Dados do
                 Edital
@@ -204,16 +213,87 @@ export default function NovoEditalForm({
                     value={descricao}
                     onChange={(e) => setDescricao(e.target.value)}
                     placeholder="Informações adicionais sobre este edital..."
-                    className="w-full bg-gray-50 border border-gray-200 text-gray-900 px-4 py-3.5 rounded-xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition-all placeholder:text-gray-400 resize-none h-32"
+                    className="w-full bg-gray-50 border border-gray-200 text-gray-900 px-4 py-3.5 rounded-xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition-all placeholder:text-gray-400 resize-none h-24"
                   />
                 </div>
+
+                {/* NOVO CAMPO: UPLOAD DE THUMBNAIL */}
+                <div className="flex flex-col gap-2 border-t border-gray-100 pt-6">
+                  <label className="text-sm font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                    <ImageIcon className="w-4 h-4" /> Capa do Edital
+                  </label>
+
+                  {thumbnailUrl ? (
+                    <div className="relative w-full h-48 rounded-2xl overflow-hidden border flex items-center justify-center border-gray-200 group">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={thumbnailUrl}
+                        alt="Capa"
+                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <button
+                          type="button"
+                          onClick={() => setThumbnailUrl("")}
+                          className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl font-bold transition-transform transform scale-95 group-hover:scale-100"
+                        >
+                          <X className="w-4 h-4" /> Remover Imagem
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="border-2 border-dashed border-gray-300 rounded-2xl p-6 bg-gray-50 hover:bg-gray-100 transition-colors">
+                      <UploadDropzone
+                        endpoint="imageUploader" // Certifique-se que é este o nome do endpoint no seu arquivo core.ts
+                        onClientUploadComplete={(res) => {
+                          if (res && res[0]) {
+                            setThumbnailUrl(res[0].url);
+                            toast.success("Capa enviada com sucesso!");
+                          }
+                        }}
+                        onUploadError={(error: Error) => {
+                          toast.error(`Erro no upload: ${error.message}`);
+                        }}
+                        className="ut-label:text-emerald-600 ut-button:bg-emerald-600 ut-button:ut-readying:bg-emerald-500"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
+            </div>
+
+            <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm space-y-3">
+              <button
+                onClick={() => handleSalvar("Publicado")}
+                disabled={isSubmitting}
+                className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-4 rounded-2xl font-extrabold shadow-md shadow-emerald-600/20 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Send className="w-5 h-5" />
+                )}
+                Publicar Edital
+              </button>
+
+              <button
+                onClick={() => handleSalvar("Rascunho")}
+                disabled={isSubmitting}
+                className="w-full flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 px-6 py-4 rounded-2xl font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Save className="w-5 h-5" />
+                )}
+                Salvar como Rascunho
+              </button>
             </div>
           </div>
 
           {/* COLUNA DIREITA: MAPEAMENTO COM TABS (Básico / Específico) */}
           <div className="space-y-6 h-full flex flex-col">
-            <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm flex flex-col flex-1 h-170">
+            <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm flex flex-col flex-1 h-200">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                   <Layers className="w-5 h-5 text-emerald-600" /> Mapeamento
@@ -224,10 +304,10 @@ export default function NovoEditalForm({
               </div>
 
               {/* TABS DE NAVEGAÇÃO */}
-              <div className="flex p-1 bg-gray-100 rounded-xl mb-4">
+              <div className="flex p-1 gap-2 bg-gray-100 rounded-xl mb-4 shrink-0">
                 <button
                   onClick={() => setAbaAtiva("basico")}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold rounded-lg transition-all ${
+                  className={`flex-1 flex cursor-pointer items-center justify-center gap-2 py-2.5 text-xs font-bold rounded-lg transition-all ${
                     abaAtiva === "basico"
                       ? "bg-white text-emerald-700 shadow-sm border border-gray-200"
                       : "text-gray-500 hover:text-gray-700"
@@ -240,7 +320,7 @@ export default function NovoEditalForm({
                 </button>
                 <button
                   onClick={() => setAbaAtiva("especifico")}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold rounded-lg transition-all ${
+                  className={`flex-1 flex cursor-pointer items-center justify-center gap-2 py-2.5 text-xs font-bold rounded-lg transition-all ${
                     abaAtiva === "especifico"
                       ? "bg-white text-emerald-700 shadow-sm border border-gray-200"
                       : "text-gray-500 hover:text-gray-700"
@@ -253,7 +333,7 @@ export default function NovoEditalForm({
                 </button>
               </div>
 
-              <div className="flex flex-col flex-1 bg-gray-50 border border-gray-200 rounded-2xl overflow-hidden">
+              <div className="flex flex-col flex-1 bg-gray-50 border border-gray-200 rounded-2xl overflow-hidden min-h-0">
                 <div className="flex items-center px-4 h-12 shrink-0 border-b border-gray-200 bg-white">
                   <Search className="w-4 h-4 text-gray-400 mr-2" />
                   <input
@@ -384,33 +464,6 @@ export default function NovoEditalForm({
                 </div>
               </div>
             </div>
-          </div>
-          <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm space-y-3">
-            <button
-              onClick={() => handleSalvar("Publicado")}
-              disabled={isSubmitting}
-              className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-4 rounded-2xl font-extrabold shadow-md shadow-emerald-600/20 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <Send className="w-5 h-5" />
-              )}
-              Publicar Edital
-            </button>
-
-            <button
-              onClick={() => handleSalvar("Rascunho")}
-              disabled={isSubmitting}
-              className="w-full flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 px-6 py-4 rounded-2xl font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <Save className="w-5 h-5" />
-              )}
-              Salvar como Rascunho
-            </button>
           </div>
         </div>
       </div>

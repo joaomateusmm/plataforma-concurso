@@ -16,8 +16,13 @@ import {
   ArrowLeft,
   BookOpen,
   BookMarked,
+  ImageIcon,
+  X,
 } from "lucide-react";
 import { atualizarEditalAdmin } from "@/actions/editais";
+
+// AJUSTE ESTE IMPORT DE ACORDO COM A SUA CONFIGURAÇÃO DO UPLOADTHING!
+import { UploadDropzone } from "@/utils/uploadthing";
 
 interface EditarEditalFormProps {
   edital: any;
@@ -27,25 +32,27 @@ interface EditarEditalFormProps {
 }
 
 export default function EditarEditalForm({
-  edital = {}, // Proteção: Se vier undefined, usa um objeto vazio para não quebrar o React
+  edital = {}, // Proteção
   initialAssuntosBasicos = [],
   initialAssuntosEspecificos = [],
   assuntosDb = [],
 }: EditarEditalFormProps) {
   const router = useRouter();
 
-  // INICIA OS ESTADOS COM OS DADOS VINDOS DO BANCO, COM FALLBACKS SEGUROS
+  // ESTADOS COM FALLBACKS SEGUROS
   const [titulo, setTitulo] = useState(edital?.titulo || "");
   const [banca, setBanca] = useState(edital?.banca || "");
   const [descricao, setDescricao] = useState(edital?.descricao || "");
+
+  // INICIA A THUMBNAIL COM O VALOR DO BANCO
+  const [thumbnailUrl, setThumbnailUrl] = useState(edital?.thumbnailUrl || "");
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedMaterias, setExpandedMaterias] = useState<string[]>([]);
 
-  // Novo Sistema: Tabs de Navegação e Estados Separados
+  // Tabs de Navegação e Estados Separados
   const [abaAtiva, setAbaAtiva] = useState<"basico" | "especifico">("basico");
-
-  // Inicia com os dados que vieram do banco
   const [assuntosBasicos, setAssuntosBasicos] = useState<number[]>(
     initialAssuntosBasicos,
   );
@@ -53,7 +60,6 @@ export default function EditarEditalForm({
     initialAssuntosEspecificos,
   );
 
-  // Variáveis para apontar para a lista correta baseado na aba que o utilizador clicou
   const assuntosSelecionadosAtuais =
     abaAtiva === "basico" ? assuntosBasicos : assuntosEspecificos;
   const setSelecionadosAtuais =
@@ -135,6 +141,7 @@ export default function EditarEditalForm({
       titulo,
       banca,
       descricao,
+      thumbnailUrl, // Passa a imagem atualizada para a Action
       assuntosMapeados: {
         basico: assuntosBasicos,
         especifico: assuntosEspecificos,
@@ -174,7 +181,8 @@ export default function EditarEditalForm({
               Editar Edital
             </h1>
             <p className="text-gray-500">
-              Modifique as informações ou os assuntos exigidos neste edital.
+              Modifique as informações, a capa ou os assuntos exigidos neste
+              edital.
             </p>
           </div>
 
@@ -189,8 +197,8 @@ export default function EditarEditalForm({
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* COLUNA ESQUERDA: INFORMAÇÕES BÁSICAS E BOTÕES */}
-          <div className="space-y-6">
-            <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm">
+          <div className="space-y-6 flex flex-col">
+            <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm flex-1">
               <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
                 <FileText className="w-5 h-5 text-emerald-600" /> Dados do
                 Edital
@@ -231,8 +239,51 @@ export default function EditarEditalForm({
                     value={descricao}
                     onChange={(e) => setDescricao(e.target.value)}
                     placeholder="Informações adicionais sobre este edital..."
-                    className="w-full bg-gray-50 border border-gray-200 text-gray-900 px-4 py-3.5 rounded-xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition-all placeholder:text-gray-400 resize-none h-32"
+                    className="w-full bg-gray-50 border border-gray-200 text-gray-900 px-4 py-3.5 rounded-xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition-all placeholder:text-gray-400 resize-none h-24"
                   />
+                </div>
+
+                {/* UPLOAD DE THUMBNAIL NO MODO DE EDIÇÃO */}
+                <div className="flex flex-col gap-2 border-t border-gray-100 pt-6">
+                  <label className="text-sm font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                    <ImageIcon className="w-4 h-4" /> Capa do Edital
+                  </label>
+
+                  {thumbnailUrl ? (
+                    <div className="relative w-full h-48 rounded-2xl overflow-hidden border border-gray-200 group">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={thumbnailUrl}
+                        alt="Capa"
+                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <button
+                          type="button"
+                          onClick={() => setThumbnailUrl("")}
+                          className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl font-bold transition-transform transform scale-95 group-hover:scale-100"
+                        >
+                          <X className="w-4 h-4" /> Remover Capa Atual
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="border-2 border-dashed border-gray-300 rounded-2xl p-6 bg-gray-50 hover:bg-gray-100 transition-colors">
+                      <UploadDropzone
+                        endpoint="imageUploader"
+                        onClientUploadComplete={(res) => {
+                          if (res && res[0]) {
+                            setThumbnailUrl(res[0].url);
+                            toast.success("Nova capa enviada com sucesso!");
+                          }
+                        }}
+                        onUploadError={(error: Error) => {
+                          toast.error(`Erro no upload: ${error.message}`);
+                        }}
+                        className="ut-label:text-emerald-600 ut-button:bg-emerald-600 ut-button:ut-readying:bg-emerald-500"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -266,9 +317,9 @@ export default function EditarEditalForm({
             </div>
           </div>
 
-          {/* COLUNA DIREITA: MAPEAMENTO COM TABS (Básico / Específico) */}
+          {/* COLUNA DIREITA: MAPEAMENTO COM TABS */}
           <div className="space-y-6 h-full flex flex-col">
-            <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm flex flex-col flex-1 h-[680px]">
+            <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm flex flex-col flex-1 h-200">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                   <Layers className="w-5 h-5 text-emerald-600" /> Mapeamento
@@ -279,7 +330,7 @@ export default function EditarEditalForm({
               </div>
 
               {/* TABS DE NAVEGAÇÃO */}
-              <div className="flex p-1 bg-gray-100 rounded-xl mb-4">
+              <div className="flex p-1 bg-gray-100 rounded-xl mb-4 shrink-0">
                 <button
                   onClick={() => setAbaAtiva("basico")}
                   className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold rounded-lg transition-all ${
@@ -308,7 +359,7 @@ export default function EditarEditalForm({
                 </button>
               </div>
 
-              <div className="flex flex-col flex-1 bg-gray-50 border border-gray-200 rounded-2xl overflow-hidden">
+              <div className="flex flex-col flex-1 bg-gray-50 border border-gray-200 rounded-2xl overflow-hidden min-h-0">
                 <div className="flex items-center px-4 h-12 shrink-0 border-b border-gray-200 bg-white">
                   <Search className="w-4 h-4 text-gray-400 mr-2" />
                   <input

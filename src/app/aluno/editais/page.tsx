@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image"; // <-- Importação correta do Next Image
 import { toast } from "sonner";
 import {
   Building2,
@@ -31,7 +32,7 @@ export default function EditaisAlunoPage() {
             toast.error("Ops!", { description: res.error });
           }
         }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (error) {
         if (isMounted) {
           toast.error("Erro", { description: "Falha ao buscar editais." });
@@ -58,7 +59,7 @@ export default function EditaisAlunoPage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 mt-6 mb-12 animate-in fade-in duration-500">
-      {/* CABEÇALHO HERO (Inspirado no Dashboard) */}
+      {/* CABEÇALHO HERO */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <h1 className="text-3xl font-bold text-white flex items-center gap-3 mb-2">
@@ -66,8 +67,7 @@ export default function EditaisAlunoPage() {
             Editais
           </h1>
           <p className="text-neutral-400">
-            Crie o mapeamento do edital selecionando as matérias e assuntos
-            exigidos na prova.
+            Escolha o seu concurso alvo e acesse o raio-x completo do edital.
           </p>
         </div>
       </div>
@@ -95,17 +95,35 @@ export default function EditaisAlunoPage() {
               key={edital.id}
               className="bg-neutral-900 border border-neutral-800 rounded-3xl flex flex-col overflow-hidden hover:border-emerald-500/50 hover:shadow-[0_0_30px_rgba(16,185,129,0.05)] transition-all duration-300 group relative"
             >
-              {/* Linha de Destaque Superior */}
-              <div className="h-1.5 w-full bg-linear-to-r from-emerald-500 to-emerald-700" />
+              {/* IMAGEM DE FUNDO DO CARD (Thumbnail) */}
+              {edital.thumbnailUrl && (
+                <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                  <Image
+                    src={edital.thumbnailUrl}
+                    alt={edital.titulo}
+                    fill
+                    unoptimized
+                    className="object-cover opacity-20 mix-blend-luminosity group-hover:scale-105 transition-transform duration-700"
+                  />
+                  {/* Máscara: Fade da Esquerda para a Direita (Garante a leitura do título) */}
+                  <div className="absolute inset-0 bg-linear-to-r from-neutral-900 via-neutral-900/80 to-transparent" />
+                  {/* Máscara: Fade de Baixo para Cima (Protege a zona do botão inferior) */}
+                  <div className="absolute inset-0 bg-linear-to-t from-neutral-900 via-neutral-900/40 to-transparent" />
+                </div>
+              )}
 
-              <div className="p-6 flex-1 flex flex-col">
+              {/* Linha de Destaque Superior */}
+              <div className="relative z-10 h-1.5 w-full bg-linear-to-r from-emerald-500 to-emerald-700" />
+
+              {/* CONTEÚDO DO CARD (com z-10 para ficar por cima do fundo) */}
+              <div className="relative z-10 p-6 flex-1 flex flex-col">
                 {/* Meta Header */}
                 <div className="flex justify-between items-start mb-5">
-                  <div className="w-12 h-12 bg-neutral-950 border border-neutral-800 rounded-2xl flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform duration-300 shadow-inner">
+                  <div className="w-12 h-12 bg-neutral-950/80 backdrop-blur-sm border border-neutral-800 rounded-2xl flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform duration-300 shadow-inner">
                     <Target className="w-6 h-6" />
                   </div>
                   {edital.banca && (
-                    <span className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg border bg-neutral-950 border-neutral-800 text-neutral-400 flex items-center gap-1.5 shadow-sm">
+                    <span className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg border bg-neutral-950/80 backdrop-blur-sm border-neutral-800 text-neutral-400 flex items-center gap-1.5 shadow-sm">
                       <Building2 className="w-3 h-3" />
                       {edital.banca}
                     </span>
@@ -113,12 +131,12 @@ export default function EditaisAlunoPage() {
                 </div>
 
                 {/* Título e Descrição */}
-                <h3 className="text-2xl font-bold text-white mb-3 leading-tight group-hover:text-emerald-400 transition-colors">
+                <h3 className="text-2xl font-bold text-white mb-3 leading-tight group-hover:text-emerald-400 transition-colors drop-shadow-md">
                   {edital.titulo}
                 </h3>
 
                 {edital.descricao ? (
-                  <p className="text-sm text-neutral-400 line-clamp-3 mb-6 leading-relaxed">
+                  <p className="text-sm text-neutral-400 line-clamp-3 mb-6 leading-relaxed drop-shadow-sm">
                     {edital.descricao}
                   </p>
                 ) : (
@@ -127,7 +145,7 @@ export default function EditaisAlunoPage() {
                   </p>
                 )}
 
-                <div className="mt-auto pt-6 border-t border-neutral-800/60">
+                <div className="mt-auto pt-6 border-t border-neutral-800/60 relative">
                   <Link
                     href={`/aluno/editais/${edital.id}`}
                     className="w-full flex items-center justify-between group/btn"

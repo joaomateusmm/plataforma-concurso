@@ -142,6 +142,7 @@ export const editais = pgTable("editais", {
   titulo: varchar("titulo", { length: 255 }).notNull(),
   descricao: text("descricao"),
   banca: varchar("banca", { length: 100 }),
+  thumbnailUrl: text("thumbnail_url"),
   status: varchar("status", { length: 50 }).default("Rascunho").notNull(),
   criadoEm: timestamp("criado_em").defaultNow(),
 });
