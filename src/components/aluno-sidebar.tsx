@@ -86,14 +86,18 @@ export function AlunoSidebar() {
       {/* Aplicamos o fundo dark neutral-950 e bordas neutral-800 na raiz da Sidebar */}
       <Sidebar className="border-r z-100 border-neutral-800 bg-neutral-950 text-neutral-300">
         {/* CABEÇALHO */}
-        <SidebarHeader className="py-[21.5px] border-b border-neutral-800 flex flex-row items-start">
+        <SidebarHeader className="py-[20.5px] border-b border-neutral-800 flex flex-row items-start">
           <Link
-            className="flex items-center justify-center gap-2 hover:opacity-80 transition-opacity w-full"
+            className="flex items-center justify-center hover:opacity-80 transition-opacity w-full"
             href="/"
           >
-            <div className="w-12 h-12 bg-neutral-900 border border-neutral-800 rounded-xl flex items-center justify-center text-emerald-500 shadow-sm">
-              <GraduationCap strokeWidth={2.5} className="w-5 h-5" />
-            </div>
+            <Image
+              className=""
+              src="/logo.svg"
+              width={50}
+              height={50}
+              alt={""}
+            />
             <span className="text-xl font-bold text-white tracking-tight leading-tight">
               +Aprovado
             </span>
