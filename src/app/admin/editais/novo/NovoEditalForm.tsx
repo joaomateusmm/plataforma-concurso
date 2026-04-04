@@ -20,9 +20,12 @@ import {
 } from "lucide-react";
 import { criarEditalAdmin } from "@/actions/editais";
 
-// AJUSTE ESTE IMPORT DE ACORDO COM A SUA CONFIGURAÇÃO DO UPLOADTHING!
-// Geralmente fica em "@/utils/uploadthing" ou "@/lib/uploadthing"
-import { UploadDropzone } from "@/utils/uploadthing";
+// 1. IMPORTAÇÕES DA NOVA ABORDAGEM (Igual ao seu projeto que funciona)
+import { generateReactHelpers } from "@uploadthing/react";
+import type { OurFileRouter } from "@/app/api/uploadthing/core";
+
+// 2. GERA O HOOK TIPADO
+const { useUploadThing } = generateReactHelpers<OurFileRouter>();
 
 export default function NovoEditalForm({
   assuntosDb = [],
@@ -34,23 +37,51 @@ export default function NovoEditalForm({
   const [titulo, setTitulo] = useState("");
   const [banca, setBanca] = useState("");
   const [descricao, setDescricao] = useState("");
-  // NOVO ESTADO: Guarda a URL da imagem carregada
+
+  // ESTADO DA IMAGEM
   const [thumbnailUrl, setThumbnailUrl] = useState("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedMaterias, setExpandedMaterias] = useState<string[]>([]);
 
-  // Novo Sistema: Tabs de Navegação e Estados Separados
+  // Tabs de Navegação e Estados Separados
   const [abaAtiva, setAbaAtiva] = useState<"basico" | "especifico">("basico");
   const [assuntosBasicos, setAssuntosBasicos] = useState<number[]>([]);
   const [assuntosEspecificos, setAssuntosEspecificos] = useState<number[]>([]);
 
-  // Qual lista estamos editando no momento?
   const assuntosSelecionadosAtuais =
     abaAtiva === "basico" ? assuntosBasicos : assuntosEspecificos;
   const setSelecionadosAtuais =
     abaAtiva === "basico" ? setAssuntosBasicos : setAssuntosEspecificos;
+
+  // --- CONFIGURAÇÃO DO UPLOADTHING (Exatamente como no seu exemplo) ---
+  const { startUpload, isUploading } = useUploadThing("imageUploader", {
+    onClientUploadComplete: (res) => {
+      if (res && res[0]) {
+        setThumbnailUrl(res[0].url);
+        toast.success("Capa enviada com sucesso!");
+      }
+    },
+    onUploadError: (error: Error) => {
+      toast.error(`Erro no upload: ${error.message}`);
+    },
+  });
+
+  const handleImageSelect = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Preview local imediato (optimistic update)
+    const objectUrl = URL.createObjectURL(file);
+    setThumbnailUrl(objectUrl);
+
+    // Inicia o upload para o UploadThing
+    await startUpload([file]);
+  };
+  // --------------------------------------------------------------------
 
   const filteredAssuntos = useMemo(() => {
     if (!searchTerm.trim()) return assuntosDb;
@@ -118,13 +149,19 @@ export default function NovoEditalForm({
       });
     }
 
+    if (isUploading) {
+      return toast.warning("Aguarde", {
+        description: "A imagem ainda está sendo enviada.",
+      });
+    }
+
     setIsSubmitting(true);
 
     const res = await criarEditalAdmin({
       titulo,
       banca,
       descricao,
-      thumbnailUrl, // Passamos a URL da Imagem para a Action!
+      thumbnailUrl, // Passamos a URL gerada!
       assuntosMapeados: {
         basico: assuntosBasicos,
         especifico: assuntosEspecificos,
@@ -217,7 +254,7 @@ export default function NovoEditalForm({
                   />
                 </div>
 
-                {/* NOVO CAMPO: UPLOAD DE THUMBNAIL */}
+                {/* UPLOAD DE THUMBNAIL (ABORDAGEM CUSTOMIZADA) */}
                 <div className="flex flex-col gap-2 border-t border-gray-100 pt-6">
                   <label className="text-sm font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
                     <ImageIcon className="w-4 h-4" /> Capa do Edital
@@ -231,32 +268,63 @@ export default function NovoEditalForm({
                         alt="Capa"
                         className="w-full h-full object-cover transition-transform group-hover:scale-105"
                       />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <button
-                          type="button"
-                          onClick={() => setThumbnailUrl("")}
-                          className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl font-bold transition-transform transform scale-95 group-hover:scale-100"
-                        >
-                          <X className="w-4 h-4" /> Remover Imagem
-                        </button>
-                      </div>
+
+                      {/* Spinner de Loading enquanto a imagem está sendo upada pro servidor real */}
+                      {isUploading && (
+                        <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                          <Loader2 className="w-8 h-8 animate-spin text-white" />
+                        </div>
+                      )}
+
+                      {/* Botão de excluir só aparece se o upload terminou */}
+                      {!isUploading && (
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-30">
+                          <button
+                            type="button"
+                            onClick={() => setThumbnailUrl("")}
+                            className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl font-bold transition-transform transform scale-95 group-hover:scale-100"
+                          >
+                            <X className="w-4 h-4" /> Remover Imagem
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ) : (
-                    <div className="border-2 border-dashed border-gray-300 rounded-2xl p-6 bg-gray-50 hover:bg-gray-100 transition-colors">
-                      <UploadDropzone
-                        endpoint="imageUploader" // Certifique-se que é este o nome do endpoint no seu arquivo core.ts
-                        onClientUploadComplete={(res) => {
-                          if (res && res[0]) {
-                            setThumbnailUrl(res[0].url);
-                            toast.success("Capa enviada com sucesso!");
-                          }
-                        }}
-                        onUploadError={(error: Error) => {
-                          toast.error(`Erro no upload: ${error.message}`);
-                        }}
-                        className="ut-label:text-emerald-600 ut-button:bg-emerald-600 ut-button:ut-readying:bg-emerald-500"
+                    <label
+                      className={`flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-2xl p-8 bg-gray-50 hover:bg-gray-100 transition-colors ${
+                        isUploading
+                          ? "cursor-not-allowed opacity-50"
+                          : "cursor-pointer"
+                      }`}
+                    >
+                      {isUploading ? (
+                        <>
+                          <Loader2 className="w-8 h-8 animate-spin text-emerald-500 mb-3" />
+                          <span className="text-sm font-bold text-emerald-600">
+                            Preparando...
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-12 h-12 bg-white border border-gray-200 rounded-full flex items-center justify-center mb-3 shadow-sm">
+                            <ImageIcon className="w-5 h-5 text-gray-400" />
+                          </div>
+                          <span className="text-sm font-bold text-gray-700">
+                            Clique para escolher uma imagem
+                          </span>
+                          <span className="text-xs text-gray-400 mt-1">
+                            PNG, JPG ou WEBP (Max 4MB)
+                          </span>
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleImageSelect}
+                        disabled={isUploading}
                       />
-                    </div>
+                    </label>
                   )}
                 </div>
               </div>
@@ -265,7 +333,7 @@ export default function NovoEditalForm({
             <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm space-y-3">
               <button
                 onClick={() => handleSalvar("Publicado")}
-                disabled={isSubmitting}
+                disabled={isSubmitting || isUploading}
                 className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-4 rounded-2xl font-extrabold shadow-md shadow-emerald-600/20 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? (
@@ -278,7 +346,7 @@ export default function NovoEditalForm({
 
               <button
                 onClick={() => handleSalvar("Rascunho")}
-                disabled={isSubmitting}
+                disabled={isSubmitting || isUploading}
                 className="w-full flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 px-6 py-4 rounded-2xl font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? (
@@ -293,7 +361,7 @@ export default function NovoEditalForm({
 
           {/* COLUNA DIREITA: MAPEAMENTO COM TABS (Básico / Específico) */}
           <div className="space-y-6 h-full flex flex-col">
-            <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm flex flex-col flex-1 h-200">
+            <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm flex flex-col flex-1 h-[800px]">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                   <Layers className="w-5 h-5 text-emerald-600" /> Mapeamento
@@ -364,8 +432,6 @@ export default function NovoEditalForm({
                           const assuntosDaMateriaIds = assuntos.map(
                             (a) => a.id,
                           );
-
-                          // Usa os assuntos do estado da aba atual!
                           const selecionadosNestaMateria =
                             assuntosDaMateriaIds.filter((id) =>
                               assuntosSelecionadosAtuais.includes(id),

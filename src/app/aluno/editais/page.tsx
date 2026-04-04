@@ -103,7 +103,7 @@ export default function EditaisAlunoPage() {
                     alt={edital.titulo}
                     fill
                     unoptimized
-                    className="object-cover opacity-20 mix-blend-luminosity group-hover:scale-105 transition-transform duration-700"
+                    className="object-cover opacity-50 group-hover:scale-105 transition-transform duration-700"
                   />
                   {/* Máscara: Fade da Esquerda para a Direita (Garante a leitura do título) */}
                   <div className="absolute inset-0 bg-linear-to-r from-neutral-900 via-neutral-900/80 to-transparent" />
@@ -112,19 +112,12 @@ export default function EditaisAlunoPage() {
                 </div>
               )}
 
-              {/* Linha de Destaque Superior */}
-              <div className="relative z-10 h-1.5 w-full bg-linear-to-r from-emerald-500 to-emerald-700" />
-
               {/* CONTEÚDO DO CARD (com z-10 para ficar por cima do fundo) */}
               <div className="relative z-10 p-6 flex-1 flex flex-col">
                 {/* Meta Header */}
                 <div className="flex justify-between items-start mb-5">
-                  <div className="w-12 h-12 bg-neutral-950/80 backdrop-blur-sm border border-neutral-800 rounded-2xl flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform duration-300 shadow-inner">
-                    <Target className="w-6 h-6" />
-                  </div>
                   {edital.banca && (
-                    <span className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg border bg-neutral-950/80 backdrop-blur-sm border-neutral-800 text-neutral-400 flex items-center gap-1.5 shadow-sm">
-                      <Building2 className="w-3 h-3" />
+                    <span className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg border bg-neutral-950/20  shadow-sm backdrop-blur-sm border-neutral-800 text-neutral-400 flex items-center gap-1.5 shadow-neutral-950">
                       {edital.banca}
                     </span>
                   )}
