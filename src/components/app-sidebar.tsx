@@ -9,6 +9,8 @@ import {
   Layers,
   Library,
   Video,
+  BellRing,
+  NotepadText,
 } from "lucide-react";
 import Link from "next/link";
 // 1. Importamos o usePathname para saber em que página estamos
@@ -33,7 +35,8 @@ const nav2Items = [
   { title: "Gerenciar Matérias", url: "/admin/materias", icon: Layers },
   { title: "Gerenciar Assuntos", url: "/admin/assuntos", icon: BookOpen },
   { title: "Gerenciar Aulas", url: "/admin/aulas", icon: Video },
-  { title: "Gerenciar Concursos", url: "/admin/concursos", icon: Video },
+  { title: "Gerenciar Concursos", url: "/admin/concursos", icon: BellRing },
+  { title: "Gerenciar Editais", url: "/admin/editais", icon: NotepadText },
 ];
 
 export function AppSidebar() {

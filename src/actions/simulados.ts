@@ -2,7 +2,7 @@
 
 import { db } from "../db/index";
 import { questoes, simulados, simuladoQuestoes } from "../db/schema";
-import { eq, inArray, and, sql } from "drizzle-orm";
+import { eq, inArray, and, sql, desc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 interface GerarSimuladoParams {
@@ -12,6 +12,19 @@ interface GerarSimuladoParams {
   bancasIds?: number[];
   materiasIds?: number[];
   assuntosIds?: number[];
+}
+
+// Função para gerar o ID alfanumérico no estilo "senha"
+function gerarIdAlfanumerico(tamanho = 15) {
+  const caracteres =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let idGerado = "";
+  for (let i = 0; i < tamanho; i++) {
+    idGerado += caracteres.charAt(
+      Math.floor(Math.random() * caracteres.length),
+    );
+  }
+  return idGerado;
 }
 
 export async function gerarSimuladoAleatorio(params: GerarSimuladoParams) {
@@ -41,13 +54,17 @@ export async function gerarSimuladoAleatorio(params: GerarSimuladoParams) {
       return { error: "Nenhuma questão encontrada com esses filtros." };
     }
 
-    // 3. Criamos o "Cabeçalho" do Simulado
+    // Geramos o ID customizado aqui!
+    const customId = gerarIdAlfanumerico();
+
+    // 3. Criamos o "Cabeçalho" do Simulado com o novo ID
     const novoSimulado = await db
       .insert(simulados)
       .values({
+        id: customId, // Injetando o ID customizado
         userId: params.userId,
         titulo: params.titulo,
-        quantidadeQuestoes: questoesSorteadas.length, // Salva quantas realmente achou
+        quantidadeQuestoes: questoesSorteadas.length,
         status: "Pendente",
       })
       .returning({ id: simulados.id });
@@ -64,7 +81,7 @@ export async function gerarSimuladoAleatorio(params: GerarSimuladoParams) {
 
     revalidatePath("/aluno/simulados");
 
-    // Retornamos o ID para o Front-end redirecionar o aluno direto para a prova!
+    // Retornamos o ID para o Front-end redirecionar o aluno direto para a prova
     return { success: true, simuladoId: simuladoId };
   } catch (error) {
     console.error("Erro ao gerar simulado:", error);
@@ -72,10 +89,8 @@ export async function gerarSimuladoAleatorio(params: GerarSimuladoParams) {
   }
 }
 
-// Adicione isto no final de src/actions/simulados.ts
-
 export async function finalizarSimulado(
-  simuladoId: number,
+  simuladoId: string, // <--- MUDOU DE number PARA string AQUI
   respostas: Record<number, string>,
 ) {
   try {
@@ -126,5 +141,34 @@ export async function finalizarSimulado(
   } catch (error) {
     console.error("Erro ao finalizar simulado:", error);
     return { error: "Falha ao corrigir a prova." };
+  }
+}
+
+export async function obterMeusSimulados(userId: string) {
+  try {
+    const lista = await db
+      .select()
+      .from(simulados)
+      .where(eq(simulados.userId, userId))
+      .orderBy(desc(simulados.criadoEm)); // Ordena do mais recente para o mais antigo
+
+    return { success: true, simulados: lista };
+  } catch (error) {
+    console.error("Erro ao buscar simulados:", error);
+    return { error: "Falha ao carregar os seus simulados." };
+  }
+}
+
+export async function deletarSimulado(simuladoId: string) {
+  try {
+    // Como configuramos 'onDelete: cascade' na tabela simulado_questoes,
+    // ao deletar o simulado pai, todas as questões vinculadas a ele sumirão automaticamente!
+    await db.delete(simulados).where(eq(simulados.id, simuladoId));
+
+    revalidatePath("/aluno/simulados");
+    return { success: true };
+  } catch (error) {
+    console.error("Erro ao deletar simulado:", error);
+    return { error: "Falha ao excluir o simulado." };
   }
 }

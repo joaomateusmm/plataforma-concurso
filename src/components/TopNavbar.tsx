@@ -1,6 +1,8 @@
 // src/components/TopNavbar.tsx
 "use client";
 
+import SearchBar from "./SearchBar";
+import UpdatesNotification from "./UpdatesNotification";
 import UserNav from "./UserNav";
 import Grainient from "@/components/Grainient";
 
@@ -53,10 +55,14 @@ export default function TopNavbar() {
         </div>
       </div>
 
-      {/* --- HEADER --- */}
-      {/* O Header fica imediatamente abaixo do Notice, herda a mesma largura e ambos têm position fixed pelo contêiner pai */}
-      <header className="flex h-14 w-full items-center justify-end border-b border-neutral-800 bg-neutral-950/60 px-6 backdrop-blur-md transition-all duration-300">
-        <div className="flex items-center gap-4">
+      <header className="flex h-14 w-full items-center border-b border-neutral-800 bg-neutral-950/60 backdrop-blur-md transition-all duration-300">
+        <div className="flex w-full justify-end gap-4 items-center mr-48">
+          <UpdatesNotification />
+          
+          <SearchBar />
+
+          <div className=" h-6 border-r border-neutral-800"></div>
+
           <UserNav />
         </div>
       </header>

@@ -11,9 +11,7 @@ import {
   BellRing,
   NotepadText,
   Sword,
-  Layers,
-  BookOpenCheck,
-  Library,
+  NotebookPen,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -34,10 +32,11 @@ import {
 const navItems = [
   { title: "Painel do Aluno", url: "/aluno", icon: LayoutDashboard },
   { title: "Concursos Abertos", url: "/aluno/concursos", icon: BellRing },
-  { title: "Editais", url: "/aluno/desempenho", icon: NotepadText },
+  { title: "Editais", url: "/aluno/editais", icon: NotepadText },
   { title: "Notícias", url: "/aluno/noticias", icon: Megaphone },
   { title: "Aulas", url: "/aluno/aulas", icon: Video },
   { title: "Desafio", url: "/aluno/desafio", icon: Sword },
+  { title: "Meus Simulados", url: "/aluno/simulados", icon: NotebookPen },
 ];
 
 const navItems2 = [
@@ -56,8 +55,18 @@ export function AlunoSidebar() {
     router.push("/");
   };
 
-  const isActive = (url: string) =>
-    url === "/aluno" ? pathname === "/aluno" : pathname?.startsWith(url);
+  const isActive = (url: string) => {
+    if (pathname === url) return true;
+    if (url === "/aluno") return pathname === "/aluno";
+    if (url === "/aluno/simulados") {
+      return (
+        pathname?.startsWith("/aluno/simulados/") &&
+        pathname !== "/aluno/simulados/novo"
+      );
+    }
+
+    return pathname?.startsWith(url);
+  };
 
   return (
     <>
@@ -109,7 +118,7 @@ export function AlunoSidebar() {
                       <li
                         className={`group relative -ml-px flex cursor-pointer items-center gap-3 py-2 pr-2 pl-4 transition-all duration-200 before:absolute before:top-1/2 before:left-0 before:h-4 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:transition-colors hover:text-white ${
                           active
-                            ? "font-medium text-green-400 before:bg-white"
+                            ? "font-medium text-emerald-400 before:bg-white"
                             : "text-neutral-400 before:bg-transparent hover:before:bg-neutral-500"
                         }`}
                       >
@@ -138,7 +147,7 @@ export function AlunoSidebar() {
                       <li
                         className={`group relative -ml-px flex cursor-pointer items-center gap-3 py-2 pr-2 pl-4 transition-all duration-200 before:absolute before:top-1/2 before:left-0 before:h-4 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:transition-colors hover:text-white ${
                           active
-                            ? "font-medium text-white before:bg-white"
+                            ? "font-medium text-emerald-400 before:bg-white"
                             : "text-neutral-400 before:bg-transparent hover:before:bg-neutral-500"
                         }`}
                       >

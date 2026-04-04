@@ -1,5 +1,3 @@
-// src/db/schema.ts
-
 import {
   pgTable,
   serial,
@@ -11,22 +9,19 @@ import {
   boolean,
 } from "drizzle-orm/pg-core";
 
-// Tabela 1: Bancas (Ex: FCC, FGV, CEBRASPE)
 export const bancas = pgTable("bancas", {
-  id: serial("id").primaryKey(), // ID automático
-  nome: varchar("nome", { length: 255 }).notNull(), // Nome da banca
+  id: serial("id").primaryKey(),
+  nome: varchar("nome", { length: 255 }).notNull(),
 });
 
-// Tabela 2: Matérias (Ex: Língua Portuguesa)
 export const materias = pgTable("materias", {
   id: serial("id").primaryKey(),
   nome: varchar("nome", { length: 255 }).notNull(),
 });
 
-// Tabela 3: Assuntos (Ex: Compreensão de textos)
 export const assuntos = pgTable("assuntos", {
   id: serial("id").primaryKey(),
-  materiaId: integer("materia_id").references(() => materias.id), // Liga o assunto à matéria
+  materiaId: integer("materia_id").references(() => materias.id),
   nome: varchar("nome", { length: 355 }).notNull(),
 });
 
@@ -34,8 +29,8 @@ export const aulas = pgTable("aulas", {
   id: serial("id").primaryKey(),
   materiaId: integer("materia_id").references(() => materias.id),
   assuntoId: integer("assunto_id").references(() => assuntos.id),
-  titulo: varchar("titulo", { length: 255 }).notNull(), // Nome da aula (Ex: "Teoria Geral - Parte 1")
-  videoUrl: text("video_url").notNull(), // O link do YouTube
+  titulo: varchar("titulo", { length: 255 }).notNull(),
+  videoUrl: text("video_url").notNull(),
 });
 
 export const concursos = pgTable("concursos", {
@@ -56,7 +51,7 @@ export const concursos = pgTable("concursos", {
 
 export const questoes = pgTable("questoes", {
   id: serial("id").primaryKey(),
-  tipo: varchar("tipo", { length: 50 }).notNull(), // Objetiva, Discursiva, Certo/Errado
+  tipo: varchar("tipo", { length: 50 }).notNull(),
   materiaId: integer("materia_id").references(() => materias.id),
   assuntoId: integer("assunto_id").references(() => assuntos.id),
   bancaId: integer("banca_id").references(() => bancas.id),
@@ -66,8 +61,6 @@ export const questoes = pgTable("questoes", {
   itemCorreto: text("item_correto").notNull(),
   itensErrados: jsonb("itens_errados").notNull(),
 });
-
-// --- TABELAS DO BETTER AUTH ---
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -121,25 +114,47 @@ export const verification = pgTable("verification", {
 });
 
 export const simulados = pgTable("simulados", {
-  id: serial("id").primaryKey(),
+  id: varchar("id", { length: 50 }).primaryKey(),
   userId: text("user_id")
     .notNull()
-    .references(() => user.id), // Link com o usuário do Better Auth
-  titulo: varchar("titulo", { length: 255 }).notNull(), // Ex: "Treino Polícia Civil"
+    .references(() => user.id),
+  titulo: varchar("titulo", { length: 255 }).notNull(),
   quantidadeQuestoes: integer("quantidade_questoes").notNull(),
-  status: varchar("status", { length: 50 }).default("Pendente").notNull(), // Pendente, Em Andamento, Concluido
+  status: varchar("status", { length: 50 }).default("Pendente").notNull(),
   acertos: integer("acertos").default(0),
   criadoEm: timestamp("criado_em").defaultNow(),
 });
 
 export const simuladoQuestoes = pgTable("simulado_questoes", {
   id: serial("id").primaryKey(),
-  simuladoId: integer("simulado_id")
+  simuladoId: varchar("simulado_id", { length: 50 })
     .notNull()
     .references(() => simulados.id, { onDelete: "cascade" }),
   questaoId: integer("questao_id")
     .notNull()
     .references(() => questoes.id),
-  respostaUsuario: text("resposta_usuario"), // A alternativa que o aluno marcou
-  isCorreta: boolean("is_correta"), // Se ele acertou ou errou (null se ainda não respondeu)
+  respostaUsuario: text("resposta_usuario"),
+  isCorreta: boolean("is_correta"),
+});
+
+export const editais = pgTable("editais", {
+  id: varchar("id", { length: 50 }).primaryKey(),
+  titulo: varchar("titulo", { length: 255 }).notNull(),
+  descricao: text("descricao"),
+  banca: varchar("banca", { length: 100 }),
+  status: varchar("status", { length: 50 }).default("Rascunho").notNull(),
+  criadoEm: timestamp("criado_em").defaultNow(),
+});
+
+export const editalAssuntos = pgTable("edital_assuntos", {
+  id: serial("id").primaryKey(),
+  editalId: varchar("edital_id", { length: 50 })
+    .notNull()
+    .references(() => editais.id, { onDelete: "cascade" }),
+  assuntoId: integer("assunto_id")
+    .notNull()
+    .references(() => assuntos.id, { onDelete: "cascade" }),
+  tipoConhecimento: varchar("tipo_conhecimento", { length: 50 })
+    .default("Básico")
+    .notNull(),
 });

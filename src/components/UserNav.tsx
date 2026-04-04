@@ -36,23 +36,21 @@ export default function UserNav() {
 
   if (isPending)
     return (
-      <div className="h-8 w-8 animate-pulse rounded-full bg-neutral-900" />
+      <div className="h-7 w-7 animate-pulse rounded-full bg-neutral-900" />
     );
 
   return (
-    // Removi a margem à direita (mr-3) que podia estar a causar bug visual
     <div
-      className="relative z-[100]"
+      className="relative z-50"
       onMouseEnter={() => setIsOpen(true)}
       onMouseLeave={() => setIsOpen(false)}
     >
-      {/* --- TRIGGER BUTTON (A Pílula) --- */}
       <div
         onClick={toggleMenu}
         className={`flex cursor-pointer items-center gap-2 rounded-full border bg-neutral-900 p-1 pr-3 duration-300 ${
           isOpen
             ? "border-neutral-700 ring-1 ring-neutral-700"
-            : "border-transparent hover:border-white/5"
+            : "border-transparent hover:border-neutral-700"
         }`}
       >
         {session ? (
@@ -70,8 +68,8 @@ export default function UserNav() {
             )}
           </div>
         ) : (
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-neutral-800 text-neutral-400 ring-1 ring-neutral-700">
-            <UserRound size={14} />
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-neutral-800 text-neutral-400 ring-1 ring-neutral-700">
+            <UserRound size={12} />
           </div>
         )}
 
@@ -85,11 +83,12 @@ export default function UserNav() {
       {/* --- DROPDOWN MENU --- */}
       {isOpen && (
         <div className="animate-in fade-in slide-in-from-top-2 absolute top-full right-0 w-60 pt-2 duration-200">
+          {/* Espaço invisível para não perder o hover ao mover o rato */}
           <div className="absolute -top-2 right-0 left-0 h-2" />
 
-          <div className="overflow-hidden rounded-xl border border-white/10 bg-neutral-950 p-1.5 shadow-[0_10px_40px_rgba(0,0,0,0.5)] backdrop-blur-xl">
+          <div className="overflow-hidden rounded-xl border border-neutral-800 bg-neutral-950/90 p-1.5 shadow-2xl shadow-black/50 backdrop-blur-xl">
             {/* Informações da Conta */}
-            <div className="mb-1 border-b border-white/5 px-3 py-2.5">
+            <div className="mb-1 border-b border-neutral-800/50 px-3 py-2.5">
               {session ? (
                 <>
                   <p className="truncate text-xs font-bold text-white">
@@ -137,7 +136,7 @@ export default function UserNav() {
             </div>
 
             {/* Ações (Sair / Entrar) */}
-            <div className="mt-1.5 border-t border-white/5 pt-1">
+            <div className="mt-1.5 border-t border-neutral-800/50 pt-1">
               {session ? (
                 <button
                   onClick={() => {
@@ -193,9 +192,9 @@ function MenuLink({
     <Link
       href={href}
       onClick={onClick}
-      className="group flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-neutral-400 transition-all hover:bg-white/5 hover:text-white"
+      className="group flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-neutral-400 transition-all hover:bg-neutral-800/80 hover:text-white"
     >
-      <span className="text-neutral-500 transition-colors group-hover:text-white">
+      <span className="text-neutral-500 transition-colors group-hover:text-emerald-500">
         {icon}
       </span>
       {label}

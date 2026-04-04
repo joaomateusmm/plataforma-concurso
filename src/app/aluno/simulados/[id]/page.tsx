@@ -15,7 +15,7 @@ export default async function SalaDeProvaPage(props: {
   params: Promise<{ id: string }>;
 }) {
   const params = await props.params;
-  const simuladoId = parseInt(params.id);
+  const simuladoId = params.id;
 
   // 1. Verifica se o simulado existe
   const simuladoResult = await db
@@ -67,7 +67,7 @@ export default async function SalaDeProvaPage(props: {
   });
 
   return (
-    <div className="max-w-5xl mx-auto mt-6 mb-12">
+    <div className="max-w-7xl mx-auto mt-6 mb-12">
       <ProvaClient simulado={simulado} questoes={questoesFormatadas} />
     </div>
   );

@@ -44,7 +44,7 @@ export default async function GerenciarConcursosPage(props: {
   }
 
   return (
-    <div className="max-w-6xl mb-12 mx-auto space-y-8">
+    <div className="max-w-full mx-12 space-y-12 mb-12">
       {/* Formulário */}
       <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200">
         <h1 className="text-3xl font-bold text-gray-800 mb-2">

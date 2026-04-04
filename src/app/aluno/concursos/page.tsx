@@ -7,10 +7,10 @@ import {
   CircleDollarSign,
   Users,
   ExternalLink,
-  Target,
   FileText,
   Newspaper,
   Clock,
+  BellRing,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -195,22 +195,22 @@ export default async function ConcursosAbertosPage() {
   );
 
   return (
-    <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in duration-500 mt-6 mb-12">
+    <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500 mt-6 mb-12">
       {/* CABEÇALHO */}
-      <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-8 text-white shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent pointer-events-none" />
-
-        <div className="relative z-10">
-          <h1 className="text-3xl font-bold mb-2 text-neutral-100 flex items-center gap-3">
-            <Target className="w-8 h-8 text-emerald-500" />
-            Concursos e Editais
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+          <h1 className="text-3xl font-bold text-white flex items-center gap-3 mb-2">
+            <BellRing className="w-8 h-8 text-emerald-500" />
+            Concursos Abertos
           </h1>
-          <p className="text-neutral-400 max-w-2xl text-lg">
+          <p className="text-neutral-400">
             Fique por dentro das melhores oportunidades. Acompanhe os editais
             abertos, próximos concursos e planeje os seus estudos.
           </p>
         </div>
       </div>
+
+      <div className="border-t mt-7 mb-9 border-neutral-800"></div>
 
       {listaConcursos.length === 0 ? (
         <div className="text-center p-16 bg-neutral-900 rounded-3xl border border-neutral-800">
@@ -227,11 +227,11 @@ export default async function ConcursosAbertosPage() {
           {/* SEÇÃO 1: INSCRIÇÕES ABERTAS */}
           {concursosAbertos.length > 0 && (
             <section className="space-y-6">
-              <div className="flex items-center gap-3 border-b border-neutral-800 pb-3">
-                <h2 className="text-2xl font-bold text-white tracking-tight">
-                  Inscrições Abertas
+              <div className="flex items-center border-b border-neutral-800 pb-3">
+                <h2 className="text-xl font-bold text-white tracking-tight">
+                  Inscrições Abertas:
                 </h2>
-                <span className="ml-2 rounded-md bg-neutral-800 px-2.5 py-0.5 text-xs font-bold text-neutral-400">
+                <span className="ml-2 rounded-md bg-neutral-800 px-2 py-0.5 text-xs font-bold text-neutral-400">
                   {concursosAbertos.length}
                 </span>
               </div>
@@ -247,11 +247,11 @@ export default async function ConcursosAbertosPage() {
           {/* SEÇÃO 2: EM BREVE */}
           {concursosEmBreve.length > 0 && (
             <section className="space-y-6">
-              <div className="flex items-center gap-3 border-b border-neutral-800 pb-3">
-                <h2 className="text-2xl font-bold text-white tracking-tight">
-                  Próximos Concursos
+              <div className="flex items-center border-b border-neutral-800 pb-3">
+                <h2 className="text-xl font-bold text-white tracking-tight">
+                  Próximos Concursos:
                 </h2>
-                <span className="ml-2 rounded-md bg-neutral-800 px-2.5 py-0.5 text-xs font-bold text-neutral-400">
+                <span className="ml-2 rounded-md bg-neutral-800 px-2 py-0.5 text-xs font-bold text-neutral-400">
                   {concursosEmBreve.length}
                 </span>
               </div>
