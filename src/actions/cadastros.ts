@@ -2,7 +2,7 @@
 "use server";
 
 import { db } from "../db/index";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { materias, bancas, assuntos } from "../db/schema";
 import { revalidatePath } from "next/cache";
 
@@ -114,4 +114,74 @@ export async function atualizarAssunto(formData: FormData) {
     .where(eq(assuntos.id, id));
 
   revalidatePath("/admin/assuntos");
+}
+
+export async function deletarMateriasEmMassa(ids: number[]) {
+  try {
+    if (!ids || ids.length === 0)
+      return { error: "Nenhuma matéria selecionada." };
+
+    await db.delete(materias).where(inArray(materias.id, ids));
+
+    revalidatePath("/admin/materias");
+    return { success: true };
+  } catch (error) {
+    console.error("Erro ao deletar matérias em massa:", error);
+    return { error: "Erro interno ao deletar matérias." };
+  }
+}
+
+export async function deletarAssuntosEmMassa(ids: number[]) {
+  try {
+    if (!ids || ids.length === 0)
+      return { error: "Nenhum assunto selecionado." };
+
+    await db.delete(assuntos).where(inArray(assuntos.id, ids));
+
+    revalidatePath("/admin/assuntos");
+    return { success: true };
+  } catch (error) {
+    console.error("Erro ao deletar assuntos em massa:", error);
+    return { error: "Erro interno ao deletar assuntos." };
+  }
+}
+
+export async function importarAssuntosJson(fileText: string) {
+  try {
+    const data = JSON.parse(fileText);
+
+    if (!Array.isArray(data)) {
+      return { error: "O arquivo JSON deve ser uma lista (array) de objetos." };
+    }
+
+    const insertData = [];
+    for (const item of data) {
+      // Verifica se o objeto tem o nome e o ID da matéria
+      if (item.nome && item.materiaId) {
+        insertData.push({
+          nome: String(item.nome).trim(),
+          materiaId: Number(item.materiaId),
+        });
+      }
+    }
+
+    if (insertData.length === 0) {
+      return {
+        error:
+          'Nenhum assunto válido encontrado. O formato correto é: [{ "nome": "Crimes contra a vida", "materiaId": 1 }]',
+      };
+    }
+
+    // Insere tudo de uma vez no banco de dados
+    await db.insert(assuntos).values(insertData);
+
+    revalidatePath("/admin/assuntos");
+    return { success: true, count: insertData.length };
+  } catch (error) {
+    console.error("Erro na importação de assuntos via JSON:", error);
+    return {
+      error:
+        "Falha ao processar o arquivo. Verifique se a formatação JSON está correta.",
+    };
+  }
 }

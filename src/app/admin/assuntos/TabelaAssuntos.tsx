@@ -1,0 +1,158 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { Edit, Trash2, Loader2, CheckSquare } from "lucide-react";
+import { toast } from "sonner";
+import { deletarAssuntosEmMassa } from "../../../actions/cadastros"; // A action que acabou de criar
+
+export function TabelaAssuntos({ listaAssuntos, assuntoEditandoId }: any) {
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const isAllSelected =
+    listaAssuntos.length > 0 && selectedIds.length === listaAssuntos.length;
+
+  const toggleAll = () => {
+    if (isAllSelected) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(listaAssuntos.map((a: any) => a.id));
+    }
+  };
+
+  const toggleOne = (id: number) => {
+    setSelectedIds((prev) =>
+      prev.includes(id)
+        ? prev.filter((selectedId) => selectedId !== id)
+        : [...prev, id],
+    );
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedIds.length === 0) return;
+
+    if (
+      !confirm(
+        `Tem a certeza que deseja excluir ${selectedIds.length} assunto(s)? Esta ação não pode ser desfeita!`,
+      )
+    ) {
+      return;
+    }
+
+    setIsDeleting(true);
+    const res = await deletarAssuntosEmMassa(selectedIds);
+    setIsDeleting(false);
+
+    if (res.error) {
+      toast.error("Erro", { description: res.error });
+    } else {
+      toast.success("Sucesso", {
+        description: "Assuntos excluídos com sucesso!",
+      });
+      setSelectedIds([]); // Limpa a seleção após o sucesso
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
+      {/* TOOLBAR DE AÇÕES (Aparece apenas quando há itens selecionados) */}
+      {selectedIds.length > 0 && (
+        <div className="bg-blue-50/50 border-b border-blue-100 p-4 flex items-center justify-between animate-in slide-in-from-top-2">
+          <div className="flex items-center gap-2 text-blue-700 font-bold text-sm">
+            <CheckSquare className="w-5 h-5" />
+            {selectedIds.length} assunto(s) selecionado(s)
+          </div>
+          <button
+            onClick={handleDeleteSelected}
+            disabled={isDeleting}
+            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-bold text-sm transition-colors shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            {isDeleting ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Trash2 className="w-4 h-4" />
+            )}
+            Excluir Selecionados
+          </button>
+        </div>
+      )}
+
+      <table className="w-full text-left border-collapse">
+        <thead>
+          <tr className="bg-gray-50 border-b border-gray-200">
+            <th className="p-5 w-12 text-center">
+              <input
+                type="checkbox"
+                checked={isAllSelected}
+                onChange={toggleAll}
+                className="w-4 h-4 cursor-pointer accent-blue-600 rounded border-gray-300"
+              />
+            </th>
+            <th className="p-5 font-bold text-gray-500 text-xs uppercase tracking-wider">
+              ID
+            </th>
+            <th className="p-5 font-bold text-gray-500 text-xs uppercase tracking-wider">
+              Matéria Vinculada
+            </th>
+            <th className="p-5 font-bold text-gray-500 text-xs uppercase tracking-wider">
+              Nome do Assunto
+            </th>
+            <th className="p-5 font-bold text-gray-500 text-xs uppercase tracking-wider text-center w-32">
+              Ações
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {listaAssuntos.map((assunto: any) => {
+            const isSelected = selectedIds.includes(assunto.id);
+            const isEditing = assuntoEditandoId === assunto.id;
+
+            return (
+              <tr
+                key={assunto.id}
+                className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
+                  isSelected ? "bg-blue-50/30" : isEditing ? "bg-yellow-50" : ""
+                }`}
+              >
+                <td className="p-5 text-center">
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => toggleOne(assunto.id)}
+                    className="w-4 h-4 cursor-pointer accent-blue-600 rounded border-gray-300"
+                  />
+                </td>
+                <td className="p-5 text-sm text-gray-400">#{assunto.id}</td>
+                <td className="p-5 text-sm text-blue-600 font-bold">
+                  {assunto.materiaNome}
+                </td>
+                <td className="p-5 text-sm font-medium text-gray-800">
+                  {assunto.nome}
+                </td>
+                <td className="p-5 flex justify-center gap-2">
+                  <Link
+                    href={`/admin/assuntos?edit=${assunto.id}`}
+                    className="p-2 text-blue-500 hover:bg-blue-100 hover:text-blue-700 rounded-lg transition-colors"
+                    title="Editar Assunto"
+                  >
+                    <Edit className="w-5 h-5" />
+                  </Link>
+                </td>
+              </tr>
+            );
+          })}
+
+          {listaAssuntos.length === 0 && (
+            <tr>
+              <td colSpan={5} className="p-10 text-center text-gray-500">
+                Nenhum assunto cadastrado ainda.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
