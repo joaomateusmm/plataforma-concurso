@@ -1,34 +1,62 @@
 // src/app/aluno/simulados/novo/page.tsx
 import { db } from "../../../../db/index";
-import { bancas, materias, assuntos } from "../../../../db/schema";
-import { NovoSimuladoForm } from "./novo-simulado-form";
+import { bancas, materias, assuntos, questoes } from "../../../../db/schema";
+import { eq, sql } from "drizzle-orm";
+import { NovoSimuladoForm } from "./novo-simulado-form"; // Ajuste o nome do ficheiro se necessário
 import { BrainCircuit } from "lucide-react";
 
 export default async function NovoSimuladoPage() {
-  // Busca todas as opções disponíveis no banco de dados para o aluno escolher
-  const listaBancas = await db.select().from(bancas);
-  const listaMaterias = await db.select().from(materias);
-  const listaAssuntos = await db.select().from(assuntos);
+  // 1. Busca Bancas + Contagem de Questões vinculadas
+  const listaBancas = await db
+    .select({
+      id: bancas.id,
+      nome: bancas.nome,
+      quantidadeQuestoes: sql<number>`count(${questoes.id})`.mapWith(Number),
+    })
+    .from(bancas)
+    .leftJoin(questoes, eq(bancas.id, questoes.bancaId))
+    .groupBy(bancas.id);
+
+  // 2. Busca Matérias + Contagem de Questões vinculadas
+  const listaMaterias = await db
+    .select({
+      id: materias.id,
+      nome: materias.nome,
+      quantidadeQuestoes: sql<number>`count(${questoes.id})`.mapWith(Number),
+    })
+    .from(materias)
+    .leftJoin(questoes, eq(materias.id, questoes.materiaId))
+    .groupBy(materias.id);
+
+  // 3. Busca Assuntos + Contagem de Questões vinculadas
+  const listaAssuntos = await db
+    .select({
+      id: assuntos.id,
+      nome: assuntos.nome,
+      quantidadeQuestoes: sql<number>`count(${questoes.id})`.mapWith(Number),
+    })
+    .from(assuntos)
+    .leftJoin(questoes, eq(assuntos.id, questoes.assuntoId))
+    .groupBy(assuntos.id);
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-500 mt-6">
-      {/* CABEÇALHO */}
-      <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-8 text-white shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="absolute inset-0 bg-linear-to-br from-emerald-500/5 to-transparent pointer-events-none" />
-
-        <div className="relative z-10">
-          <h1 className="text-3xl font-bold mb-2 text-neutral-100 flex items-center gap-3">
+    <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500 mt-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+          <h1 className="text-3xl font-bold text-white flex items-center gap-3 mb-2">
             <BrainCircuit className="w-8 h-8 text-emerald-500" />
-            Gerador de Simulados
+            Criar Simulado
           </h1>
-          <p className="text-neutral-400 max-w-2xl text-lg">
-            Crie provas personalizadas escolhendo as bancas, matérias e assuntos
-            específicos que você precisa treinar hoje.
+          <p className="text-neutral-400">
+            Crie o seu próprio simulado. Escolha sua Banca, Matérias e Questões,
+            se prepare de forma consciente para sua prova.
           </p>
         </div>
       </div>
 
-      {/* FORMULÁRIO INTERATIVO */}
+      <div className="border-t mt-7 mb-9 border-neutral-800"></div>
+
+      {/* A DIV estática saiu daqui. Agora o formulário gere o layout de duas colunas! */}
       <NovoSimuladoForm
         bancas={listaBancas}
         materias={listaMaterias}

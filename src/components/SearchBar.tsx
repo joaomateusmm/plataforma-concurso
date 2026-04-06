@@ -191,7 +191,7 @@ export default function SearchBar() {
     <>
       <div
         onClick={() => setIsOpen(true)}
-        className="group relative flex h-8 w-full max-w-sm cursor-pointer items-center justify-between rounded-xl border hover:ring-2 ring-neutral-700 border-neutral-800 bg-neutral-900/50 px-3 duration-300 hover:bg-neutral-900"
+        className="group relative hidden h-9 w-64 cursor-text items-center justify-between rounded-full bg-neutral-900 px-3 duration-300 hover:ring-1 hover:ring-neutral-800 md:flex"
       >
         <div className="flex items-center">
           <Search className="mr-2 h-3 w-3 text-neutral-500" />
@@ -199,12 +199,12 @@ export default function SearchBar() {
           <span className="text-xs font-medium text-neutral-500 transition-colors group-hover:text-neutral-400 hidden sm:block">
             Pesquisar na plataforma...
           </span>
-          <span className="text-sm font-medium text-neutral-500 transition-colors group-hover:text-neutral-400 block sm:hidden">
-            Pesquisar...
-          </span>
         </div>
-        <div className=" items-center gap-1 text-[10px] font-bold text-neutral-600 hidden sm:flex">
-          <kbd className="rounded-full border flex items-center justify-center border-neutral-800 bg-neutral-950 w-5 h-5">
+        <div className="flex items-center gap-1 text-[10px] font-bold text-neutral-600">
+          <kbd className="rounded bg-neutral-800 px-1.5 py-0.5 font-sans">
+            ⌘
+          </kbd>
+          <kbd className="rounded bg-neutral-800 px-1.5 py-0.5 font-sans">
             K
           </kbd>
         </div>

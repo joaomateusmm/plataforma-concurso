@@ -49,12 +49,12 @@ export default function UserNav() {
         onClick={toggleMenu}
         className={`flex cursor-pointer items-center gap-2 rounded-full border bg-neutral-900 p-1 pr-3 duration-300 ${
           isOpen
-            ? "border-neutral-700 ring-1 ring-neutral-700"
+            ? "border-neutral-700 ring-0.5 ring-neutral-700"
             : "border-transparent hover:border-neutral-700"
         }`}
       >
         {session ? (
-          <div className="relative flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-800 text-[10px] font-bold text-white ring-1 ring-neutral-700">
+          <div className="relative flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-800 text-[10px] font-bold text-white">
             {session.user.image ? (
               <Image
                 src={session.user.image}
@@ -68,7 +68,7 @@ export default function UserNav() {
             )}
           </div>
         ) : (
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-neutral-800 text-neutral-400 ring-1 ring-neutral-700">
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-neutral-800 text-neutral-400 ring-0.5 ring-neutral-700">
             <UserRound size={12} />
           </div>
         )}

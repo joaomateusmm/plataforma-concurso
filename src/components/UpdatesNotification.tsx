@@ -12,7 +12,7 @@ type Update = {
 };
 
 export default function UpdatesNotification() {
-  const [updates, setUpdates] = useState<Update[]>([]);
+  const [updates] = useState<Update[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -45,14 +45,12 @@ export default function UpdatesNotification() {
 
   return (
     <div className="relative" ref={dropdownRef}>
-      {/* BOTÃO DO SINO */}
       <button
         onClick={handleToggle}
-        className="relative flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-neutral-900 text-neutral-400 ring-neutral-700 duration-300 hover:text-white hover:ring-2 focus:outline-none active:scale-95"
+        className="relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-neutral-900 text-neutral-400 ring-neutral-700 duration-300 hover:text-white hover:ring-2 focus:outline-none active:scale-95"
       >
-        <Bell className="h-3 w-3" />
+        <Bell className="h-3.5 w-3.5" />
 
-        {/* BOLINHA DE NOTIFICAÇÃO (BADGE) COM LIMITE DE 9 */}
         {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-neutral-100 text-[10px] font-bold text-black shadow-[0_0_10px_rgba(99,102,241,0.5)]">
             {unreadCount > 9 ? "9+" : unreadCount}
@@ -63,7 +61,7 @@ export default function UpdatesNotification() {
       {/* DROPDOWN MENU */}
       {isOpen && (
         <div
-          className="animate-in fade-in slide-in-from-top-2 absolute right-0 z-[100] mt-2 w-80 origin-top-right rounded-xl border border-neutral-800 bg-neutral-950 p-2 shadow-2xl"
+          className="animate-in fade-in slide-in-from-top-2 absolute right-0 z-100 mt-2 w-80 origin-top-right rounded-xl border border-neutral-800 bg-neutral-950 p-2 shadow-2xl"
           data-lenis-prevent="true"
         >
           <div className="mb-2 flex items-center justify-between border-b border-neutral-800 px-3 py-2">
@@ -72,7 +70,7 @@ export default function UpdatesNotification() {
           </div>
 
           {/* ÁREA COM SCROLL ATIVO */}
-          <div className="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-neutral-800 max-h-[350px] overflow-y-auto overscroll-contain pr-1">
+          <div className="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-neutral-800 max-h-87.5 overflow-y-auto overscroll-contain pr-1">
             {updates.length === 0 ? (
               <div className="p-4 text-center text-sm text-neutral-500">
                 Nenhuma atualização recente.
