@@ -6,11 +6,9 @@ import Link from "next/link";
 import Image from "next/image"; // <-- Importação correta do Next Image
 import { toast } from "sonner";
 import {
-  Building2,
   ArrowRight,
   Loader2,
   Sparkles,
-  Target,
   NotepadText,
 } from "lucide-react";
 import { obterEditaisPublicados } from "@/actions/editais";

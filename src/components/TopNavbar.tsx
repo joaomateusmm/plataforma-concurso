@@ -12,7 +12,7 @@ export default function TopNavbar() {
       {/* --- BANNER (NOTICE) --- */}
       <div className="relative flex h-9 items-center justify-center overflow-hidden bg-neutral-950 px-4">
         {/* BACKGROUND: Grainient */}
-        <div className="absolute inset-0 z-0 opacity-70">
+        <div className="absolute inset-0 z-0 opacity-30">
           <div style={{ width: "100%", height: "100%", position: "relative" }}>
             <Grainient
               color1="#9effa5"
@@ -42,14 +42,12 @@ export default function TopNavbar() {
         </div>
 
         <div className="relative z-10 flex items-center gap-3 text-sm md:text-[13px]">
-          <span className="flex items-center gap-1 text-white font-medium">
+          <span className="flex items-center gap-1 text-white/80 font-medium">
             <span className="font-sans">
-              <a className="text-neutral-900 font-bold">
-                Promoção de inauguração!
-              </a>{" "}
+              <a className="font-bold text-white">Promoção de inauguração!</a>{" "}
               Adquira todas as funções da plataforma por{" "}
-              <a className="text-neutral-900 font-bold">50%</a> do valor! Válido
-              até 06/06.
+              <a className=" font-bold text-white">50%</a> do valor! Válido até
+              06/06.
             </span>
           </span>
         </div>
@@ -58,7 +56,7 @@ export default function TopNavbar() {
       <header className="flex h-14 w-full items-center border-b border-neutral-800 bg-neutral-950/60 backdrop-blur-md transition-all duration-300">
         <div className="flex w-full justify-end gap-4 items-center mr-48">
           <UpdatesNotification />
-          
+
           <SearchBar />
 
           <div className=" h-6 border-r border-neutral-800"></div>
