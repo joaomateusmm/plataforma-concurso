@@ -3,18 +3,17 @@
 
 import {
   BookOpen,
-  CircleFadingPlus,
   FileText,
-  Home,
   Layers,
   Library,
   Video,
   BellRing,
   NotepadText,
+  LayoutDashboard,
 } from "lucide-react";
 import Link from "next/link";
-// 1. Importamos o usePathname para saber em que página estamos
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 
 import {
   Sidebar,
@@ -23,13 +22,11 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
+  SidebarFooter,
 } from "@/components/ui/sidebar";
 
 const nav2Items = [
-  { title: "Dashboard", url: "/admin", icon: Home },
+  { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
   { title: "Gerenciar Questões", url: "/admin/questoes", icon: FileText },
   { title: "Gerenciar Bancas", url: "/admin/bancas", icon: Library },
   { title: "Gerenciar Matérias", url: "/admin/materias", icon: Layers },
@@ -40,59 +37,99 @@ const nav2Items = [
 ];
 
 export function AppSidebar() {
-  // 2. Lemos a URL atual do navegador (Ex: "/admin/materias")
   const pathname = usePathname();
 
+  // Lógica exata usada no Aluno para determinar o link ativo
+  const isActive = (url: string) => {
+    if (pathname === url) return true;
+    if (url === "/admin") return pathname === "/admin";
+    return pathname?.startsWith(url);
+  };
+
   return (
-    <Sidebar>
-      <SidebarHeader className="p-5 border-b border-gray-100 flex flex-row">
-        <Link
-          className="flex items-center justify-center gap-2 hover:scale-[1.02] duration-300"
-          href="/"
+    <>
+      <style>{`
+        .hide-native-scroll::-webkit-scrollbar {
+          display: none !important;
+          width: 0 !important;
+          height: 0 !important;
+        }
+        .hide-native-scroll {
+          scrollbar-width: none !important;
+          -ms-overflow-style: none !important;
+        }
+      `}</style>
+
+      <Sidebar
+        data-lenis-prevent="true"
+        className="border-r z-50 border-gray-200 bg-white text-gray-700 h-full flex flex-col shadow-sm"
+      >
+        {/* CABEÇALHO COM LOGOTIPO */}
+        <SidebarHeader className=" border-b border-gray-100 bg-white">
+          <Link
+            className="flex items-center justify-center hover:scale-105 duration-300 w-full"
+            href="/"
+          >
+            <Image
+              className=""
+              src="/logo.svg"
+              width={55}
+              height={55}
+              alt={""}
+            />
+            <span className="text-xl font-bold text-neutral-700 tracking-tight leading-tight">
+              +Aprovado
+            </span>
+          </Link>
+        </SidebarHeader>
+
+        {/* CONTEÚDO (LINKS COM DESIGN DO ALUNO EM TEMA CLARO) */}
+        <SidebarContent
+          data-force-scroll="true"
+          className="hide-native-scroll relative flex-1 overflow-x-hidden overflow-y-auto bg-white"
+          style={{ overscrollBehavior: "contain" }}
         >
-          <div className="w-10 h-10 bg-green-600 rounded-md shadow-md flex items-center justify-center text-white">
-            <CircleFadingPlus />
-          </div>
-          <span className="text-lg font-bold text-green-600">+Aprovado</span>
-        </Link>
-      </SidebarHeader>
+          <div className="px-4 pt-3">
+            <SidebarGroup className="mb-8 p-0">
+              <SidebarGroupLabel className="mb-3 px-0 text-xs font-bold tracking-widest text-gray-400 uppercase bg-transparent hover:bg-transparent">
+                Menu de Gestão
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <ul className="ml-2 flex flex-col gap-1 border-l border-gray-200 text-sm">
+                  {nav2Items.map((item) => {
+                    const active = isActive(item.url);
 
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Menu de Visualização</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {nav2Items.map((item) => {
-                // 3. Verificamos se este item é a página ativa
-                // Fazemos uma verificação exata para o Dashboard ("/") e "começa com" para as outras rotas (para manter ativo mesmo ao editar ?edit=1)
-                const isActive =
-                  item.url === "/admin"
-                    ? pathname === "/admin"
-                    : pathname?.startsWith(item.url);
-
-                return (
-                  <SidebarMenuItem
-                    // 4. Usamos crases (template literals) para injetar classes condicionais no Tailwind
-                    className={`my-1.5 active:scale-95 p-1 font-medium duration-200 mx-1 rounded-md shadow-sm ${
-                      isActive
-                        ? "bg-neutral-100/30 text-neutral-800 shadow-neutral-200 hover:bg-neutral-200" // ESTILO QUANDO ATIVO
-                        : "bg-neutral-100/30 text-neutral-800 shadow-neutral-200 hover:bg-neutral-200" // ESTILO QUANDO INATIVO
-                    }`}
-                    key={item.title}
-                  >
-                    <SidebarMenuButton asChild>
-                      <Link href={item.url}>
-                        <item.icon className="w-5 h-5" />
-                        <span>{item.title}</span>
+                    return (
+                      <Link href={item.url} key={item.title}>
+                        <li
+                          className={`group relative -ml-px flex cursor-pointer items-center gap-3 py-2.5 pr-2 pl-4 transition-all duration-200 before:absolute before:top-1/2 before:left-0 before:h-4 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:transition-colors hover:text-gray-900 ${
+                            active
+                              ? "font-bold text-emerald-600 before:bg-emerald-600"
+                              : "text-gray-500 font-medium before:bg-transparent hover:before:bg-gray-300"
+                          }`}
+                        >
+                          <item.icon className="w-4 h-4 shrink-0" />
+                          <span className="truncate">{item.title}</span>
+                        </li>
                       </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-    </Sidebar>
+                    );
+                  })}
+                </ul>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </div>
+        </SidebarContent>
+
+        {/* RODAPÉ */}
+        <SidebarFooter className="border-t border-gray-100 bg-white shrink-0 p-4">
+          <div className="flex items-center justify-between text-gray-400">
+            <span className="text-[10px] font-medium truncate pr-2">
+              © 2026 +Aprovado. <br />
+              Todos os direitos reservados.
+            </span>
+          </div>
+        </SidebarFooter>
+      </Sidebar>
+    </>
   );
 }

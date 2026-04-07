@@ -45,8 +45,11 @@ export const concursos = pgTable("concursos", {
   status: varchar("status", { length: 50 }).notNull(),
   linkEdital: text("link_edital"),
   linkInscricao: text("link_inscricao"),
+  linkCronograma: text("link_cronograma"),
   periodoInscricao: varchar("periodo_inscricao", { length: 255 }),
   periodoIsencao: varchar("periodo_isencao", { length: 255 }),
+  dataProva: varchar("data_prova", { length: 255 }),
+  thumbnailUrl: text("thumbnail_url"),
 });
 
 export const questoes = pgTable("questoes", {

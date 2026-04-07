@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/app/aluno/concursos/ListaConcursos.tsx
 "use client";
 
+import Image from "next/image";
 import * as React from "react";
 import { useState, useMemo } from "react";
 import {
@@ -16,6 +18,8 @@ import {
   CircleDashed,
   Bell,
   Megaphone,
+  CalendarDays,
+  Briefcase, // <-- Adicionado ícone para o Cargo
 } from "lucide-react";
 import Link from "next/link";
 
@@ -30,47 +34,60 @@ import {
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 
+// --------------------------------------------------------------------------------
+// FUNÇÕES AUXILIARES
+// --------------------------------------------------------------------------------
 function extrairSalario(texto: string | null): number {
   if (!texto) return 0;
-  // Expressão regular para achar padrões monetários
   const numeros = texto.match(/\d{1,3}(\.\d{3})*(,\d{2})?/g);
   if (!numeros) return 0;
-
-  // Converte todos os resultados encontrados para número e pega o maior
   const valores = numeros.map((n) =>
     parseFloat(n.replace(/\./g, "").replace(",", ".")),
   );
   return Math.max(...valores);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const getStatusBadge = (status: string) => {
+  switch (status) {
+    case "Inscrições Abertas":
+      return "text-neutral-400 border-none";
+    case "Em Breve":
+    case "Edital Em Breve":
+      return "text-neutral-400 border-none";
+    case "Inscrições Encerradas":
+      return "text-neutral-400 border-none";
+    case "Encerrado":
+      return "text-neutral-400 border-none";
+    default:
+      return "text-neutral-400 border-none";
+  }
+};
+
 function ConcursoCard({ concurso }: { concurso: any }) {
   const isEmBreve =
     concurso.status === "Em Breve" || concurso.status === "Edital Em Breve";
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "Inscrições Abertas":
-        return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
-      case "Em Breve":
-      case "Edital Em Breve":
-        return "bg-yellow-500/10 text-yellow-400 border-yellow-500/20";
-      case "Inscrições Encerradas":
-        return "bg-orange-500/10 text-orange-400 border-orange-500/20";
-      case "Encerrado":
-        return "bg-red-500/10 text-red-400 border-red-500/20";
-      default:
-        return "bg-neutral-800 text-neutral-400 border-neutral-700";
-    }
-  };
+  const isInscricoesEncerradas = concurso.status === "Inscrições Encerradas";
+  const isEncerradoTudo = concurso.status === "Encerrado";
 
   return (
-    <div className="bg-neutral-900 rounded-2xl border border-neutral-800 overflow-hidden flex flex-col hover:border-neutral-700 hover:bg-neutral-900/80 transition-all duration-300 group h-full">
-      <div className="p-5 border-b border-neutral-800/50 flex items-center justify-between bg-neutral-950/30">
+    <div className="bg-neutral-900 rounded-2xl border border-neutral-800 overflow-hidden flex flex-col hover:border-neutral-700 hover:bg-neutral-900/80 transition-all duration-300 group h-full relative">
+      {concurso.thumbnailUrl && (
+        <div className="absolute bottom-0 right-0 w-78 h-78 overflow-hidden z-0 pointer-events-none opacity-50  transition-opacity duration-500">
+          <Image
+            src={concurso.thumbnailUrl}
+            alt={concurso.orgao}
+            fill
+            className="object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-linear-to-t from-transparent via-neutral-900/40 to-neutral-900" />
+          <div className="absolute inset-0 bg-linear-to-r from-neutral-900 via-neutral-900/40 to-transparent" />
+        </div>
+      )}
+
+      {/* HEADER DO CARD (STATUS E BANCA) */}
+      <div className="px-6 py-3 border-b border-neutral-800/50 flex items-center justify-between bg-neutral-950/30 relative z-10">
         <span
-          className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getStatusBadge(
-            concurso.status,
-          )}`}
+          className={`py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getStatusBadge(concurso.status)}`}
         >
           {concurso.status}
         </span>
@@ -82,13 +99,14 @@ function ConcursoCard({ concurso }: { concurso: any }) {
         </div>
       </div>
 
-      <div className="flex px-6 pt-4 ">
+      <div className="flex px-6 pt-4 relative z-10">
         <button className="bg-neutral-800 flex gap-2 font-medium items-center py-1 px-2 text-xs rounded-md text-neutral-500 hover:text-neutral-200 duration-300 shadow-sm hover:shadow-md cursor-pointer">
           <Bell className="h-3 w-3" /> Ativar Lembrete
         </button>
       </div>
 
-      <div className="px-6 py-4 flex-1 flex flex-col gap-4">
+      {/* CORPO DO CARD (INFORMAÇÕES) */}
+      <div className="px-6 py-4 flex-1 flex flex-col gap-4 relative z-10">
         <div>
           <h2 className="text-xl font-extrabold text-neutral-200 group-hover:text-emerald-400 transition-colors leading-tight">
             {concurso.orgao}
@@ -103,6 +121,9 @@ function ConcursoCard({ concurso }: { concurso: any }) {
             {concurso.descricao}
           </p>
         )}
+        <p className="text-neutral-500 font-medium text-xs -mt-3 hover:underline cursor-pointer">
+          ver mais...
+        </p>
 
         <div className="grid grid-cols-2 gap-y-3 gap-x-2 mt-2">
           <div className="flex items-center gap-2 text-neutral-300">
@@ -128,8 +149,10 @@ function ConcursoCard({ concurso }: { concurso: any }) {
           </div>
         </div>
 
-        {(concurso.periodoInscricao || concurso.periodoIsencao) && (
-          <div className="border-t border-neutral-800/60 pt-4 mt-2 space-y-2">
+        {(concurso.periodoInscricao ||
+          concurso.periodoIsencao ||
+          concurso.dataProva) && (
+          <div className="border-t border-neutral-800/60 md:grid md:grid-cols-2 pt-4 mt-2 space-y-3">
             {concurso.periodoInscricao && (
               <div className="flex items-start gap-2">
                 <Clock className="w-3.5 h-3.5 text-neutral-500 mt-0.5 shrink-0" />
@@ -152,105 +175,211 @@ function ConcursoCard({ concurso }: { concurso: any }) {
                 </p>
               </div>
             )}
+            {concurso.dataProva && (
+              <div className="flex items-start gap-2">
+                <CalendarDays className="w-3.5 h-3.5 text-neutral-500 mt-0.5 shrink-0" />
+                <p className="text-[11px] text-neutral-400 leading-tight">
+                  <span className="font-bold text-neutral-300 block">
+                    Data da Prova:
+                  </span>
+                  {concurso.dataProva}
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>
 
-      <div className="p-5 pt-0 mt-auto flex flex-col gap-3">
-        {/* BOTÃO PRINCIPAL (Inscrições vs Em Breve) */}
+      {/* AÇÕES (BOTÕES E LINKS INFERIORES) */}
+      <div className="p-5 pt-0 mt-auto flex flex-col gap-3 relative z-10">
+        {/* BOTÃO PRINCIPAL */}
         {isEmBreve ? (
           <button
             disabled
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all duration-300 bg-neutral-800/50 text-neutral-500 cursor-not-allowed border border-neutral-800"
+            className="w-full flex items-center justify-center gap-2 backdrop-blur-md py-3 rounded-xl font-bold text-sm transition-all duration-300 bg-neutral-800 text-white/40"
           >
             Em Breve...
+          </button>
+        ) : isInscricoesEncerradas ? (
+          <button
+            disabled
+            className="w-full flex items-center justify-center gap-2 backdrop-blur-md py-3 rounded-xl font-bold text-sm transition-all duration-300 bg-neutral-800 text-white/40"
+          >
+            Inscrições Encerradas <ExternalLink className="w-4 h-4" />
+          </button>
+        ) : isEncerradoTudo ? (
+          <button
+            disabled
+            className="w-full flex items-center justify-center gap-2 backdrop-blur-md py-3 rounded-xl font-bold text-sm transition-all duration-300 bg-neutral-800 text-white/40"
+          >
+            Concurso Encerrado
           </button>
         ) : (
           <a
             href={concurso.linkInscricao || "#"}
             target={concurso.linkInscricao ? "_blank" : "_self"}
             rel="noopener noreferrer"
-            className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all duration-300 ${
-              concurso.status === "Inscrições Abertas"
-                ? "bg-emerald-600 text-white hover:bg-emerald-500 shadow-lg shadow-emerald-900/20"
-                : "bg-neutral-800 text-neutral-300 hover:bg-neutral-700 hover:text-white border border-neutral-700"
-            }`}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all duration-300 bg-emerald-600 text-white hover:bg-emerald-500 shadow-lg shadow-emerald-900/20"
           >
-            {concurso.status === "Inscrições Abertas"
-              ? "Fazer Inscrição"
-              : "Ver Detalhes da Inscrição"}
-            <ExternalLink className="w-4 h-4" />
+            Fazer Inscrição <ExternalLink className="w-4 h-4" />
           </a>
         )}
 
-        {/* LÓGICA ATUALIZADA DOS LINKS INFERIORES */}
-        {isEmBreve ? (
-          <div className="flex flex-col md:flex-row gap-3 items-center justify-center">
-            <Link
-              href="/aluno/noticias"
-              className="flex items-center justify-center gap-1.5 text-xs font-medium text-neutral-500/80 hover:text-neutral-400 transition-colors py-1 group/noticia"
-            >
-              <Megaphone className="w-3.5 h-3.5" />
-              <span className="group-hover/noticia:underline underline-offset-2">
-                Acompanhe as Notícias
-              </span>
-            </Link>
-
-            {/* Lógica: Só mostra se houver linkEdital */}
-            {concurso.linkEdital && (
-              <a
-                href={concurso.linkEdital}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-1.5 text-xs font-medium text-neutral-500 hover:text-neutral-400 transition-colors py-1 group/noticia"
+        {/* LINKS SECUNDÁRIOS */}
+        <div className="flex flex-wrap gap-x-4 gap-y-2 items-center justify-center mt-1">
+          {/* LÓGICA: EM BREVE */}
+          {isEmBreve && (
+            <>
+              <Link
+                href="/aluno/noticias"
+                className="flex items-center gap-1.5 text-xs font-medium text-neutral-400 hover:text-emerald-400 transition-colors group/link"
               >
-                <FileText className="w-3.5 h-3.5" />
-                <span className="group-hover/noticia:underline underline-offset-2">
-                  Ver Edital Passado
+                <Megaphone className="w-3.5 h-3.5" />
+                <span className="group-hover/link:underline underline-offset-2">
+                  Acompanhe as Notícias
                 </span>
-              </a>
-            )}
-          </div>
-        ) : (
-          concurso.linkEdital && (
+              </Link>
+              {concurso.linkEdital && (
+                <a
+                  href={concurso.linkEdital}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-xs font-medium text-neutral-400 hover:text-emerald-400 transition-colors  group/link"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span className="group-hover/link:underline underline-offset-2">
+                    Ver Edital Passado
+                  </span>
+                </a>
+              )}
+            </>
+          )}
+
+          {/* LÓGICA: INSCRIÇÕES ENCERRADAS (Prova a caminho) */}
+          {isInscricoesEncerradas && (
+            <>
+              {concurso.linkEdital && (
+                <a
+                  href={concurso.linkEdital}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-xs font-medium text-neutral-400 hover:text-emerald-400 transition-colors group/link"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span className="group-hover/link:underline underline-offset-2">
+                    Ver edital Atual
+                  </span>
+                </a>
+              )}
+              {concurso.linkCronograma && (
+                <a
+                  href={concurso.linkCronograma}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-xs font-medium text-neutral-400 hover:text-emerald-400 transition-colors group/link"
+                >
+                  <CalendarDays className="w-3.5 h-3.5" />
+                  <span className="group-hover/link:underline underline-offset-2">
+                    Ver cronograma
+                  </span>
+                </a>
+              )}
+            </>
+          )}
+
+          {/* LÓGICA: ENCERRADO TUDO (Histórico) */}
+          {isEncerradoTudo && concurso.linkEdital && (
             <a
               href={concurso.linkEdital}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-1.5 text-xs font-medium text-neutral-400 hover:text-emerald-400 transition-colors py-1 group/edital"
+              className="flex items-center gap-1.5 text-xs font-medium text-neutral-400 hover:text-emerald-400 transition-colors group/link"
             >
               <FileText className="w-3.5 h-3.5" />
-              <span className="group-hover/edital:underline underline-offset-2">
-                Acessar Edital Oficial
+              <span className="group-hover/link:underline underline-offset-2">
+                Ver Edital Passado
               </span>
             </a>
-          )
-        )}
+          )}
+
+          {/* LÓGICA: ABERTO (PADRÃO) */}
+          {!isEmBreve &&
+            !isInscricoesEncerradas &&
+            !isEncerradoTudo &&
+            concurso.linkEdital && (
+              <a
+                href={concurso.linkEdital}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 text-xs font-medium text-neutral-400 hover:text-emerald-400 transition-colors py-1 group/link"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span className="group-hover/link:underline underline-offset-2">
+                  Acessar Edital Oficial
+                </span>
+              </a>
+            )}
+        </div>
       </div>
     </div>
   );
 }
 
+function SecaoConcursos({
+  titulo,
+  concursos,
+  badgeColor = "bg-neutral-800 text-neutral-400",
+}: {
+  titulo: string;
+  concursos: any[];
+  badgeColor?: string;
+}) {
+  if (concursos.length === 0) return null;
+
+  return (
+    <section className="space-y-6">
+      <div className="flex items-center pb-3 border-b border-neutral-800">
+        <h2 className="text-xl font-bold text-white tracking-tight">
+          {titulo}
+        </h2>
+        <span
+          className={`ml-2 rounded-md px-2 py-0.5 text-xs font-bold ${badgeColor}`}
+        >
+          {concursos.length}
+        </span>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        {concursos.map((concurso) => (
+          <ConcursoCard key={concurso.id} concurso={concurso} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// --------------------------------------------------------------------------------
+// COMPONENTE PRINCIPAL: LISTA CONCURSOS
+// --------------------------------------------------------------------------------
 export function ListaConcursos({
   concursosIniciais,
 }: {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   concursosIniciais: any[];
 }) {
-  // 1. ESTADOS DOS FILTROS
   const [searchTerm, setSearchTerm] = useState("");
   const [filtroBanca, setFiltroBanca] = useState<string | null>(null);
+  const [filtroCargo, setFiltroCargo] = useState<string | null>(null); // <-- NOVO ESTADO
   const [filtroEscolaridade, setFiltroEscolaridade] = useState<string | null>(
     null,
   );
   const [filtroStatus, setFiltroStatus] = useState<string | null>(null);
-
-  // Array de [min, max] para a faixa salarial
   const [filtroSalario, setFiltroSalario] = useState<number[] | null>(null);
 
-  // 2. EXTRAÇÃO DINÂMICA DAS OPÇÕES
   const opcoesBancas = Array.from(
     new Set(concursosIniciais.map((c) => c.banca).filter(Boolean)),
+  );
+  const opcoesCargos = Array.from(
+    // <-- NOVA OPÇÃO PARA CARGOS
+    new Set(concursosIniciais.map((c) => c.cargo).filter(Boolean)),
   );
   const opcoesEscolaridade = Array.from(
     new Set(concursosIniciais.map((c) => c.escolaridade).filter(Boolean)),
@@ -259,36 +388,31 @@ export function ListaConcursos({
     new Set(concursosIniciais.map((c) => c.status).filter(Boolean)),
   );
 
-  // Descobre automaticamente qual é o maior salário da plataforma
   const sliderMax = useMemo(() => {
     const max = Math.max(
       0,
       ...concursosIniciais.map((c) => extrairSalario(c.salario)),
     );
-    return Math.max(10000, Math.ceil(max / 5000) * 5000); // Garante mínimo de 10k e arredonda
+    return Math.max(10000, Math.ceil(max / 5000) * 5000);
   }, [concursosIniciais]);
 
-  // 3. LÓGICA DE FILTRAGEM COMBINADA
   const concursosFiltrados = useMemo(() => {
     return concursosIniciais.filter((c) => {
-      // Texto
       const lowerSearch = searchTerm.toLowerCase();
       const matchSearch =
         !searchTerm.trim() ||
         c.orgao.toLowerCase().includes(lowerSearch) ||
         c.cargo.toLowerCase().includes(lowerSearch);
 
-      // Dropdowns
       const matchBanca = !filtroBanca || c.banca === filtroBanca;
+      const matchCargo = !filtroCargo || c.cargo === filtroCargo; // <-- NOVA LÓGICA DE FILTRO
       const matchEscolaridade =
         !filtroEscolaridade || c.escolaridade === filtroEscolaridade;
       const matchStatus = !filtroStatus || c.status === filtroStatus;
 
-      // Remuneração (Slider)
       let matchSalario = true;
       if (filtroSalario) {
         const salarioReal = extrairSalario(c.salario);
-        // Se extrairSalario retornar 0 ("A definir"), nós os mantemos APENAS se o filtro mínimo for 0
         if (salarioReal === 0 && filtroSalario[0] > 0) {
           matchSalario = false;
         } else {
@@ -300,6 +424,7 @@ export function ListaConcursos({
       return (
         matchSearch &&
         matchBanca &&
+        matchCargo && // <-- INCLUÍDO NO RETORNO
         matchEscolaridade &&
         matchStatus &&
         matchSalario
@@ -309,20 +434,26 @@ export function ListaConcursos({
     concursosIniciais,
     searchTerm,
     filtroBanca,
+    filtroCargo, // <-- INCLUÍDO NAS DEPENDÊNCIAS
     filtroEscolaridade,
     filtroStatus,
     filtroSalario,
   ]);
 
-  // 4. DIVISÃO DAS SEÇÕES
+  // 4. DIVISÃO DAS SEÇÕES ATUALIZADA (Agora temos 4 seções distintas!)
   const concursosAbertos = concursosFiltrados.filter(
     (c) => c.status === "Inscrições Abertas",
   );
   const concursosEmBreve = concursosFiltrados.filter(
     (c) => c.status === "Em Breve" || c.status === "Edital Em Breve",
   );
+  const concursosInscricoesEncerradas = concursosFiltrados.filter(
+    (c) => c.status === "Inscrições Encerradas",
+  );
+  const concursosTotalmenteEncerrados = concursosFiltrados.filter(
+    (c) => c.status === "Encerrado",
+  );
 
-  // Formatar Moeda Helper
   const formatarMoeda = (valor: number) => {
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
@@ -357,11 +488,14 @@ export function ListaConcursos({
           </div>
         </div>
 
-        <div className="w-1 border-r h-10 border-neutral-800"></div>
+        <div className="w-1 border-r h-10 border-neutral-800 hidden md:block"></div>
 
         {/* DROPDOWNS DINÂMICOS */}
         <div className="flex flex-wrap items-center gap-3">
-          <span className="text-neutral-700 font-medium text-sm">Filtros:</span>
+          <span className="text-neutral-700 font-medium text-sm hidden sm:block">
+            Filtros:
+          </span>
+
           {/* BANCA */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -396,6 +530,46 @@ export function ListaConcursos({
                     className="cursor-pointer focus:bg-neutral-800 border-t rounded-none border-neutral-700/70 focus:text-white py-3 duration-200"
                   >
                     {banca as string}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* CARGO (NOVO DROPDOWN) */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                className={`bg-neutral-900 cursor-pointer duration-300 hover:ring-[0.6px] ring-neutral-700 py-5 rounded-full px-4 border-none shadow-none ${
+                  filtroCargo
+                    ? " text-neutral-300 hover:bg-neutral-900"
+                    : " text-neutral-500"
+                }`}
+              >
+                <Briefcase className="mr-1.5 h-4 w-4 shrink-0" />
+                <span className="truncate max-w-30">
+                  {filtroCargo || "Cargo"}
+                </span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="bg-neutral-900 border border-neutral-800 text-neutral-300">
+              <DropdownMenuGroup>
+                <DropdownMenuLabel className="text-neutral-500">
+                  Filtrar por Cargo
+                </DropdownMenuLabel>
+                <DropdownMenuItem
+                  onClick={() => setFiltroCargo(null)}
+                  className="cursor-pointer focus:bg-neutral-800 border-t rounded-none border-neutral-700/70 focus:text-white py-3 duration-200"
+                >
+                  Todos os Cargos
+                </DropdownMenuItem>
+                {opcoesCargos.map((cargo) => (
+                  <DropdownMenuItem
+                    key={cargo as string}
+                    onClick={() => setFiltroCargo(cargo as string)}
+                    className="cursor-pointer focus:bg-neutral-800 border-t rounded-none border-neutral-700/70 focus:text-white py-3 duration-200"
+                  >
+                    {cargo as string}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuGroup>
@@ -513,7 +687,6 @@ export function ListaConcursos({
                     Limpar
                   </button>
                 </div>
-
                 <div className="px-2">
                   <Slider
                     value={filtroSalario || [0, sliderMax]}
@@ -524,7 +697,6 @@ export function ListaConcursos({
                     className="py-2"
                   />
                 </div>
-
                 <div className="flex justify-between items-center text-xs font-medium text-neutral-400 bg-neutral-950 px-3 py-2 rounded-lg border border-neutral-800 shadow-inner">
                   <span>
                     {formatarMoeda((filtroSalario || [0, sliderMax])[0])}
@@ -553,41 +725,26 @@ export function ListaConcursos({
         </div>
       ) : (
         <div className="space-y-16">
-          {concursosAbertos.length > 0 && (
-            <section className="space-y-6">
-              <div className="flex items-center pb-3">
-                <h2 className="text-xl font-bold text-white tracking-tight">
-                  Inscrições Abertas:
-                </h2>
-                <span className="ml-2 rounded-md bg-neutral-800 px-2 py-0.5 text-xs font-bold text-neutral-400">
-                  {concursosAbertos.length}
-                </span>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {concursosAbertos.map((concurso) => (
-                  <ConcursoCard key={concurso.id} concurso={concurso} />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {concursosEmBreve.length > 0 && (
-            <section className="space-y-6">
-              <div className="flex items-center border-b border-neutral-800 pb-3">
-                <h2 className="text-xl font-bold text-white tracking-tight">
-                  Próximos Concursos:
-                </h2>
-                <span className="ml-2 rounded-md bg-neutral-800 px-2 py-0.5 text-xs font-bold text-neutral-400">
-                  {concursosEmBreve.length}
-                </span>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {concursosEmBreve.map((concurso) => (
-                  <ConcursoCard key={concurso.id} concurso={concurso} />
-                ))}
-              </div>
-            </section>
-          )}
+          <SecaoConcursos
+            titulo="Em Andamento (Inscrições Fechadas):"
+            concursos={concursosInscricoesEncerradas}
+            badgeColor="bg-neutral-500/10 text-neutral-400 border border-neutral-500/20"
+          />
+          <SecaoConcursos
+            titulo="Inscrições Abertas:"
+            concursos={concursosAbertos}
+            badgeColor="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+          />
+          <SecaoConcursos
+            titulo="Próximos Concursos:"
+            concursos={concursosEmBreve}
+            badgeColor="bg-yellow-500/10 text-yellow-400 border border-yellow-500/20"
+          />
+          <SecaoConcursos
+            titulo="Concursos Encerrados (Histórico):"
+            concursos={concursosTotalmenteEncerrados}
+            badgeColor="bg-neutral-800 text-neutral-500 border border-neutral-700"
+          />
         </div>
       )}
     </>

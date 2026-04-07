@@ -33,8 +33,6 @@ export default async function AdminLayout({
         <div className="mb-6 flex items-center">
           <SidebarTrigger className="text-gray-500 hover:text-gray-800" />
         </div>
-
-        {/* Aqui é onde o Next.js injeta a página atual (page.tsx) */}
         {children}
       </main>
     </SidebarProvider>

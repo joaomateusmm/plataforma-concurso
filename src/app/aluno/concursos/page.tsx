@@ -28,7 +28,6 @@ export default async function ConcursosAbertosPage() {
 
       <div className="border-t mt-7 mb-9 border-neutral-800"></div>
 
-      {/* Componente Cliente que faz a pesquisa mágica */}
       <ListaConcursos concursosIniciais={listaConcursos} />
     </div>
   );

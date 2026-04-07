@@ -1,4 +1,3 @@
-// src/actions/concursos.ts
 "use server";
 
 import { db } from "../db/index";
@@ -18,8 +17,11 @@ export async function salvarConcurso(formData: FormData) {
     status: formData.get("status") as string,
     linkInscricao: formData.get("linkInscricao") as string,
     linkEdital: formData.get("linkEdital") as string,
-    periodoInscricao: formData.get("periodoInscricao") as string, // Novo
-    periodoIsencao: formData.get("periodoIsencao") as string, // Novo
+    linkCronograma: formData.get("linkCronograma") as string,
+    periodoInscricao: formData.get("periodoInscricao") as string,
+    periodoIsencao: formData.get("periodoIsencao") as string,
+    dataProva: formData.get("dataProva") as string,
+    thumbnailUrl: formData.get("thumbnailUrl") as string, // <-- NOVO
   });
 
   revalidatePath("/admin/concursos");
@@ -42,8 +44,11 @@ export async function atualizarConcurso(formData: FormData) {
       status: formData.get("status") as string,
       linkInscricao: formData.get("linkInscricao") as string,
       linkEdital: formData.get("linkEdital") as string,
-      periodoInscricao: formData.get("periodoInscricao") as string, // Novo
-      periodoIsencao: formData.get("periodoIsencao") as string, // Novo
+      linkCronograma: formData.get("linkCronograma") as string,
+      periodoInscricao: formData.get("periodoInscricao") as string,
+      periodoIsencao: formData.get("periodoIsencao") as string,
+      dataProva: formData.get("dataProva") as string,
+      thumbnailUrl: formData.get("thumbnailUrl") as string, // <-- NOVO
     })
     .where(eq(concursos.id, id));
 
@@ -58,7 +63,7 @@ export async function deletarConcurso(formData: FormData) {
     revalidatePath("/admin/concursos");
     revalidatePath("/aluno/concursos");
     return { success: true };
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
     return { error: "Erro ao excluir concurso." };
   }
