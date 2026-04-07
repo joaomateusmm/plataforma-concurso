@@ -132,6 +132,7 @@ export default function SignInForm({
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
               placeholder="••••••••"
               required
               className="h-12 w-full rounded-lg border border-neutral-800 bg-neutral-900 px-4 pr-12 text-white transition-all placeholder:text-neutral-600 focus:border-white focus:ring-2 focus:ring-white/10 focus:outline-none"
