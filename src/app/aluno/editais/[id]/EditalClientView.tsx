@@ -4,7 +4,16 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { ChevronLeft, ChevronDown, BookOpen, FileDown } from "lucide-react";
+import Link from "next/link"; // <-- ADICIONADO IMPORT DO LINK
+import {
+  ChevronLeft,
+  ChevronDown,
+  BookOpen,
+  FileDown,
+  CopyPlus,
+  Video,
+  LayersPlus,
+} from "lucide-react";
 
 interface EditalClientViewProps {
   edital: any;
@@ -88,6 +97,10 @@ export default function EditalClientView({
                 </div>
 
                 <div className="flex items-center gap-4">
+                  <a className="text-[11px] cursor-pointer font-bold flex items-center gap-2  px-2.5 py-1 rounded hover:bg-black hover:text-neutral-100 duration-300 bg-neutral-950 border border-neutral-800 text-neutral-400">
+                    <LayersPlus className="w-4 h-4" />
+                    Criar Caderno de Questões
+                  </a>
                   <span className="text-[11px] font-bold px-2.5 py-1 rounded bg-neutral-950 border border-neutral-800 text-neutral-400">
                     {quantidadeAssuntos} tópicos
                   </span>
@@ -107,16 +120,37 @@ export default function EditalClientView({
                 <div className="overflow-hidden">
                   <div className="p-3 pt-0 border-t border-neutral-800/50 bg-neutral-950/30">
                     <ul className="flex flex-col gap-1 mt-3">
-                      {assuntos.map((assunto, index) => (
-                        <li
-                          key={assunto.id}
-                          className="flex items-start gap-3 px-3 py-2 rounded-xl hover:bg-neutral-900 transition-colors group cursor-default"
-                        >
-                          <span className="text-sm text-neutral-400 group-hover:text-neutral-200 transition-colors leading-relaxed">
-                            {index + 1} - {assunto.nome}
-                          </span>
-                        </li>
-                      ))}
+                      {assuntos.map((assunto, index) => {
+                        const temAulas =
+                          assunto.temAulas ||
+                          assunto.qtdAulas > 0 ||
+                          (assunto.aulas && assunto.aulas.length > 0);
+
+                        return (
+                          <li
+                            key={assunto.id}
+                            className="flex items-center  gap-3 px-3 py-2 rounded-xl hover:bg-neutral-900 transition-colors group cursor-default"
+                          >
+                            <span className="text-sm text-neutral-400 group-hover:text-neutral-200 transition-colors leading-relaxed">
+                              {index + 1} - {assunto.nome}
+                            </span>
+                            {temAulas && (
+                              <div className="flex items-center gap-3 shrink-0">
+                                <span className="text-neutral-600 hidden sm:block">
+                                  ⟶
+                                </span>
+                                <Link
+                                  href={`/aluno/aulas?assuntoId=${assunto.id}`}
+                                  className="text-[11px] cursor-pointer font-bold flex items-center gap-1.5 px-2.5 py-1 rounded hover:bg-emerald-500/10 hover:text-emerald-400 hover:border-emerald-500/30 duration-300 bg-neutral-950 border border-neutral-800 text-neutral-400"
+                                >
+                                  <Video className="h-3.5 w-3.5" />
+                                  Ver Aulas
+                                </Link>
+                              </div>
+                            )}
+                          </li>
+                        );
+                      })}
                     </ul>
                   </div>
                 </div>
@@ -176,9 +210,15 @@ export default function EditalClientView({
                 download
                 className="px-3 py-1.5 text-[10px] cursor-pointer hover:bg-neutral-900/80 duration-200 font-medium uppercase tracking-wider rounded-lg border bg-neutral-950/80 border-neutral-800 text-neutral-400 hover:text-white flex items-center gap-1.5 backdrop-blur-sm"
               >
-                <FileDown className="h-4 w-4 text-red-800" /> Baixar PDF
+                <FileDown className="h-4 w-4 mr-1 text-emerald-500" /> Baixar
+                PDF
               </a>
             )}
+
+            <a className="px-3 py-1.5 text-[10px] cursor-pointer hover:bg-neutral-900/80 duration-200 font-medium uppercase tracking-wider rounded-lg border bg-neutral-950/80 border-neutral-800 text-neutral-400 hover:text-white flex items-center gap-1.5 backdrop-blur-sm">
+              <CopyPlus className="h-4 w-4 mr-1 text-emerald-500" /> Criar
+              Simulado
+            </a>
           </div>
 
           <h1 className="text-3xl  font-medium mb-4 text-white tracking-tight leading-tight">
@@ -217,7 +257,7 @@ export default function EditalClientView({
         {Object.keys(agrupamentoBasico).length > 0 && (
           <div className="space-y-6">
             <div className="flex items-center justify-between gap-3 mb-6 pb-4 border-b border-neutral-800">
-              <h2 className="text-2xl font-medium text-white">
+              <h2 className="text-xl font-medium text-white">
                 Conhecimentos Básicos:
               </h2>
               <span className="ml-2 px-2 py-1 rounded-md bg-neutral-900 border border-neutral-800 text-neutral-500 text-[10px] font-bold">

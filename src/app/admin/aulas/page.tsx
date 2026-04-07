@@ -8,8 +8,8 @@ import { DeleteButton } from "./delete-button";
 import { Edit, Video } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { AulaForm } from "./AulaForm"; // <-- Importamos o novo formulário!
 
-// Molde para o TypeScript da edição
 type Aula = {
   id: number;
   titulo: string;
@@ -23,11 +23,13 @@ export default async function GerenciarAulasPage(props: {
 }) {
   const searchParams = await props.searchParams;
 
-  // Buscamos as listas para os campos de seleção (select)
   const listaMaterias = await db.select().from(materias);
   const listaAssuntos = await db.select().from(assuntos);
 
-  // Consulta JOIN para mostrar os nomes reais na tabela
+  // ORDENAMOS TUDO ALFABETICAMENTE ANTES DE ENVIAR PARA O FORMULÁRIO
+  listaMaterias.sort((a, b) => a.nome.localeCompare(b.nome));
+  listaAssuntos.sort((a, b) => a.nome.localeCompare(b.nome));
+
   const listaAulas = await db
     .select({
       id: aulas.id,
@@ -40,7 +42,6 @@ export default async function GerenciarAulasPage(props: {
     .innerJoin(materias, eq(aulas.materiaId, materias.id))
     .innerJoin(assuntos, eq(aulas.assuntoId, assuntos.id));
 
-  // Lógica de Edição via URL
   const editId = searchParams.edit ? parseInt(searchParams.edit) : null;
   let aulaEditando: Aula | null = null;
 
@@ -51,12 +52,12 @@ export default async function GerenciarAulasPage(props: {
     }
   }
 
-  // Função central para salvar ou atualizar
+  // A Ação Server agora é passada diretamente como prop para o Componente Client
   async function handleAction(formData: FormData) {
     "use server";
     if (aulaEditando) {
       await atualizarAula(formData);
-      redirect("/admin/aulas");
+      redirect("/admin/aulas"); // Limpa o estado da URL ao atualizar
     } else {
       await salvarAula(formData);
     }
@@ -64,119 +65,13 @@ export default async function GerenciarAulasPage(props: {
 
   return (
     <div className="max-w-full mx-12 space-y-12 mb-12">
-      {/* Formulário de Criação/Edição */}
-      <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">
-          {aulaEditando ? "Editar Videoaula" : "Gerenciar Videoaulas"}
-        </h1>
-        <p className="text-gray-600 mb-8">
-          {aulaEditando
-            ? "Altere os dados da aula selecionada."
-            : "Vincule aulas do YouTube a um assunto específico."}
-        </p>
-
-        <form action={handleAction} className="space-y-6">
-          {aulaEditando && (
-            <input type="hidden" name="id" value={aulaEditando.id} />
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Seleção de Matéria */}
-            <div className="flex flex-col">
-              <label className="font-semibold mb-1 text-gray-800">
-                Matéria *
-              </label>
-              <select
-                name="materiaId"
-                className="border p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
-                required
-                defaultValue={
-                  aulaEditando ? aulaEditando.materiaId?.toString() : ""
-                }
-              >
-                <option value="">Selecione a matéria...</option>
-                {listaMaterias.map((materia) => (
-                  <option key={materia.id} value={materia.id}>
-                    {materia.nome}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Seleção de Assunto */}
-            <div className="flex flex-col">
-              <label className="font-semibold mb-1 text-gray-800">
-                Assunto *
-              </label>
-              <select
-                name="assuntoId"
-                className="border p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
-                required
-                defaultValue={
-                  aulaEditando ? aulaEditando.assuntoId?.toString() : ""
-                }
-              >
-                <option value="">Selecione o assunto...</option>
-                {listaAssuntos.map((assunto) => (
-                  <option key={assunto.id} value={assunto.id}>
-                    {assunto.nome}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Título da Aula */}
-            <div className="flex flex-col">
-              <label className="font-semibold mb-1 text-gray-800">
-                Título da Aula *
-              </label>
-              <input
-                name="titulo"
-                type="text"
-                required
-                defaultValue={aulaEditando ? aulaEditando.titulo : ""}
-                className="border p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                placeholder="Ex: Concordância Verbal - Parte 1"
-              />
-            </div>
-
-            {/* URL do Vídeo */}
-            <div className="flex flex-col">
-              <label className="font-semibold mb-1 text-gray-800">
-                Link do YouTube *
-              </label>
-              <input
-                name="videoUrl"
-                type="url"
-                required
-                defaultValue={aulaEditando ? aulaEditando.videoUrl : ""}
-                className="border p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                placeholder="Ex: https://www.youtube.com/watch?v=..."
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-2 pt-4 border-t border-gray-100">
-            <button
-              type="submit"
-              className="px-8 py-3 bg-green-600 text-white font-bold rounded-md hover:bg-green-700 transition"
-            >
-              {aulaEditando ? "Atualizar Aula" : "Salvar Aula"}
-            </button>
-
-            {aulaEditando && (
-              <Link
-                href="/admin/aulas"
-                className="px-6 py-3 bg-gray-100 text-gray-700 font-bold rounded-md hover:bg-gray-200 transition"
-              >
-                Cancelar
-              </Link>
-            )}
-          </div>
-        </form>
-      </div>
+      {/* Renderiza o novo formulário interativo */}
+      <AulaForm
+        materias={listaMaterias}
+        assuntos={listaAssuntos}
+        aulaEditando={aulaEditando}
+        onSubmitAction={handleAction}
+      />
 
       {/* Tabela de Listagem */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">

@@ -5,7 +5,15 @@ import { materias, assuntos, aulas } from "../../../db/schema";
 import { AulasAccordion } from "./aulas-accordion";
 import { Video } from "lucide-react";
 
-export default async function MateriaisPage() {
+export default async function MateriaisPage(props: {
+  searchParams: Promise<{ assuntoId?: string }>;
+}) {
+  // 1. CAPTURAMOS O PARÂMETRO DA URL
+  const searchParams = await props.searchParams;
+  const assuntoIdSelecionado = searchParams.assuntoId
+    ? parseInt(searchParams.assuntoId)
+    : undefined;
+
   const listaMaterias = await db.select().from(materias);
   const listaAssuntos = await db.select().from(assuntos);
   const listaAulas = await db.select().from(aulas);
@@ -46,7 +54,11 @@ export default async function MateriaisPage() {
 
       <div className="border-t mt-7 mb-9 border-neutral-800"></div>
 
-      <AulasAccordion materias={arvoreMaterias} />
+      {/* 2. PASSAMOS O ID SELECIONADO PARA O ACORDEÃO */}
+      <AulasAccordion
+        materias={arvoreMaterias}
+        assuntoAbertoId={assuntoIdSelecionado}
+      />
     </div>
   );
 }

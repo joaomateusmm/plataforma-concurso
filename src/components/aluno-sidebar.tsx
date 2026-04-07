@@ -13,6 +13,7 @@ import {
   ClockFading,
   Grid2x2Check,
   X,
+  LayersPlus,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -74,6 +75,12 @@ const navItems2: NavItem[] = [
     title: "Year in pixels",
     url: "/aluno/simulados/year-in-ixels",
     icon: Grid2x2Check,
+    status: "em_breve",
+  },
+  {
+    title: "Cadernos",
+    url: "/aluno/simulados/relogio",
+    icon: LayersPlus,
     status: "em_breve",
   },
 ];

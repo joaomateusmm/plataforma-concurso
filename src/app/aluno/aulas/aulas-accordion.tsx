@@ -2,7 +2,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react"; // <-- Adicionado useEffect
 import { ChevronDown, PlayCircle, BookOpen, Layers } from "lucide-react";
 
 // Definimos o formato dos dados que vamos receber do banco
@@ -17,10 +17,55 @@ function getYouTubeId(url: string) {
   return match && match[2].length === 11 ? match[2] : null;
 }
 
-export function AulasAccordion({ materias }: { materias: Materia[] }) {
-  // Controlamos quais matérias e assuntos estão abertos
-  const [materiasAbertas, setMateriasAbertas] = useState<number[]>([]);
-  const [assuntosAbertos, setAssuntosAbertos] = useState<number[]>([]);
+export function AulasAccordion({
+  materias,
+  assuntoAbertoId, // <-- Nova propriedade recebida da página
+}: {
+  materias: Materia[];
+  assuntoAbertoId?: number;
+}) {
+  // 1. Inicializamos os estados já abertos se viermos do link do Edital
+  const [materiasAbertas, setMateriasAbertas] = useState<number[]>(() => {
+    if (!assuntoAbertoId) return [];
+    // Procura qual é a matéria "Pai" deste assunto
+    const materiaPai = materias.find((m) =>
+      m.assuntos.some((a) => a.id === assuntoAbertoId),
+    );
+    return materiaPai ? [materiaPai.id] : [];
+  });
+
+  const [assuntosAbertos, setAssuntosAbertos] = useState<number[]>(() => {
+    return assuntoAbertoId ? [assuntoAbertoId] : [];
+  });
+
+  // 2. Faz scroll suave para o assunto assim que a página carregar
+  useEffect(() => {
+    if (assuntoAbertoId) {
+      // Dá um tempinho (100ms) para o React renderizar o HTML aberto antes de rolar
+      setTimeout(() => {
+        const elemento = document.getElementById(`assunto-${assuntoAbertoId}`);
+        if (elemento) {
+          elemento.scrollIntoView({ behavior: "smooth", block: "center" });
+
+          // Opcional: Adiciona um brilhinho rápido para destacar qual abriu
+          elemento.classList.add(
+            "ring-2",
+            "ring-emerald-500",
+            "ring-offset-2",
+            "ring-offset-neutral-950",
+          );
+          setTimeout(() => {
+            elemento.classList.remove(
+              "ring-2",
+              "ring-emerald-500",
+              "ring-offset-2",
+              "ring-offset-neutral-950",
+            );
+          }, 2000);
+        }
+      }, 100);
+    }
+  }, [assuntoAbertoId]);
 
   const toggleMateria = (id: number) => {
     setMateriasAbertas((prev) =>
@@ -48,7 +93,6 @@ export function AulasAccordion({ materias }: { materias: Materia[] }) {
     );
   }
 
-  // 1. Ordenamos as Matérias em ordem alfabética/numérica
   const materiasOrdenadas = [...materias].sort((a, b) =>
     a.nome.localeCompare(b.nome, undefined, { numeric: true }),
   );
@@ -58,7 +102,6 @@ export function AulasAccordion({ materias }: { materias: Materia[] }) {
       {materiasOrdenadas.map((materia) => {
         const isMateriaAberta = materiasAbertas.includes(materia.id);
 
-        // 2. Ordenamos os Assuntos em ordem alfabética/numérica
         const assuntosOrdenados = [...materia.assuntos].sort((a, b) =>
           a.nome.localeCompare(b.nome, undefined, { numeric: true }),
         );
@@ -126,7 +169,6 @@ export function AulasAccordion({ materias }: { materias: Materia[] }) {
                       assunto.id,
                     );
 
-                    // 3. Ordenamos as Aulas em ordem alfabética/numérica
                     const aulasOrdenadas = [...assunto.aulas].sort((a, b) =>
                       a.titulo.localeCompare(b.titulo, undefined, {
                         numeric: true,
@@ -136,7 +178,8 @@ export function AulasAccordion({ materias }: { materias: Materia[] }) {
                     return (
                       <div
                         key={assunto.id}
-                        className="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden"
+                        id={`assunto-${assunto.id}`} // <-- ADICIONADO ID PARA O SCROLL FUNCIONAR
+                        className="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden transition-all duration-500"
                       >
                         {/* NÍVEL 2: ASSUNTO */}
                         <button
@@ -194,7 +237,7 @@ export function AulasAccordion({ materias }: { materias: Materia[] }) {
                                           alt={aula.titulo}
                                           fill
                                           sizes="112px"
-                                          unoptimized 
+                                          unoptimized
                                           className="object-cover opacity-70 group-hover:opacity-100 transition-opacity duration-300"
                                         />
 
