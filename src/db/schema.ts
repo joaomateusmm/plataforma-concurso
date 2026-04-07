@@ -163,3 +163,13 @@ export const editalAssuntos = pgTable("edital_assuntos", {
     .default("Básico")
     .notNull(),
 });
+
+export const lembretesConcursos = pgTable("lembretes_concursos", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  concursoId: integer("concurso_id")
+    .notNull()
+    .references(() => concursos.id, { onDelete: "cascade" }),
+});

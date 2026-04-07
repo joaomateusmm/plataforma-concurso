@@ -1,6 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// src/app/aluno/concursos/ListaConcursos.tsx
 "use client";
+
+import { alternarLembreteConcurso } from "@/actions/lembretes";
+import { toast } from "sonner";
+import { BellRing, Loader2 } from "lucide-react";
 
 import Image from "next/image";
 import * as React from "react";
@@ -19,7 +22,7 @@ import {
   Bell,
   Megaphone,
   CalendarDays,
-  Briefcase, // <-- Adicionado ícone para o Cargo
+  Briefcase,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -63,15 +66,53 @@ const getStatusBadge = (status: string) => {
   }
 };
 
-function ConcursoCard({ concurso }: { concurso: any }) {
+function ConcursoCard({
+  concurso,
+  lembretesAtivosIniciais = [],
+}: {
+  concurso: any;
+  lembretesAtivosIniciais?: number[];
+}) {
   const isEmBreve =
     concurso.status === "Em Breve" || concurso.status === "Edital Em Breve";
   const isInscricoesEncerradas = concurso.status === "Inscrições Encerradas";
   const isEncerradoTudo = concurso.status === "Encerrado";
 
-  // NOVO ESTADO: Controla se a descrição está expandida ou não
   const [mostrarDescricaoCompleta, setMostrarDescricaoCompleta] =
     useState(false);
+
+  // Inicializa o estado olhando se o ID do concurso está no array de lembretes
+  const [isLembreteAtivo, setIsLembreteAtivo] = useState(
+    lembretesAtivosIniciais.includes(concurso.id),
+  );
+  const [isLoadingLembrete, setIsLoadingLembrete] = useState(false);
+
+  const handleToggleLembrete = async () => {
+    setIsLoadingLembrete(true);
+    const res = await alternarLembreteConcurso(concurso.id);
+
+    if (res.error) {
+      toast.error(res.error);
+    } else {
+      setIsLembreteAtivo(res.active ?? false);
+
+      // Lógica do Toast atualizada:
+      if (res.active) {
+        toast.success("Lembrete ativado com sucesso!", {
+          description:
+            "Você será avisado no seu e-mail sempre que o status deste concurso for atualizado (ex: edital lançado, inscrições abertas).",
+          duration: 6000, // Deixamos o toast um pouco mais de tempo na tela para o usuário conseguir ler
+        });
+      } else {
+        // Quando o usuário desativa o lembrete
+        toast.info("Lembrete desativado.", {
+          description:
+            "Você não receberá mais notificações sobre este concurso.",
+        });
+      }
+    }
+    setIsLoadingLembrete(false);
+  };
 
   return (
     <div className="bg-neutral-900 rounded-2xl border border-neutral-800 overflow-hidden flex flex-col hover:border-neutral-700 hover:bg-neutral-900/80 transition-all duration-300 group h-full relative">
@@ -81,6 +122,7 @@ function ConcursoCard({ concurso }: { concurso: any }) {
             src={concurso.thumbnailUrl}
             alt={concurso.orgao}
             fill
+            sizes="(max-width: 768px) 100vw, 350px"
             className="object-cover object-center"
           />
           <div className="absolute inset-0 bg-linear-to-t from-transparent via-neutral-900/40 to-neutral-900" />
@@ -104,8 +146,23 @@ function ConcursoCard({ concurso }: { concurso: any }) {
       </div>
 
       <div className="flex px-6 pt-4 relative z-10">
-        <button className="bg-neutral-800 flex gap-2 font-medium items-center py-1 px-2 text-xs rounded-md text-neutral-500 hover:text-neutral-200 duration-300 shadow-sm hover:shadow-md cursor-pointer">
-          <Bell className="h-3 w-3" /> Ativar Lembrete
+        <button
+          onClick={handleToggleLembrete}
+          disabled={isLoadingLembrete}
+          className={`flex gap-2 font-medium items-center py-1 px-2 text-xs rounded-md duration-300 shadow-sm cursor-pointer backdrop-blur-sm border ${
+            isLembreteAtivo
+              ? "bg-neutral-500/20 text-neutral-200 border-neutral-500 hover:bg-neutral-500"
+              : "bg-neutral-800/80 text-neutral-400 border-neutral-700/50 hover:text-white hover:bg-neutral-700"
+          }`}
+        >
+          {isLoadingLembrete ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : isLembreteAtivo ? (
+            <BellRing className="h-3.5 w-3.5 fill-white" />
+          ) : (
+            <Bell className="h-3.5 w-3.5" />
+          )}
+          {isLembreteAtivo ? "Lembrete Ativo" : "Ativar Lembrete"}
         </button>
       </div>
 
@@ -130,7 +187,6 @@ function ConcursoCard({ concurso }: { concurso: any }) {
             >
               {concurso.descricao}
             </p>
-            {/* O botão só aparece se a descrição tiver mais de 90 caracteres para evitar botões inúteis em textos pequenos */}
             {concurso.descricao.length > 90 && (
               <p
                 onClick={() =>
@@ -348,10 +404,12 @@ function SecaoConcursos({
   titulo,
   concursos,
   badgeColor = "bg-neutral-800 text-neutral-400",
+  lembretesAtivosIniciais = [], // <-- ADICIONADO AQUI
 }: {
   titulo: string;
   concursos: any[];
   badgeColor?: string;
+  lembretesAtivosIniciais?: number[]; // <-- ADICIONADO AQUI
 }) {
   if (concursos.length === 0) return null;
 
@@ -369,7 +427,11 @@ function SecaoConcursos({
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {concursos.map((concurso) => (
-          <ConcursoCard key={concurso.id} concurso={concurso} />
+          <ConcursoCard
+            key={concurso.id}
+            concurso={concurso}
+            lembretesAtivosIniciais={lembretesAtivosIniciais} // <-- PASSANDO PARA O CARD
+          />
         ))}
       </div>
     </section>
@@ -381,12 +443,14 @@ function SecaoConcursos({
 // --------------------------------------------------------------------------------
 export function ListaConcursos({
   concursosIniciais,
+  lembretesAtivosIniciais = [], // <-- ADICIONADO AQUI PARA RECEBER DO PAGE.TSX
 }: {
   concursosIniciais: any[];
+  lembretesAtivosIniciais?: number[]; // <-- ADICIONADO AQUI
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filtroBanca, setFiltroBanca] = useState<string | null>(null);
-  const [filtroCargo, setFiltroCargo] = useState<string | null>(null); // <-- NOVO ESTADO
+  const [filtroCargo, setFiltroCargo] = useState<string | null>(null);
   const [filtroEscolaridade, setFiltroEscolaridade] = useState<string | null>(
     null,
   );
@@ -458,7 +522,6 @@ export function ListaConcursos({
     filtroSalario,
   ]);
 
-  // 4. DIVISÃO DAS SEÇÕES ATUALIZADA
   const concursosAbertos = concursosFiltrados.filter(
     (c) => c.status === "Inscrições Abertas",
   );
@@ -747,21 +810,25 @@ export function ListaConcursos({
             titulo="Em Andamento (Inscrições Fechadas):"
             concursos={concursosInscricoesEncerradas}
             badgeColor="bg-neutral-500/10 text-neutral-400 border border-neutral-500/20"
+            lembretesAtivosIniciais={lembretesAtivosIniciais} // <-- PASSANDO PARA SEÇÃO
           />
           <SecaoConcursos
             titulo="Inscrições Abertas:"
             concursos={concursosAbertos}
             badgeColor="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+            lembretesAtivosIniciais={lembretesAtivosIniciais} // <-- PASSANDO PARA SEÇÃO
           />
           <SecaoConcursos
             titulo="Próximos Concursos:"
             concursos={concursosEmBreve}
             badgeColor="bg-yellow-500/10 text-yellow-400 border border-yellow-500/20"
+            lembretesAtivosIniciais={lembretesAtivosIniciais} // <-- PASSANDO PARA SEÇÃO
           />
           <SecaoConcursos
             titulo="Concursos Encerrados (Histórico):"
             concursos={concursosTotalmenteEncerrados}
             badgeColor="bg-neutral-800 text-neutral-500 border border-neutral-700"
+            lembretesAtivosIniciais={lembretesAtivosIniciais} // <-- PASSANDO PARA SEÇÃO
           />
         </div>
       )}
