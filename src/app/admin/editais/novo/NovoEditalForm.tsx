@@ -17,6 +17,7 @@ import {
   BookOpen,
   ImageIcon,
   X,
+  UploadCloud,
 } from "lucide-react";
 import { criarEditalAdmin } from "@/actions/editais";
 
@@ -38,12 +39,17 @@ export default function NovoEditalForm({
   const [banca, setBanca] = useState("");
   const [descricao, setDescricao] = useState("");
 
-  // ESTADO DA IMAGEM
+  // ESTADOS DOS ARQUIVOS
   const [thumbnailUrl, setThumbnailUrl] = useState("");
+  const [pdfUrl, setPdfUrl] = useState("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [expandedMaterias, setExpandedMaterias] = useState<string[]>([]);
+
+  // Guarda QUAIS pastas o usuário abriu ou fechou manualmente clicando.
+  const [manuallyExpandedMaterias, setManuallyExpandedMaterias] = useState<
+    string[]
+  >([]);
 
   // Tabs de Navegação e Estados Separados
   const [abaAtiva, setAbaAtiva] = useState<"basico" | "especifico">("basico");
@@ -55,18 +61,19 @@ export default function NovoEditalForm({
   const setSelecionadosAtuais =
     abaAtiva === "basico" ? setAssuntosBasicos : setAssuntosEspecificos;
 
-  // --- CONFIGURAÇÃO DO UPLOADTHING (Exatamente como no seu exemplo) ---
-  const { startUpload, isUploading } = useUploadThing("imageUploader", {
-    onClientUploadComplete: (res) => {
-      if (res && res[0]) {
-        setThumbnailUrl(res[0].url);
-        toast.success("Capa enviada com sucesso!");
-      }
-    },
-    onUploadError: (error: Error) => {
-      toast.error(`Erro no upload: ${error.message}`);
-    },
-  });
+  // --- CONFIGURAÇÃO DO UPLOADTHING (IMAGEM) ---
+  const { startUpload: uploadImage, isUploading: isUploadingImage } =
+    useUploadThing("imageUploader", {
+      onClientUploadComplete: (res) => {
+        if (res && res[0]) {
+          setThumbnailUrl(res[0].url);
+          toast.success("Capa enviada com sucesso!");
+        }
+      },
+      onUploadError: (error: Error) => {
+        toast.error(`Erro no upload da capa: ${error.message}`);
+      },
+    });
 
   const handleImageSelect = async (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -79,30 +86,72 @@ export default function NovoEditalForm({
     setThumbnailUrl(objectUrl);
 
     // Inicia o upload para o UploadThing
-    await startUpload([file]);
+    await uploadImage([file]);
+  };
+
+  // --- CONFIGURAÇÃO DO UPLOADTHING (PDF) ---
+  const { startUpload: uploadPdf, isUploading: isUploadingPdf } =
+    useUploadThing("pdfUploader", {
+      onClientUploadComplete: (res) => {
+        if (res && res[0]) {
+          setPdfUrl(res[0].url);
+          toast.success("Edital em PDF enviado com sucesso!");
+        }
+      },
+      onUploadError: (error: Error) => {
+        toast.error(`Erro no upload do PDF: ${error.message}`);
+      },
+    });
+
+  const handlePdfSelect = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== "application/pdf") {
+      toast.error("Por favor, selecione apenas arquivos PDF.");
+      return;
+    }
+
+    // Inicia o upload para o UploadThing
+    await uploadPdf([file]);
   };
   // --------------------------------------------------------------------
 
-  const filteredAssuntos = useMemo(() => {
-    if (!searchTerm.trim()) return assuntosDb;
-    const lowerSearch = searchTerm.toLowerCase();
-    return assuntosDb.filter(
-      (item) =>
-        item.nome.toLowerCase().includes(lowerSearch) ||
-        (item.materiaNome &&
-          item.materiaNome.toLowerCase().includes(lowerSearch)),
-    );
-  }, [assuntosDb, searchTerm]);
+  // Vê se estamos atualmente numa pesquisa
+  const isSearching = searchTerm.trim().length > 0;
 
   const assuntosAgrupados = useMemo(() => {
+    let filtrados = [...assuntosDb];
+    if (isSearching) {
+      const lowerSearch = searchTerm.toLowerCase();
+      filtrados = filtrados.filter(
+        (item) =>
+          item.nome.toLowerCase().includes(lowerSearch) ||
+          (item.materiaNome &&
+            item.materiaNome.toLowerCase().includes(lowerSearch)),
+      );
+    }
+
     const grupos: Record<string, any[]> = {};
-    filteredAssuntos.forEach((assunto) => {
+    filtrados.forEach((assunto) => {
       const materia = assunto.materiaNome || "Outros / Sem Matéria";
       if (!grupos[materia]) grupos[materia] = [];
       grupos[materia].push(assunto);
     });
-    return grupos;
-  }, [filteredAssuntos]);
+
+    const gruposOrdenados: Record<string, any[]> = {};
+    Object.keys(grupos)
+      .sort((a, b) => a.localeCompare(b))
+      .forEach((materia) => {
+        gruposOrdenados[materia] = grupos[materia].sort((a, b) =>
+          a.nome.localeCompare(b.nome),
+        );
+      });
+
+    return gruposOrdenados;
+  }, [assuntosDb, searchTerm, isSearching]);
 
   const toggleAssunto = (id: number) => {
     setSelecionadosAtuais((prev) =>
@@ -111,7 +160,7 @@ export default function NovoEditalForm({
   };
 
   const toggleMateriaAccordion = (materiaNome: string) => {
-    setExpandedMaterias((prev) =>
+    setManuallyExpandedMaterias((prev) =>
       prev.includes(materiaNome)
         ? prev.filter((m) => m !== materiaNome)
         : [...prev, materiaNome],
@@ -149,34 +198,42 @@ export default function NovoEditalForm({
       });
     }
 
-    if (isUploading) {
+    if (isUploadingImage || isUploadingPdf) {
       return toast.warning("Aguarde", {
-        description: "A imagem ainda está sendo enviada.",
+        description: "Existem arquivos sendo enviados para o servidor.",
       });
     }
 
     setIsSubmitting(true);
 
-    const res = await criarEditalAdmin({
-      titulo,
-      banca,
-      descricao,
-      thumbnailUrl, // Passamos a URL gerada!
-      assuntosMapeados: {
-        basico: assuntosBasicos,
-        especifico: assuntosEspecificos,
-      },
-      status,
-    });
-
-    if (res.error) {
-      toast.error("Erro ao salvar", { description: res.error });
-      setIsSubmitting(false);
-    } else {
-      toast.success("Edital Criado!", {
-        description: `O edital foi salvo como ${status}.`,
+    try {
+      const res = await criarEditalAdmin({
+        titulo,
+        banca,
+        descricao,
+        thumbnailUrl, // Passamos a URL gerada da imagem
+        pdfUrl, // Passamos a URL gerada do PDF
+        assuntosMapeados: {
+          basico: assuntosBasicos,
+          especifico: assuntosEspecificos,
+        },
+        status,
       });
-      router.push("/admin/editais");
+
+      if (res.error) {
+        toast.error("Erro ao salvar", { description: res.error });
+        setIsSubmitting(false);
+      } else {
+        toast.success("Edital Criado!", {
+          description: `O edital foi salvo como ${status}.`,
+        });
+        router.push("/admin/editais");
+      }
+    } catch {
+      toast.error("Erro Fatal", {
+        description: "Falha ao conectar com o servidor.",
+      });
+      setIsSubmitting(false);
     }
   };
 
@@ -254,7 +311,7 @@ export default function NovoEditalForm({
                   />
                 </div>
 
-                {/* UPLOAD DE THUMBNAIL (ABORDAGEM CUSTOMIZADA) */}
+                {/* UPLOAD DE THUMBNAIL */}
                 <div className="flex flex-col gap-2 border-t border-gray-100 pt-6">
                   <label className="text-sm font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
                     <ImageIcon className="w-4 h-4" /> Capa do Edital
@@ -269,22 +326,20 @@ export default function NovoEditalForm({
                         className="w-full h-full object-cover transition-transform group-hover:scale-105"
                       />
 
-                      {/* Spinner de Loading enquanto a imagem está sendo upada pro servidor real */}
-                      {isUploading && (
+                      {isUploadingImage && (
                         <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50 backdrop-blur-sm">
                           <Loader2 className="w-8 h-8 animate-spin text-white" />
                         </div>
                       )}
 
-                      {/* Botão de excluir só aparece se o upload terminou */}
-                      {!isUploading && (
+                      {!isUploadingImage && (
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-30">
                           <button
                             type="button"
                             onClick={() => setThumbnailUrl("")}
                             className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl font-bold transition-transform transform scale-95 group-hover:scale-100"
                           >
-                            <X className="w-4 h-4" /> Remover Imagem
+                            <X className="w-4 h-4" /> Remover Capa Atual
                           </button>
                         </div>
                       )}
@@ -292,12 +347,12 @@ export default function NovoEditalForm({
                   ) : (
                     <label
                       className={`flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-2xl p-8 bg-gray-50 hover:bg-gray-100 transition-colors ${
-                        isUploading
+                        isUploadingImage
                           ? "cursor-not-allowed opacity-50"
                           : "cursor-pointer"
                       }`}
                     >
-                      {isUploading ? (
+                      {isUploadingImage ? (
                         <>
                           <Loader2 className="w-8 h-8 animate-spin text-emerald-500 mb-3" />
                           <span className="text-sm font-bold text-emerald-600">
@@ -322,7 +377,87 @@ export default function NovoEditalForm({
                         accept="image/*"
                         className="hidden"
                         onChange={handleImageSelect}
-                        disabled={isUploading}
+                        disabled={isUploadingImage}
+                      />
+                    </label>
+                  )}
+                </div>
+
+                {/* UPLOAD DE PDF */}
+                <div className="flex flex-col gap-2 border-t border-gray-100 pt-6">
+                  <label className="text-sm font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                    <FileText className="w-4 h-4" /> Arquivo PDF do Edital
+                  </label>
+
+                  {pdfUrl ? (
+                    <div className="relative w-full p-4 rounded-2xl border border-emerald-200 bg-emerald-50 flex items-center justify-between group">
+                      <div className="flex items-center gap-4 overflow-hidden">
+                        <div className="w-12 h-12 bg-white rounded-xl shadow-sm border border-emerald-100 flex items-center justify-center shrink-0">
+                          <FileText className="w-6 h-6 text-emerald-600" />
+                        </div>
+                        <div className="flex flex-col truncate">
+                          <span className="text-sm font-bold text-emerald-900 truncate">
+                            Edital Anexado
+                          </span>
+                          <a
+                            href={pdfUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs font-medium text-emerald-600 hover:text-emerald-700 hover:underline"
+                          >
+                            Visualizar Arquivo
+                          </a>
+                        </div>
+                      </div>
+
+                      {isUploadingPdf && (
+                        <Loader2 className="w-5 h-5 animate-spin text-emerald-600 shrink-0" />
+                      )}
+
+                      {!isUploadingPdf && (
+                        <button
+                          type="button"
+                          onClick={() => setPdfUrl("")}
+                          className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-xl font-bold transition-transform transform scale-95 group-hover:scale-100 shrink-0"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <label
+                      className={`flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-2xl p-8 bg-gray-50 hover:bg-gray-100 transition-colors ${
+                        isUploadingPdf
+                          ? "cursor-not-allowed opacity-50"
+                          : "cursor-pointer"
+                      }`}
+                    >
+                      {isUploadingPdf ? (
+                        <>
+                          <Loader2 className="w-8 h-8 animate-spin text-emerald-500 mb-3" />
+                          <span className="text-sm font-bold text-emerald-600">
+                            Enviando PDF...
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-12 h-12 bg-white border border-gray-200 rounded-full flex items-center justify-center mb-3 shadow-sm">
+                            <UploadCloud className="w-5 h-5 text-gray-400" />
+                          </div>
+                          <span className="text-sm font-bold text-gray-700">
+                            Clique para anexar o PDF
+                          </span>
+                          <span className="text-xs text-gray-400 mt-1">
+                            Apenas arquivos .PDF
+                          </span>
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        accept="application/pdf"
+                        className="hidden"
+                        onChange={handlePdfSelect}
+                        disabled={isUploadingPdf}
                       />
                     </label>
                   )}
@@ -333,7 +468,7 @@ export default function NovoEditalForm({
             <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm space-y-3">
               <button
                 onClick={() => handleSalvar("Publicado")}
-                disabled={isSubmitting || isUploading}
+                disabled={isSubmitting || isUploadingImage || isUploadingPdf}
                 className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-4 rounded-2xl font-extrabold shadow-md shadow-emerald-600/20 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? (
@@ -346,7 +481,7 @@ export default function NovoEditalForm({
 
               <button
                 onClick={() => handleSalvar("Rascunho")}
-                disabled={isSubmitting || isUploading}
+                disabled={isSubmitting || isUploadingImage || isUploadingPdf}
                 className="w-full flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 px-6 py-4 rounded-2xl font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? (
@@ -374,6 +509,7 @@ export default function NovoEditalForm({
               {/* TABS DE NAVEGAÇÃO */}
               <div className="flex p-1 gap-2 bg-gray-100 rounded-xl mb-4 shrink-0">
                 <button
+                  type="button"
                   onClick={() => setAbaAtiva("basico")}
                   className={`flex-1 flex cursor-pointer items-center justify-center gap-2 py-2.5 text-xs font-bold rounded-lg transition-all ${
                     abaAtiva === "basico"
@@ -387,6 +523,7 @@ export default function NovoEditalForm({
                   </span>
                 </button>
                 <button
+                  type="button"
                   onClick={() => setAbaAtiva("especifico")}
                   className={`flex-1 flex cursor-pointer items-center justify-center gap-2 py-2.5 text-xs font-bold rounded-lg transition-all ${
                     abaAtiva === "especifico"
@@ -428,7 +565,8 @@ export default function NovoEditalForm({
                       {Object.entries(assuntosAgrupados).map(
                         ([materiaNome, assuntos]) => {
                           const isExpanded =
-                            expandedMaterias.includes(materiaNome);
+                            isSearching ||
+                            manuallyExpandedMaterias.includes(materiaNome);
                           const assuntosDaMateriaIds = assuntos.map(
                             (a) => a.id,
                           );
@@ -438,7 +576,8 @@ export default function NovoEditalForm({
                             ).length;
                           const todosSelecionados =
                             selecionadosNestaMateria ===
-                            assuntosDaMateriaIds.length;
+                              assuntosDaMateriaIds.length &&
+                            assuntosDaMateriaIds.length > 0;
 
                           return (
                             <div
@@ -453,6 +592,7 @@ export default function NovoEditalForm({
                               >
                                 <div className="flex items-center gap-3 flex-1">
                                   <button
+                                    type="button"
                                     onClick={(e) =>
                                       toggleAllInMateria(e, materiaNome)
                                     }
@@ -479,7 +619,9 @@ export default function NovoEditalForm({
                                     {assuntosDaMateriaIds.length}
                                   </span>
                                   <ChevronDown
-                                    className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                                    className={`w-4 h-4 text-gray-400 transition-transform ${
+                                      isExpanded ? "rotate-180" : ""
+                                    }`}
                                   />
                                 </div>
                               </div>
@@ -512,7 +654,11 @@ export default function NovoEditalForm({
                                           )}
                                         </div>
                                         <span
-                                          className={`whitespace-normal leading-snug text-[13px] ${isSelected ? "text-gray-900 font-medium" : "text-gray-500"}`}
+                                          className={`wrap-break-word leading-snug text-[13px] ${
+                                            isSelected
+                                              ? "text-gray-900 font-medium"
+                                              : "text-gray-500"
+                                          }`}
                                         >
                                           {assunto.nome}
                                         </span>

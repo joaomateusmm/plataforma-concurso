@@ -4,15 +4,7 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import {
-  ChevronLeft,
-  ChevronDown,
-  BookOpen,
-  CheckCircle2,
-  PlayCircle,
-  FileDown,
-} from "lucide-react";
-import Link from "next/link";
+import { ChevronLeft, ChevronDown, BookOpen, FileDown } from "lucide-react";
 
 interface EditalClientViewProps {
   edital: any;
@@ -25,6 +17,7 @@ export default function EditalClientView({
 }: EditalClientViewProps) {
   const router = useRouter();
   const [expandedMaterias, setExpandedMaterias] = useState<string[]>([]);
+
   const agrupamentoBasico = useMemo(() => {
     const basicos = assuntosDb.filter((a) => a.tipo === "Básico");
     const grupos: Record<string, any[]> = {};
@@ -114,13 +107,13 @@ export default function EditalClientView({
                 <div className="overflow-hidden">
                   <div className="p-3 pt-0 border-t border-neutral-800/50 bg-neutral-950/30">
                     <ul className="flex flex-col gap-1 mt-3">
-                      {assuntos.map((assunto) => (
+                      {assuntos.map((assunto, index) => (
                         <li
                           key={assunto.id}
                           className="flex items-start gap-3 px-3 py-2 rounded-xl hover:bg-neutral-900 transition-colors group cursor-default"
                         >
                           <span className="text-sm text-neutral-400 group-hover:text-neutral-200 transition-colors leading-relaxed">
-                            1 - {assunto.nome}
+                            {index + 1} - {assunto.nome}
                           </span>
                         </li>
                       ))}
@@ -147,11 +140,14 @@ export default function EditalClientView({
       <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-8 md:p-10 shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-8">
         <div className="absolute inset-y-0 right-0 w-full md:w-3/4 pointer-events-none hidden md:block">
           <Image
-            src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1000&auto=format&fit=crop"
-            alt="Fundo Estudantes"
+            src={
+              edital.thumbnailUrl ||
+              "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1000&auto=format&fit=crop"
+            }
+            alt={edital.titulo || "Fundo Edital"}
             fill
             unoptimized
-            className="object-cover opacity-25 mix-blend-luminosity"
+            className="object-cover opacity-35"
           />
           <div className="absolute inset-0 bg-linear-to-r from-neutral-900 via-neutral-900/80 to-transparent" />
           <div className="absolute inset-0 bg-linear-to-b from-neutral-900/50 via-transparent to-neutral-900/50" />
@@ -165,13 +161,24 @@ export default function EditalClientView({
               Edital Verticalizado
             </span>
             {edital.banca && (
-              <span className="px-3 py-1.5 text-[10px] font-medium uppercase tracking-wider rounded-lg border bg-neutral-950/80 border-neutral-800 text-neutral-400 flex items-center gap-1.5 backdrop-blur-sm">
-                Banca<span className="font-extrabold">{edital.banca}</span>
+              <span className="px-3 py-1.5 gap-1 text-[10px] font-medium uppercase tracking-wider rounded-lg border bg-neutral-950/80 border-neutral-800 text-neutral-400 flex items-center backdrop-blur-sm">
+                Banca:
+                <span className="font-extrabold">{edital.banca}</span>
               </span>
             )}
-            <span className="px-3 py-1.5 text-[10px] cursor-pointer hover:bg-neutral-900/80 duration-200 font-medium uppercase tracking-wider rounded-lg border bg-neutral-950/80 border-neutral-800 text-neutral-400 hover:text-white flex items-center gap-1.5 backdrop-blur-sm">
-              <FileDown className="h-4 w-4 text-red-800" /> Baixar PDF
-            </span>
+
+            {/* LÓGICA DE DOWNLOAD DO PDF */}
+            {edital.pdfUrl && (
+              <a
+                href={edital.pdfUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                download
+                className="px-3 py-1.5 text-[10px] cursor-pointer hover:bg-neutral-900/80 duration-200 font-medium uppercase tracking-wider rounded-lg border bg-neutral-950/80 border-neutral-800 text-neutral-400 hover:text-white flex items-center gap-1.5 backdrop-blur-sm"
+              >
+                <FileDown className="h-4 w-4 text-red-800" /> Baixar PDF
+              </a>
+            )}
           </div>
 
           <h1 className="text-3xl  font-medium mb-4 text-white tracking-tight leading-tight">
@@ -203,12 +210,6 @@ export default function EditalClientView({
               </p>
             </div>
           </div>
-          {/* <Link
-            href="/aluno/simulados/novo"
-            className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-3 rounded-xl font-bold shadow-[0_0_15px_rgba(16,185,129,0.2)] transition-all"
-          >
-            <PlayCircle className="w-4 h-4 fill-current" /> Gerar Simulado
-          </Link> */}
         </div>
       </div>
 
@@ -230,7 +231,7 @@ export default function EditalClientView({
         {Object.keys(agrupamentoEspecifico).length > 0 && (
           <div className="space-y-6">
             <div className="flex items-center justify-between gap-3 mb-6 pb-4 border-b border-neutral-800">
-              <h2 className="text-2xl font-medium text-white">
+              <h2 className="text-xl font-medium text-white">
                 Conhecimentos Específicos:
               </h2>
               <span className="ml-2 px-2 py-1 rounded-md bg-neutral-900 border border-neutral-800 text-neutral-500 text-[10px] font-bold">

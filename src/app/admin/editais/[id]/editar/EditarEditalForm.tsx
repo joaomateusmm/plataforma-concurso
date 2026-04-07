@@ -18,14 +18,12 @@ import {
   ImageIcon,
   X,
   Search,
+  UploadCloud,
 } from "lucide-react";
 import { atualizarEditalAdmin } from "@/actions/editais";
-
-// 1. IMPORTAÇÕES DA NOVA ABORDAGEM DO UPLOADTHING
 import { generateReactHelpers } from "@uploadthing/react";
 import type { OurFileRouter } from "@/app/api/uploadthing/core";
 
-// 2. GERA O HOOK TIPADO
 const { useUploadThing } = generateReactHelpers<OurFileRouter>();
 
 interface EditarEditalFormProps {
@@ -42,23 +40,16 @@ export default function EditarEditalForm({
   assuntosDb = [],
 }: EditarEditalFormProps) {
   const router = useRouter();
-
-  // ESTADOS COM FALLBACKS SEGUROS
   const [titulo, setTitulo] = useState(edital?.titulo || "");
   const [banca, setBanca] = useState(edital?.banca || "");
   const [descricao, setDescricao] = useState(edital?.descricao || "");
-
-  // INICIA A THUMBNAIL COM O VALOR DO BANCO
   const [thumbnailUrl, setThumbnailUrl] = useState(edital?.thumbnailUrl || "");
-
+  const [pdfUrl, setPdfUrl] = useState(edital?.pdfUrl || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  // Estado para as pastas que o usuário abriu manualmente
   const [manuallyExpandedMaterias, setManuallyExpandedMaterias] = useState<
     string[]
   >([]);
-
-  // Tabs de Navegação e Estados Separados
   const [abaAtiva, setAbaAtiva] = useState<"basico" | "especifico">("basico");
   const [assuntosBasicos, setAssuntosBasicos] = useState<number[]>(
     initialAssuntosBasicos,
@@ -66,50 +57,61 @@ export default function EditarEditalForm({
   const [assuntosEspecificos, setAssuntosEspecificos] = useState<number[]>(
     initialAssuntosEspecificos,
   );
-
   const assuntosSelecionadosAtuais =
     abaAtiva === "basico" ? assuntosBasicos : assuntosEspecificos;
   const setSelecionadosAtuais =
     abaAtiva === "basico" ? setAssuntosBasicos : setAssuntosEspecificos;
-
-  // --- CONFIGURAÇÃO DO UPLOADTHING ---
-  const { startUpload, isUploading } = useUploadThing("imageUploader", {
-    onClientUploadComplete: (res) => {
-      if (res && res[0]) {
-        setThumbnailUrl(res[0].url);
-        toast.success("Nova capa enviada com sucesso!");
-      }
-    },
-    onUploadError: (error: Error) => {
-      toast.error(`Erro no upload: ${error.message}`);
-    },
-  });
+  const { startUpload: uploadImage, isUploading: isUploadingImage } =
+    useUploadThing("imageUploader", {
+      onClientUploadComplete: (res) => {
+        if (res && res[0]) {
+          setThumbnailUrl(res[0].url);
+          toast.success("Nova capa enviada com sucesso!");
+        }
+      },
+      onUploadError: (error: Error) => {
+        toast.error(`Erro no upload da capa: ${error.message}`);
+      },
+    });
 
   const handleImageSelect = async (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
-    // Preview local imediato (optimistic update)
     const objectUrl = URL.createObjectURL(file);
     setThumbnailUrl(objectUrl);
-
-    // Inicia o upload para o servidor
-    await startUpload([file]);
+    await uploadImage([file]);
   };
-  // --------------------------------------------------------------------
+  const { startUpload: uploadPdf, isUploading: isUploadingPdf } =
+    useUploadThing("pdfUploader", {
+      onClientUploadComplete: (res) => {
+        if (res && res[0]) {
+          setPdfUrl(res[0].url);
+          toast.success("Novo Edital em PDF enviado com sucesso!");
+        }
+      },
+      onUploadError: (error: Error) => {
+        toast.error(`Erro no upload do PDF: ${error.message}`);
+      },
+    });
 
-  // ====================================================================
-  // NOVA LÓGICA: FILTRA, AGRUPA E ORDENA ALFABETICAMENTE (A-Z)
-  // EFEITOS REMOVIDOS PARA EVITAR AVISOS DO ESLINT
-  // ====================================================================
+  const handlePdfSelect = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== "application/pdf") {
+      toast.error("Por favor, selecione apenas arquivos PDF.");
+      return;
+    }
+
+    await uploadPdf([file]);
+  };
   const isSearching = searchTerm.trim().length > 0;
-
   const assuntosAgrupados = useMemo(() => {
     let filtrados = [...assuntosDb];
-
-    // 1. Filtragem pela pesquisa
     if (isSearching) {
       const lowerSearch = searchTerm.toLowerCase();
       filtrados = filtrados.filter(
@@ -119,29 +121,23 @@ export default function EditarEditalForm({
             item.materiaNome.toLowerCase().includes(lowerSearch)),
       );
     }
-
-    // 2. Agrupamento
     const grupos: Record<string, any[]> = {};
     filtrados.forEach((assunto) => {
       const materia = assunto.materiaNome || "Outros / Sem Matéria";
       if (!grupos[materia]) grupos[materia] = [];
       grupos[materia].push(assunto);
     });
-
-    // 3. Ordenação Alfabética (Matérias e depois Assuntos)
     const gruposOrdenados: Record<string, any[]> = {};
     Object.keys(grupos)
-      .sort((a, b) => a.localeCompare(b)) // Ordena as Matérias de A a Z
+      .sort((a, b) => a.localeCompare(b))
       .forEach((materia) => {
-        gruposOrdenados[materia] = grupos[materia].sort(
-          (a, b) => a.nome.localeCompare(b.nome), // Ordena os Assuntos de A a Z
+        gruposOrdenados[materia] = grupos[materia].sort((a, b) =>
+          a.nome.localeCompare(b.nome),
         );
       });
 
     return gruposOrdenados;
   }, [assuntosDb, searchTerm, isSearching]);
-
-  // ====================================================================
 
   const toggleAssunto = (id: number) => {
     setSelecionadosAtuais((prev) =>
@@ -192,34 +188,42 @@ export default function EditarEditalForm({
       });
     }
 
-    if (isUploading) {
+    if (isUploadingImage || isUploadingPdf) {
       return toast.warning("Aguarde", {
-        description: "A imagem ainda está sendo enviada.",
+        description: "Existem arquivos sendo enviados para o servidor.",
       });
     }
 
     setIsSubmitting(true);
 
-    const res = await atualizarEditalAdmin(edital.id, {
-      titulo,
-      banca,
-      descricao,
-      thumbnailUrl, // Passa a imagem atualizada para a Action
-      assuntosMapeados: {
-        basico: assuntosBasicos,
-        especifico: assuntosEspecificos,
-      },
-      status,
-    });
-
-    if (res.error) {
-      toast.error("Erro ao atualizar", { description: res.error });
-      setIsSubmitting(false);
-    } else {
-      toast.success("Edital Atualizado!", {
-        description: `O edital foi salvo como ${status}.`,
+    try {
+      const res = await atualizarEditalAdmin(edital.id, {
+        titulo,
+        banca,
+        descricao,
+        thumbnailUrl,
+        pdfUrl,
+        assuntosMapeados: {
+          basico: assuntosBasicos,
+          especifico: assuntosEspecificos,
+        },
+        status,
       });
-      router.push("/admin/editais");
+
+      if (res.error) {
+        toast.error("Erro ao atualizar", { description: res.error });
+        setIsSubmitting(false);
+      } else {
+        toast.success("Edital Atualizado!", {
+          description: `O edital foi salvo como ${status}.`,
+        });
+        router.push("/admin/editais");
+      }
+    } catch {
+      toast.error("Erro Fatal", {
+        description: "Falha ao conectar com o servidor.",
+      });
+      setIsSubmitting(false);
     }
   };
 
@@ -233,7 +237,6 @@ export default function EditarEditalForm({
       `}</style>
 
       <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500 mb-12">
-        {/* CABEÇALHO ADMIN - Light Mode */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white border border-gray-200 p-8 rounded-3xl shadow-sm">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-100 text-blue-700 font-bold text-xs uppercase tracking-wider mb-4">
@@ -244,7 +247,7 @@ export default function EditarEditalForm({
               Editar Edital
             </h1>
             <p className="text-gray-500">
-              Modifique as informações, a capa ou os assuntos exigidos neste
+              Modifique as informações, arquivos ou os assuntos exigidos neste
               edital.
             </p>
           </div>
@@ -259,7 +262,6 @@ export default function EditarEditalForm({
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* COLUNA ESQUERDA: INFORMAÇÕES BÁSICAS E BOTÕES */}
           <div className="space-y-6 flex flex-col">
             <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm flex-1">
               <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
@@ -306,7 +308,6 @@ export default function EditarEditalForm({
                   />
                 </div>
 
-                {/* UPLOAD DE THUMBNAIL (ABORDAGEM CUSTOMIZADA) */}
                 <div className="flex flex-col gap-2 border-t border-gray-100 pt-6">
                   <label className="text-sm font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
                     <ImageIcon className="w-4 h-4" /> Capa do Edital
@@ -321,15 +322,13 @@ export default function EditarEditalForm({
                         className="w-full h-full object-cover transition-transform group-hover:scale-105"
                       />
 
-                      {/* Spinner de Loading enquanto a imagem está sendo upada pro servidor real */}
-                      {isUploading && (
+                      {isUploadingImage && (
                         <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50 backdrop-blur-sm">
                           <Loader2 className="w-8 h-8 animate-spin text-white" />
                         </div>
                       )}
 
-                      {/* Botão de excluir só aparece se o upload terminou */}
-                      {!isUploading && (
+                      {!isUploadingImage && (
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-30">
                           <button
                             type="button"
@@ -344,12 +343,12 @@ export default function EditarEditalForm({
                   ) : (
                     <label
                       className={`flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-2xl p-8 bg-gray-50 hover:bg-gray-100 transition-colors ${
-                        isUploading
+                        isUploadingImage
                           ? "cursor-not-allowed opacity-50"
                           : "cursor-pointer"
                       }`}
                     >
-                      {isUploading ? (
+                      {isUploadingImage ? (
                         <>
                           <Loader2 className="w-8 h-8 animate-spin text-emerald-500 mb-3" />
                           <span className="text-sm font-bold text-emerald-600">
@@ -374,7 +373,86 @@ export default function EditarEditalForm({
                         accept="image/*"
                         className="hidden"
                         onChange={handleImageSelect}
-                        disabled={isUploading}
+                        disabled={isUploadingImage}
+                      />
+                    </label>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-2 border-t border-gray-100 pt-6">
+                  <label className="text-sm font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                    <FileText className="w-4 h-4" /> Arquivo PDF do Edital
+                  </label>
+
+                  {pdfUrl ? (
+                    <div className="relative w-full p-4 rounded-2xl border border-emerald-200 bg-emerald-50 flex items-center justify-between group">
+                      <div className="flex items-center gap-4 overflow-hidden">
+                        <div className="w-12 h-12 bg-white rounded-xl shadow-sm border border-emerald-100 flex items-center justify-center shrink-0">
+                          <FileText className="w-6 h-6 text-emerald-600" />
+                        </div>
+                        <div className="flex flex-col truncate">
+                          <span className="text-sm font-bold text-emerald-900 truncate">
+                            Edital Anexado
+                          </span>
+                          <a
+                            href={pdfUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs font-medium text-emerald-600 hover:text-emerald-700 hover:underline"
+                          >
+                            Visualizar Arquivo Atual
+                          </a>
+                        </div>
+                      </div>
+
+                      {isUploadingPdf && (
+                        <Loader2 className="w-5 h-5 animate-spin text-emerald-600 shrink-0" />
+                      )}
+
+                      {!isUploadingPdf && (
+                        <button
+                          type="button"
+                          onClick={() => setPdfUrl("")}
+                          className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-xl font-bold transition-transform transform scale-95 group-hover:scale-100 shrink-0"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <label
+                      className={`flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-2xl p-8 bg-gray-50 hover:bg-gray-100 transition-colors ${
+                        isUploadingPdf
+                          ? "cursor-not-allowed opacity-50"
+                          : "cursor-pointer"
+                      }`}
+                    >
+                      {isUploadingPdf ? (
+                        <>
+                          <Loader2 className="w-8 h-8 animate-spin text-emerald-500 mb-3" />
+                          <span className="text-sm font-bold text-emerald-600">
+                            Enviando PDF...
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-12 h-12 bg-white border border-gray-200 rounded-full flex items-center justify-center mb-3 shadow-sm">
+                            <UploadCloud className="w-5 h-5 text-gray-400" />
+                          </div>
+                          <span className="text-sm font-bold text-gray-700">
+                            Clique para anexar um novo PDF
+                          </span>
+                          <span className="text-xs text-gray-400 mt-1">
+                            Apenas arquivos .PDF
+                          </span>
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        accept="application/pdf"
+                        className="hidden"
+                        onChange={handlePdfSelect}
+                        disabled={isUploadingPdf}
                       />
                     </label>
                   )}
@@ -385,7 +463,7 @@ export default function EditarEditalForm({
             <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm space-y-3">
               <button
                 onClick={() => handleAtualizar("Publicado")}
-                disabled={isSubmitting || isUploading}
+                disabled={isSubmitting || isUploadingImage || isUploadingPdf}
                 className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-4 rounded-2xl font-extrabold shadow-md shadow-emerald-600/20 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? (
@@ -398,7 +476,7 @@ export default function EditarEditalForm({
 
               <button
                 onClick={() => handleAtualizar("Rascunho")}
-                disabled={isSubmitting || isUploading}
+                disabled={isSubmitting || isUploadingImage || isUploadingPdf}
                 className="w-full flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 px-6 py-4 rounded-2xl font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? (
@@ -411,7 +489,6 @@ export default function EditarEditalForm({
             </div>
           </div>
 
-          {/* COLUNA DIREITA: MAPEAMENTO COM TABS */}
           <div className="space-y-6 h-full flex flex-col">
             <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm flex flex-col flex-1 h-200">
               <div className="flex items-center justify-between mb-4">
@@ -423,9 +500,9 @@ export default function EditarEditalForm({
                 </span>
               </div>
 
-              {/* TABS DE NAVEGAÇÃO */}
               <div className="flex p-1 bg-gray-100 rounded-xl mb-4 shrink-0">
                 <button
+                  type="button"
                   onClick={() => setAbaAtiva("basico")}
                   className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold rounded-lg transition-all ${
                     abaAtiva === "basico"
@@ -439,6 +516,7 @@ export default function EditarEditalForm({
                   </span>
                 </button>
                 <button
+                  type="button"
                   onClick={() => setAbaAtiva("especifico")}
                   className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold rounded-lg transition-all ${
                     abaAtiva === "especifico"
@@ -479,7 +557,6 @@ export default function EditarEditalForm({
                     <div className="flex flex-col gap-2">
                       {Object.entries(assuntosAgrupados).map(
                         ([materiaNome, assuntos]) => {
-                          // A pasta expande se: o utilizador abriu manualmente OU se estiver a pesquisar
                           const isExpanded =
                             isSearching ||
                             manuallyExpandedMaterias.includes(materiaNome);
@@ -509,6 +586,7 @@ export default function EditarEditalForm({
                               >
                                 <div className="flex items-center gap-3 flex-1">
                                   <button
+                                    type="button"
                                     onClick={(e) =>
                                       toggleAllInMateria(e, materiaNome)
                                     }
@@ -535,7 +613,9 @@ export default function EditarEditalForm({
                                     {assuntosDaMateriaIds.length}
                                   </span>
                                   <ChevronDown
-                                    className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                                    className={`w-4 h-4 text-gray-400 transition-transform ${
+                                      isExpanded ? "rotate-180" : ""
+                                    }`}
                                   />
                                 </div>
                               </div>

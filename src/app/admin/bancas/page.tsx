@@ -1,3 +1,4 @@
+// src/app/admin/bancas/page.tsx
 import { salvarBanca, atualizarBanca } from "../../../actions/cadastros";
 import { db } from "../../../db/index";
 import { bancas } from "../../../db/schema";
@@ -6,7 +7,8 @@ import { Edit } from "lucide-react";
 import Link from "next/link";
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
-import { MultiBancaForm } from "./MultiBancaForm"; // Importando o nosso novo Form dinâmico!
+import { MultiBancaForm } from "./MultiBancaForm";
+import { ImportBancasJson } from "./ImportBancasJson"; // <-- NOSSO NOVO BOTÃO
 
 // Criamos o molde para o TypeScript
 type Banca = {
@@ -34,7 +36,7 @@ export default async function GerenciarBancasPage(props: {
     }
   }
 
-  // NOVA LÓGICA: Suporta Salvar em Massa!
+  // LÓGICA: Suporta Salvar em Massa do Formulário!
   async function handleAction(formData: FormData) {
     "use server";
 
@@ -65,16 +67,23 @@ export default async function GerenciarBancasPage(props: {
     <div className="max-w-full mx-12 space-y-12 mb-12 animate-in fade-in duration-500">
       {/* Formulário de Criação/Edição Modernizado */}
       <div className="bg-white p-10 rounded-3xl shadow-sm border border-gray-200">
-        <h1 className="text-3xl font-extrabold text-gray-900 mb-2">
-          {bancaEditando ? "Editar Banca" : "Cadastrar Bancas"}
-        </h1>
-        <p className="text-gray-500 mb-8">
+        {/* CABEÇALHO FLEX: Título à esquerda, Botão à direita */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
+          <h1 className="text-3xl font-extrabold text-gray-900">
+            {bancaEditando ? "Editar Banca" : "Cadastrar Bancas"}
+          </h1>
+
+          {/* Oculta o botão de importação se estivermos editando uma banca */}
+          {!bancaEditando && <ImportBancasJson />}
+        </div>
+
+        <p className="text-gray-500 mb-8 max-w-2xl">
           {bancaEditando
             ? "Altere o nome da banca organizadora selecionada."
-            : "Adicione uma ou múltiplas bancas organizadoras de uma só vez."}
+            : "Adicione uma ou múltiplas bancas organizadoras de uma só vez, ou utilize a importação via JSON para adicionar dezenas."}
         </p>
 
-        {/* CHAMADA DO NOVO COMPONENTE */}
+        {/* CHAMADA DO COMPONENTE CLIENTE */}
         <MultiBancaForm bancaEditando={bancaEditando} action={handleAction} />
       </div>
 

@@ -35,6 +35,7 @@ export function ExportDictionaryButton() {
       toast.success("Dicionário exportado!", {
         description: "Envie este arquivo para o seu Gem especialista.",
       });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast.error("Erro", { description: "Falha ao exportar os IDs." });
     } finally {

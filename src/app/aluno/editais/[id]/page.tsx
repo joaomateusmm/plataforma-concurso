@@ -1,3 +1,4 @@
+// src/app/aluno/editais/[id]/page.tsx
 import { db } from "@/db/index";
 import { editais, editalAssuntos, assuntos, materias } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -9,7 +10,6 @@ export default async function EditalAlunoPage(props: {
 }) {
   const params = await props.params;
   const editalId = params.id;
-
   const editalData = await db
     .select()
     .from(editais)
@@ -19,13 +19,12 @@ export default async function EditalAlunoPage(props: {
     return notFound();
   }
 
-  // ATENÇÃO AQUI: Adicionado editalAssuntos.tipoConhecimento à busca!
   const assuntosVinculados = await db
     .select({
       id: assuntos.id,
       nome: assuntos.nome,
       materiaNome: materias.nome,
-      tipo: editalAssuntos.tipoConhecimento, // <-- Este é o segredo!
+      tipo: editalAssuntos.tipoConhecimento,
     })
     .from(editalAssuntos)
     .innerJoin(assuntos, eq(editalAssuntos.assuntoId, assuntos.id))

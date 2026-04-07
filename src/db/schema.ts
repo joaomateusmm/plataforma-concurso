@@ -145,6 +145,7 @@ export const editais = pgTable("editais", {
   thumbnailUrl: text("thumbnail_url"),
   status: varchar("status", { length: 50 }).default("Rascunho").notNull(),
   criadoEm: timestamp("criado_em").defaultNow(),
+  pdfUrl: text("pdf_url"),
 });
 
 export const editalAssuntos = pgTable("edital_assuntos", {

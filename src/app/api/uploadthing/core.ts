@@ -10,6 +10,13 @@ export const ourFileRouter = {
     console.log("Image Upload complete:", file.url);
   }),
 
+  // NOVA ROTA: Exclusiva para PDFs (Editais)
+  pdfUploader: f({
+    pdf: { maxFileSize: "16MB", maxFileCount: 1 },
+  }).onUploadComplete(async ({ file }) => {
+    console.log("PDF Upload complete:", file.url);
+  }),
+
   assetUploader: f({
     blob: { maxFileSize: "32MB", maxFileCount: 10 },
   }).onUploadComplete(async ({ file }) => {
@@ -18,11 +25,9 @@ export const ourFileRouter = {
 
   videoUploader: f({
     video: { maxFileSize: "16MB", maxFileCount: 1 },
-  })
-    // Removi "metadata" daqui também
-    .onUploadComplete(async ({ file }) => {
-      console.log("Video Upload complete:", file.url);
-    }),
+  }).onUploadComplete(async ({ file }) => {
+    console.log("Video Upload complete:", file.url);
+  }),
 } satisfies FileRouter;
 
 export type OurFileRouter = typeof ourFileRouter;
