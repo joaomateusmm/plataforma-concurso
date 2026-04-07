@@ -69,6 +69,10 @@ function ConcursoCard({ concurso }: { concurso: any }) {
   const isInscricoesEncerradas = concurso.status === "Inscrições Encerradas";
   const isEncerradoTudo = concurso.status === "Encerrado";
 
+  // NOVO ESTADO: Controla se a descrição está expandida ou não
+  const [mostrarDescricaoCompleta, setMostrarDescricaoCompleta] =
+    useState(false);
+
   return (
     <div className="bg-neutral-900 rounded-2xl border border-neutral-800 overflow-hidden flex flex-col hover:border-neutral-700 hover:bg-neutral-900/80 transition-all duration-300 group h-full relative">
       {concurso.thumbnailUrl && (
@@ -116,14 +120,29 @@ function ConcursoCard({ concurso }: { concurso: any }) {
           </p>
         </div>
 
+        {/* LÓGICA DE DESCRIÇÃO EXPANSÍVEL */}
         {concurso.descricao && (
-          <p className="text-sm text-neutral-400 line-clamp-2">
-            {concurso.descricao}
-          </p>
+          <div className="flex flex-col">
+            <p
+              className={`text-sm text-neutral-400 transition-all duration-300 ${
+                mostrarDescricaoCompleta ? "" : "line-clamp-2"
+              }`}
+            >
+              {concurso.descricao}
+            </p>
+            {/* O botão só aparece se a descrição tiver mais de 90 caracteres para evitar botões inúteis em textos pequenos */}
+            {concurso.descricao.length > 90 && (
+              <p
+                onClick={() =>
+                  setMostrarDescricaoCompleta(!mostrarDescricaoCompleta)
+                }
+                className="text-neutral-500 font-medium text-xs mt-1 hover:underline cursor-pointer w-fit"
+              >
+                {mostrarDescricaoCompleta ? "ver menos..." : "ver mais..."}
+              </p>
+            )}
+          </div>
         )}
-        <p className="text-neutral-500 font-medium text-xs -mt-3 hover:underline cursor-pointer">
-          ver mais...
-        </p>
 
         <div className="grid grid-cols-2 gap-y-3 gap-x-2 mt-2">
           <div className="flex items-center gap-2 text-neutral-300">
@@ -378,7 +397,6 @@ export function ListaConcursos({
     new Set(concursosIniciais.map((c) => c.banca).filter(Boolean)),
   );
   const opcoesCargos = Array.from(
-    // <-- NOVA OPÇÃO PARA CARGOS
     new Set(concursosIniciais.map((c) => c.cargo).filter(Boolean)),
   );
   const opcoesEscolaridade = Array.from(
@@ -405,7 +423,7 @@ export function ListaConcursos({
         c.cargo.toLowerCase().includes(lowerSearch);
 
       const matchBanca = !filtroBanca || c.banca === filtroBanca;
-      const matchCargo = !filtroCargo || c.cargo === filtroCargo; // <-- NOVA LÓGICA DE FILTRO
+      const matchCargo = !filtroCargo || c.cargo === filtroCargo;
       const matchEscolaridade =
         !filtroEscolaridade || c.escolaridade === filtroEscolaridade;
       const matchStatus = !filtroStatus || c.status === filtroStatus;
@@ -424,7 +442,7 @@ export function ListaConcursos({
       return (
         matchSearch &&
         matchBanca &&
-        matchCargo && // <-- INCLUÍDO NO RETORNO
+        matchCargo &&
         matchEscolaridade &&
         matchStatus &&
         matchSalario
@@ -434,13 +452,13 @@ export function ListaConcursos({
     concursosIniciais,
     searchTerm,
     filtroBanca,
-    filtroCargo, // <-- INCLUÍDO NAS DEPENDÊNCIAS
+    filtroCargo,
     filtroEscolaridade,
     filtroStatus,
     filtroSalario,
   ]);
 
-  // 4. DIVISÃO DAS SEÇÕES ATUALIZADA (Agora temos 4 seções distintas!)
+  // 4. DIVISÃO DAS SEÇÕES ATUALIZADA
   const concursosAbertos = concursosFiltrados.filter(
     (c) => c.status === "Inscrições Abertas",
   );
@@ -536,7 +554,7 @@ export function ListaConcursos({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* CARGO (NOVO DROPDOWN) */}
+          {/* CARGO */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
