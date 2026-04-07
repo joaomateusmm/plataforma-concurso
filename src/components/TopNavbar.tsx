@@ -55,7 +55,7 @@ export default function TopNavbar() {
         </div>
       </div>
 
-      <header className="flex h-14 pl-12 pr-48 w-full justify-between items-center border-b border-neutral-800 bg-neutral-950/60 backdrop-blur-md transition-all duration-300">
+      <header className="flex h-14 px-4 w-full justify-between items-center border-b border-neutral-800 bg-neutral-950/60 backdrop-blur-md transition-all duration-300">
         <div>
           <Link
             className="flex items-center justify-center hover:opacity-80 transition-opacity w-full"

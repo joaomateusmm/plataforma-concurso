@@ -361,7 +361,7 @@ export default function NovoEditalForm({
 
           {/* COLUNA DIREITA: MAPEAMENTO COM TABS (Básico / Específico) */}
           <div className="space-y-6 h-full flex flex-col">
-            <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm flex flex-col flex-1 h-[800px]">
+            <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm flex flex-col flex-1 h-200">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                   <Layers className="w-5 h-5 text-emerald-600" /> Mapeamento

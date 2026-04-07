@@ -1,3 +1,4 @@
+// src/app/admin/assuntos/page.tsx
 import { salvarAssunto, atualizarAssunto } from "../../../actions/cadastros";
 import { db } from "../../../db/index";
 import { materias, assuntos } from "../../../db/schema";
@@ -7,7 +8,8 @@ import { redirect } from "next/navigation";
 // IMPORTAMOS OS COMPONENTES
 import { MultiAssuntoForm } from "./MultiAssuntoForm";
 import { TabelaAssuntos } from "./TabelaAssuntos";
-import { ImportAssuntosJson } from "./ImportAssuntosJson"; // O nosso novo botão de importação!
+import { ImportAssuntosJson } from "./ImportAssuntosJson";
+import { ExportAssuntosJson } from "./ExportAssuntosJson"; // <-- O nosso novo botão de exportação!
 
 type Assunto = {
   id: number;
@@ -75,14 +77,19 @@ export default async function GerenciarAssuntosPage(props: {
     <div className="max-w-full mx-12 space-y-12 mb-12 animate-in fade-in duration-500">
       {/* CARD DO FORMULÁRIO */}
       <div className="bg-white p-10 rounded-3xl shadow-sm border border-gray-200">
-        {/* CABEÇALHO COM O TÍTULO E O BOTÃO DE IMPORTAR */}
+        {/* CABEÇALHO COM O TÍTULO E OS BOTÕES */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
           <h1 className="text-3xl font-extrabold text-gray-900">
             {assuntoEditando ? "Editar Assunto" : "Cadastrar Assuntos"}
           </h1>
 
-          {/* Esconde o botão de importar se estivermos a editar um assunto específico */}
-          {!assuntoEditando && <ImportAssuntosJson />}
+          {/* Agrupamos os botões num flex container para ficarem lado a lado */}
+          {!assuntoEditando && (
+            <div className="flex items-end justify-center flex-col gap-3">
+              <ExportAssuntosJson listaAssuntos={listaAssuntos} />
+              <ImportAssuntosJson />
+            </div>
+          )}
         </div>
 
         <p className="text-gray-500 mb-8 max-w-2xl">

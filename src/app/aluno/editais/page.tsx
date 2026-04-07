@@ -5,12 +5,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image"; // <-- Importação correta do Next Image
 import { toast } from "sonner";
-import {
-  ArrowRight,
-  Loader2,
-  Sparkles,
-  NotepadText,
-} from "lucide-react";
+import { ArrowRight, Loader2, Sparkles, NotepadText } from "lucide-react";
 import { obterEditaisPublicados } from "@/actions/editais";
 
 export default function EditaisAlunoPage() {
@@ -91,7 +86,7 @@ export default function EditaisAlunoPage() {
           {editais.map((edital) => (
             <div
               key={edital.id}
-              className="bg-neutral-900 border border-neutral-800 rounded-3xl flex flex-col overflow-hidden hover:border-emerald-500/50 hover:shadow-[0_0_30px_rgba(16,185,129,0.05)] transition-all duration-300 group relative"
+              className="bg-neutral-900 border border-neutral-800 rounded-3xl flex flex-col overflow-hidden hover:ring-1 ring-neutral-700 duration-300 group relative"
             >
               {/* IMAGEM DE FUNDO DO CARD (Thumbnail) */}
               {edital.thumbnailUrl && (
@@ -122,7 +117,7 @@ export default function EditaisAlunoPage() {
                 </div>
 
                 {/* Título e Descrição */}
-                <h3 className="text-2xl font-bold text-white mb-3 leading-tight group-hover:text-emerald-400 transition-colors drop-shadow-md">
+                <h3 className="text-2xl font-bold text-white mb-3 leading-tight group-hover:text-emerald-400 duration-300 drop-shadow-md">
                   {edital.titulo}
                 </h3>
 

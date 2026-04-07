@@ -35,6 +35,7 @@ export function ImportAssuntosJson() {
           description: `${result.count} assuntos foram adicionados ao banco de dados com sucesso.`,
         });
       }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast.error("Erro", { description: "Falha ao ler o arquivo." });
     } finally {
@@ -61,7 +62,7 @@ export function ImportAssuntosJson() {
         {isImporting ? (
           <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
         ) : (
-          <FileJson className="w-4 h-4 text-indigo-500 group-hover:scale-110 transition-transform" />
+          <FileJson className="w-4 h-4 text-indigo-500" />
         )}
         {isImporting ? "Processando..." : "Importar JSON"}
       </button>

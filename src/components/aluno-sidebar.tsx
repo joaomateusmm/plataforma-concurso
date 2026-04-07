@@ -53,12 +53,17 @@ const navItems: NavItem[] = [
     status: "em_breve",
   },
   { title: "Aulas", url: "/aluno/aulas", icon: Video },
-  { title: "Desafio", url: "/aluno/desafio", icon: Sword, status: "novo" },
+  { title: "Desafio", url: "/aluno/desafio", icon: Sword, status: "em_breve" },
   { title: "Meus Simulados", url: "/aluno/simulados", icon: NotebookPen },
 ];
 
 const navItems2: NavItem[] = [
-  { title: "Criar Simulado", url: "/aluno/simulados/novo", icon: CopyPlus },
+  {
+    title: "Criar Simulado",
+    url: "/aluno/simulados/novo",
+    icon: CopyPlus,
+    status: "novo",
+  },
   {
     title: "Flip Clock",
     url: "/aluno/simulados/relogio",
@@ -229,8 +234,9 @@ export function AlunoSidebar() {
             <div className="flex items-center gap-3 animate-pulse">
               <div className="w-10 h-10 rounded-full bg-neutral-800" />
               <div className="flex-1 space-y-2">
-                <div className="h-3 bg-neutral-800 rounded w-full" />
-                <div className="h-3 bg-neutral-800 rounded w-2/3" />
+                <span className="text-[10px] font-medium truncate pr-2">
+                  © 2026 +Aprovado. <br></br>Todos os direitos reservados.
+                </span>
               </div>
             </div>
           ) : user ? (

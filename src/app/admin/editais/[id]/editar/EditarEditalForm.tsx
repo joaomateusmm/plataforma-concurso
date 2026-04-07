@@ -9,7 +9,6 @@ import {
   Save,
   FileText,
   Check,
-  Search,
   Send,
   ChevronDown,
   Layers,
@@ -18,6 +17,7 @@ import {
   BookMarked,
   ImageIcon,
   X,
+  Search,
 } from "lucide-react";
 import { atualizarEditalAdmin } from "@/actions/editais";
 
@@ -53,7 +53,10 @@ export default function EditarEditalForm({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [expandedMaterias, setExpandedMaterias] = useState<string[]>([]);
+  // Estado para as pastas que o usuário abriu manualmente
+  const [manuallyExpandedMaterias, setManuallyExpandedMaterias] = useState<
+    string[]
+  >([]);
 
   // Tabs de Navegação e Estados Separados
   const [abaAtiva, setAbaAtiva] = useState<"basico" | "especifico">("basico");
@@ -97,26 +100,48 @@ export default function EditarEditalForm({
   };
   // --------------------------------------------------------------------
 
-  const filteredAssuntos = useMemo(() => {
-    if (!searchTerm.trim()) return assuntosDb;
-    const lowerSearch = searchTerm.toLowerCase();
-    return assuntosDb.filter(
-      (item) =>
-        item.nome?.toLowerCase().includes(lowerSearch) ||
-        (item.materiaNome &&
-          item.materiaNome.toLowerCase().includes(lowerSearch)),
-    );
-  }, [assuntosDb, searchTerm]);
+  // ====================================================================
+  // NOVA LÓGICA: FILTRA, AGRUPA E ORDENA ALFABETICAMENTE (A-Z)
+  // EFEITOS REMOVIDOS PARA EVITAR AVISOS DO ESLINT
+  // ====================================================================
+  const isSearching = searchTerm.trim().length > 0;
 
   const assuntosAgrupados = useMemo(() => {
+    let filtrados = [...assuntosDb];
+
+    // 1. Filtragem pela pesquisa
+    if (isSearching) {
+      const lowerSearch = searchTerm.toLowerCase();
+      filtrados = filtrados.filter(
+        (item) =>
+          item.nome?.toLowerCase().includes(lowerSearch) ||
+          (item.materiaNome &&
+            item.materiaNome.toLowerCase().includes(lowerSearch)),
+      );
+    }
+
+    // 2. Agrupamento
     const grupos: Record<string, any[]> = {};
-    filteredAssuntos.forEach((assunto) => {
+    filtrados.forEach((assunto) => {
       const materia = assunto.materiaNome || "Outros / Sem Matéria";
       if (!grupos[materia]) grupos[materia] = [];
       grupos[materia].push(assunto);
     });
-    return grupos;
-  }, [filteredAssuntos]);
+
+    // 3. Ordenação Alfabética (Matérias e depois Assuntos)
+    const gruposOrdenados: Record<string, any[]> = {};
+    Object.keys(grupos)
+      .sort((a, b) => a.localeCompare(b)) // Ordena as Matérias de A a Z
+      .forEach((materia) => {
+        gruposOrdenados[materia] = grupos[materia].sort(
+          (a, b) => a.nome.localeCompare(b.nome), // Ordena os Assuntos de A a Z
+        );
+      });
+
+    return gruposOrdenados;
+  }, [assuntosDb, searchTerm, isSearching]);
+
+  // ====================================================================
 
   const toggleAssunto = (id: number) => {
     setSelecionadosAtuais((prev) =>
@@ -125,7 +150,7 @@ export default function EditarEditalForm({
   };
 
   const toggleMateriaAccordion = (materiaNome: string) => {
-    setExpandedMaterias((prev) =>
+    setManuallyExpandedMaterias((prev) =>
       prev.includes(materiaNome)
         ? prev.filter((m) => m !== materiaNome)
         : [...prev, materiaNome],
@@ -454,8 +479,11 @@ export default function EditarEditalForm({
                     <div className="flex flex-col gap-2">
                       {Object.entries(assuntosAgrupados).map(
                         ([materiaNome, assuntos]) => {
+                          // A pasta expande se: o utilizador abriu manualmente OU se estiver a pesquisar
                           const isExpanded =
-                            expandedMaterias.includes(materiaNome);
+                            isSearching ||
+                            manuallyExpandedMaterias.includes(materiaNome);
+
                           const assuntosDaMateriaIds = assuntos.map(
                             (a) => a.id,
                           );
@@ -465,7 +493,8 @@ export default function EditarEditalForm({
                             ).length;
                           const todosSelecionados =
                             selecionadosNestaMateria ===
-                            assuntosDaMateriaIds.length;
+                              assuntosDaMateriaIds.length &&
+                            assuntosDaMateriaIds.length > 0;
 
                           return (
                             <div
@@ -539,7 +568,7 @@ export default function EditarEditalForm({
                                           )}
                                         </div>
                                         <span
-                                          className={`whitespace-normal leading-snug text-[13px] ${isSelected ? "text-gray-900 font-medium" : "text-gray-500"}`}
+                                          className={`wrap-break-word leading-snug text-[13px] ${isSelected ? "text-gray-900 font-medium" : "text-gray-500"}`}
                                         >
                                           {assunto.nome}
                                         </span>

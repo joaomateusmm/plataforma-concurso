@@ -14,12 +14,17 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
-  // 1. AVISAMOS O BETTER AUTH SOBRE A NOVA COLUNA
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    },
+  },
   user: {
     additionalFields: {
       role: {
         type: "string",
-        required: false, // Define como falso porque adicionamos com default('user')
+        required: false,
         defaultValue: "user",
       },
     },

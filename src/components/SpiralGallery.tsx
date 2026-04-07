@@ -18,42 +18,42 @@ function lerp(p1: number, p2: number, t: number) {
 
 const defaultItems = [
   {
-    image: "/bombeiro.png",
+    image: "/bombeiro.webp",
     text: "BMC",
     href: "/aluno",
   },
   {
-    image: `/simulado.png`,
+    image: `/simulado.webp`,
     text: "Provas",
     href: "/aluno",
   },
   {
-    image: `/policial.jpg`,
+    image: `/policial.webp`,
     text: "PM",
     href: "/aluno",
   },
   {
-    image: "/prf.jpeg",
+    image: "/prf.webp",
     text: "PRF",
     href: "/aluno",
   },
   {
-    image: `/gcm.jpg`,
+    image: `/gcm.webp`,
     text: "GCM",
     href: "/aluno",
   },
   {
-    image: `/militar.jpeg`,
+    image: `/militar.webp`,
     text: "ESA",
     href: "/aluno",
   },
   {
-    image: `/pp.jfif`,
+    image: `/pp.webp`,
     text: "PCCE",
     href: "/aluno",
   },
   {
-    image: `/pmce.png`,
+    image: `/pmce.webp`,
     text: "PMCE",
     href: "/aluno",
   },

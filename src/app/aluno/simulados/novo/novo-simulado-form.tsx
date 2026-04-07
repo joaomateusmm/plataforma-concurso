@@ -13,6 +13,10 @@ import {
   FileText,
   Target,
   Layers,
+  Folder,
+  FolderOpen,
+  ChevronDown,
+  CornerDownRight,
 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { gerarSimuladoAleatorio } from "../../../../actions/simulados";
@@ -23,6 +27,9 @@ interface DadosProps {
   assuntos: any[];
 }
 
+// --------------------------------------------------------------------------------
+// FILTER CARD PADRÃO (Usado para Bancas e Matérias - Lista Plana)
+// --------------------------------------------------------------------------------
 function FilterCard({
   title,
   items,
@@ -58,7 +65,7 @@ function FilterCard({
         </span>
       </label>
 
-      <div className="flex flex-col h-120 bg-neutral-950 border border-neutral-800 rounded-xl overflow-hidden shadow-inner">
+      <div className="flex flex-col h-160 bg-neutral-950 border border-neutral-800 rounded-xl overflow-hidden shadow-inner">
         <div className="flex items-center px-4 h-12 shrink-0 border-b border-neutral-800/60 bg-neutral-950">
           <Search className="w-4 h-4 text-neutral-500 mr-2" />
           <input
@@ -132,6 +139,209 @@ function FilterCard({
   );
 }
 
+// --------------------------------------------------------------------------------
+// FILTER CARD DE ASSUNTOS (Design Hierárquico em Pastas)
+// --------------------------------------------------------------------------------
+function FilterCardAssuntos({
+  items,
+  selectedIds,
+  onToggle,
+}: {
+  items: any[];
+  selectedIds: number[];
+  onToggle: (id: number) => void;
+}) {
+  const [searchTerm, setSearchTerm] = useState("");
+  // Estado que guarda as pastas manualmente expandidas pelo utilizador
+  const [manuallyExpandedFolders, setManuallyExpandedFolders] = useState<
+    string[]
+  >([]);
+
+  const groupedAndFilteredItems = useMemo(() => {
+    let result = [...items];
+    const isSearching = searchTerm.trim().length > 0;
+
+    if (isSearching) {
+      const lowerSearch = searchTerm.toLowerCase();
+      result = result.filter(
+        (item) =>
+          item.nome.toLowerCase().includes(lowerSearch) ||
+          (item.materiaNome &&
+            item.materiaNome.toLowerCase().includes(lowerSearch)),
+      );
+    }
+
+    result.sort((a, b) => a.nome.localeCompare(b.nome));
+
+    const groups: Record<string, any[]> = {};
+    result.forEach((item) => {
+      const materia = item.materiaNome || "Outros Assuntos";
+      if (!groups[materia]) groups[materia] = [];
+      groups[materia].push(item);
+    });
+
+    return Object.keys(groups)
+      .sort((a, b) => a.localeCompare(b))
+      .map((materiaNome) => ({
+        materiaNome,
+        assuntos: groups[materiaNome],
+        // Se estiver pesquisando, forçamos todas as pastas que têm resultados a ficarem abertas
+        isAutoExpanded: isSearching,
+      }));
+  }, [items, searchTerm]);
+
+  const toggleFolder = (materiaNome: string) => {
+    setManuallyExpandedFolders((prev) =>
+      prev.includes(materiaNome)
+        ? prev.filter((name) => name !== materiaNome)
+        : [...prev, materiaNome],
+    );
+  };
+
+  return (
+    <div className="flex flex-col">
+      <label className="text-sm font-semibold text-neutral-300 mb-3 flex justify-between items-center">
+        Assuntos
+        <span className="text-[10px] bg-neutral-800 px-2 py-0.5 rounded-full text-emerald-400">
+          {selectedIds.length} marcados
+        </span>
+      </label>
+
+      <div className="flex flex-col h-120 bg-neutral-950 border border-neutral-800 rounded-xl overflow-hidden shadow-inner">
+        <div className="flex items-center px-4 h-12 shrink-0 border-b border-neutral-800/60 bg-neutral-950">
+          <Search className="w-4 h-4 text-neutral-500 mr-2" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Pesquisar por matéria ou assunto..."
+            className="flex-1 bg-transparent border-none text-white text-sm focus:outline-none focus:ring-0 placeholder:text-neutral-600"
+          />
+        </div>
+
+        <div
+          data-lenis-prevent="true"
+          className="custom-scrollbar relative flex-1 min-h-0 overflow-x-hidden overflow-y-auto"
+          style={{ overscrollBehavior: "contain" }}
+        >
+          {groupedAndFilteredItems.length === 0 ? (
+            <div className="py-8 text-center text-sm text-neutral-500">
+              Nenhum resultado encontrado.
+            </div>
+          ) : (
+            <div className="flex flex-col">
+              {groupedAndFilteredItems.map((group) => {
+                // A pasta está aberta se: o usuário abriu manualmente OU se estamos pesquisando e o grupo apareceu
+                const isExpanded =
+                  group.isAutoExpanded ||
+                  manuallyExpandedFolders.includes(group.materiaNome);
+                const selectedInGroup = group.assuntos.filter((a) =>
+                  selectedIds.includes(a.id),
+                ).length;
+
+                return (
+                  <div
+                    key={group.materiaNome}
+                    className="border-b border-neutral-800/50 last:border-0"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => toggleFolder(group.materiaNome)}
+                      className="flex items-center justify-between w-full px-4 py-3.5 hover:bg-neutral-900/50 transition-colors group"
+                    >
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        {isExpanded ? (
+                          <FolderOpen className="w-4 h-4 text-emerald-500 shrink-0" />
+                        ) : (
+                          <Folder className="w-4 h-4 text-neutral-400 group-hover:text-neutral-300 shrink-0 transition-colors" />
+                        )}
+                        <span className="font-semibold text-sm text-neutral-300 truncate">
+                          {group.materiaNome}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-3 shrink-0">
+                        {selectedInGroup > 0 && (
+                          <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                            {selectedInGroup}/{group.assuntos.length}
+                          </span>
+                        )}
+                        <ChevronDown
+                          className={`w-4 h-4 text-neutral-500 transition-transform duration-200 ${
+                            isExpanded ? "rotate-180" : ""
+                          }`}
+                        />
+                      </div>
+                    </button>
+
+                    {isExpanded && (
+                      <div className="flex flex-col bg-neutral-950 pb-2">
+                        {group.assuntos.map((item) => {
+                          const isSelected = selectedIds.includes(item.id);
+                          const qtd = item.quantidadeQuestoes || 0;
+
+                          return (
+                            <button
+                              key={item.id}
+                              type="button"
+                              onClick={() => onToggle(item.id)}
+                              className={`flex items-start gap-3 w-full text-left pr-4 py-2.5 transition-colors group ${
+                                isSelected
+                                  ? "bg-neutral-900 text-white"
+                                  : "hover:bg-neutral-900/40 text-neutral-400 hover:text-neutral-200"
+                              }`}
+                            >
+                              <div className="w-12 shrink-0 flex justify-end opacity-40 group-hover:opacity-100 transition-opacity">
+                                <CornerDownRight
+                                  className={`w-4 h-4 mt-0.5 ${isSelected ? "text-emerald-500" : "text-neutral-600"}`}
+                                />
+                              </div>
+
+                              <div
+                                className={`w-4 h-4 mt-0.5 rounded border shrink-0 flex items-center justify-center transition-colors ${
+                                  isSelected
+                                    ? "bg-emerald-500 border-emerald-500"
+                                    : "border-neutral-700 bg-neutral-900"
+                                }`}
+                              >
+                                {isSelected && (
+                                  <Check className="w-3 h-3 text-neutral-950 stroke-3" />
+                                )}
+                              </div>
+
+                              <div className="flex flex-1 items-center justify-between gap-3 overflow-hidden">
+                                <span className="truncate leading-snug text-[13px]">
+                                  {item.nome}
+                                </span>
+                                <span
+                                  className={`shrink-0 text-[9px] font-bold px-2 py-0.5 rounded-md border ${
+                                    qtd > 0
+                                      ? "bg-neutral-800/50 text-neutral-400 border-neutral-800"
+                                      : "bg-neutral-800/30 text-neutral-600 border-neutral-800/50"
+                                  }`}
+                                >
+                                  {qtd} Qts
+                                </span>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// --------------------------------------------------------------------------------
+// FORMULÁRIO PRINCIPAL
+// --------------------------------------------------------------------------------
 export function NovoSimuladoForm({ bancas, materias, assuntos }: DadosProps) {
   const router = useRouter();
   const { data: session } = authClient.useSession();
@@ -156,11 +366,6 @@ export function NovoSimuladoForm({ bancas, materias, assuntos }: DadosProps) {
     }
   };
 
-  // =========================================================
-  // LÓGICA DINÂMICA DO RESUMO DO SIMULADO (A MÁGICA ACONTECE AQUI)
-  // =========================================================
-
-  // Extraímos os nomes do que o utilizador selecionou para mostrar na caixa
   const nomesBancas = bancas
     .filter((b) => bancasSelecionadas.includes(b.id))
     .map((b) => b.nome);
@@ -171,9 +376,7 @@ export function NovoSimuladoForm({ bancas, materias, assuntos }: DadosProps) {
     .filter((a) => assuntosSelecionados.includes(a.id))
     .map((a) => a.nome);
 
-  // Estimativa de Questões: Calcula o limite superior cruzando os filtros!
   const estimativaQuestoes = useMemo(() => {
-    // Total absoluto do banco
     const totalBanco = bancas.reduce(
       (acc, curr) => acc + (Number(curr.quantidadeQuestoes) || 0),
       0,
@@ -209,7 +412,6 @@ export function NovoSimuladoForm({ bancas, materias, assuntos }: DadosProps) {
             )
         : totalBanco;
 
-    // A intersecção nunca pode ser maior que o menor grupo selecionado!
     return Math.min(totalB, totalM, totalA);
   }, [
     bancas,
@@ -258,8 +460,8 @@ export function NovoSimuladoForm({ bancas, materias, assuntos }: DadosProps) {
         });
         router.push(`/aluno/simulados/${resultado.simuladoId}`);
       }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error) {
+    } catch {
+      // <-- Erro 2 resolvido: Variável "error" removida
       toast.error("Erro Fatal", {
         description: "Falha ao conectar com o servidor.",
       });
@@ -273,7 +475,6 @@ export function NovoSimuladoForm({ bancas, materias, assuntos }: DadosProps) {
       <style>{`
         .hide-native-scroll::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
         .hide-native-scroll { scrollbar-width: none !important; -ms-overflow-style: none !important; }
-
         .custom-scrollbar::-webkit-scrollbar { display: block !important; width: 6px !important; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent !important; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #3f3f46 !important; border-radius: 10px !important; }
@@ -281,9 +482,7 @@ export function NovoSimuladoForm({ bancas, materias, assuntos }: DadosProps) {
         .custom-scrollbar { scrollbar-width: thin !important; scrollbar-color: #3f3f46 transparent !important; }
       `}</style>
 
-      {/* GRID LAYOUT: O Formulário na esquerda, Resumo na direita */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        {/* COLUNA ESQUERDA: FORMULÁRIO (Ocupa 2 espaços) */}
         <form
           onSubmit={handleGerarSimulado}
           className="lg:col-span-2 space-y-6"
@@ -338,7 +537,7 @@ export function NovoSimuladoForm({ bancas, materias, assuntos }: DadosProps) {
               </h2>
               <p className="text-sm text-neutral-400 mt-1">
                 Se não marcar nenhuma opção, o simulado sorteará questões de
-                forma totalmente aleatória de todo o banco.
+                forma aleatória de todo o banco.
               </p>
             </div>
 
@@ -365,9 +564,8 @@ export function NovoSimuladoForm({ bancas, materias, assuntos }: DadosProps) {
                   )
                 }
               />
-              <FilterCard
-                title="Assuntos"
-                placeholder="Pesquisar assunto..."
+
+              <FilterCardAssuntos
                 items={assuntos}
                 selectedIds={assuntosSelecionados}
                 onToggle={(id) =>
@@ -380,40 +578,18 @@ export function NovoSimuladoForm({ bancas, materias, assuntos }: DadosProps) {
               />
             </div>
           </div>
-
-          <div className="flex justify-end pt-4">
-            <button
-              type="submit"
-              disabled={isGenerating}
-              className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all disabled:opacity-70 disabled:cursor-not-allowed"
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Sorteando Questões...
-                </>
-              ) : (
-                <>
-                  <Play className="w-5 h-5 fill-current" />
-                  Criar e Começar Simulado
-                </>
-              )}
-            </button>
-          </div>
         </form>
 
-        {/* COLUNA DIREITA: RESUMO DINÂMICO (Ocupa 1 espaço e fica FIXO no scroll) */}
         <div className="lg:col-span-1 sticky top-8">
           <div className="flex flex-col p-6 gap-6 text-white bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl relative overflow-hidden">
-            {/* Brilho visual no card */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-3xl rounded-full pointer-events-none" />
-
             <div>
               <div className="flex items-center gap-2 text-xs font-bold text-emerald-500 tracking-widest mb-3">
                 <FileText className="w-3.5 h-3.5" />
                 Visualize seu simulado:
               </div>
               <h3 className="text-2xl font-bold text-white wrap-break-word leading-tight">
+                {" "}
                 {titulo || "Novo Simulado"}
               </h3>
             </div>
@@ -482,6 +658,25 @@ export function NovoSimuladoForm({ bancas, materias, assuntos }: DadosProps) {
                 </span>
               </div>
             </div>
+          </div>
+          <div className="flex justify-center pt-6">
+            <button
+              type="submit"
+              disabled={isGenerating}
+              className="flex items-center justify-center cursor-pointer gap-2 bg-emerald-600 px-4 hover:scale-[1.02] text-white py-4 rounded-xl font-bold text-lg duration-300 disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" /> Sorteando
+                  Questões...
+                </>
+              ) : (
+                <>
+                  <Play className="w-5 h-5 fill-current" /> Criar e Começar
+                  Simulado
+                </>
+              )}
+            </button>
           </div>
         </div>
       </div>

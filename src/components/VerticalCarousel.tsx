@@ -69,13 +69,14 @@ export function VerticalCarousel({
               key={`col1-${idx}`}
               className="group relative h-80 w-full shrink-0 cursor-pointer overflow-hidden rounded-2xl bg-neutral-900"
             >
-              {/* NEXT IMAGE AQUI */}
+              {/* NEXT IMAGE AQUI COM O ATRIBUTO SIZES */}
               <Image
                 src={item.image}
                 alt={item.text}
-                fill // Faz a imagem preencher a div pai (h-64 w-full)
+                fill
+                sizes="(max-width: 1024px) 100vw, 20vw"
                 className="object-cover transition-transform duration-500 group-hover:scale-110"
-                unoptimized={item.image.includes("picsum.photos")} // Desativa otimização para picsum pra evitar erros de hostname
+                unoptimized={item.image.includes("picsum.photos")}
               />
               <div className="absolute inset-0 flex items-end bg-linear-to-t from-black/80 via-black/20 to-transparent p-6 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                 <span className="text-lg font-bold tracking-wide text-white">
@@ -100,11 +101,12 @@ export function VerticalCarousel({
               key={`col2-${idx}`}
               className="group relative h-80 w-full shrink-0 cursor-pointer overflow-hidden rounded-2xl bg-neutral-900"
             >
-              {/* NEXT IMAGE AQUI */}
+              {/* NEXT IMAGE AQUI COM O ATRIBUTO SIZES */}
               <Image
                 src={item.image}
                 alt={item.text}
                 fill
+                sizes="(max-width: 1024px) 100vw, 20vw"
                 className="object-cover transition-transform duration-500 group-hover:scale-110"
                 unoptimized={item.image.includes("picsum.photos")}
               />

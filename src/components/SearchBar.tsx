@@ -210,7 +210,6 @@ export default function SearchBar() {
         </div>
       </div>
 
-      {/* 2. O MODAL: Transportado para o portal apenas se já montou no cliente */}
       {mounted && typeof document !== "undefined"
         ? createPortal(modalContent, document.body)
         : null}

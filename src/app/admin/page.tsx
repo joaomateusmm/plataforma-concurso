@@ -1,6 +1,20 @@
 // src/app/admin/page.tsx
+import { redirect } from "next/navigation";
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth"; 
 
-export default function AdminDashboard() {
+export default async function AdminDashboard() {
+  // 1. Busca a sessão atual no lado do servidor
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  // 2. Regra de Ouro: Se não tiver logado, OU se a role não for "admin", bloqueia o acesso!
+  if (!session?.user || session.user.role !== "admin") {
+    // Redireciona o usuário comum (ou deslogado) de volta para o painel de alunos
+    redirect("/aluno");
+  }
+
   return (
     <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200 max-w-full mx-12 space-y-12 mb-12">
       <h1 className="text-3xl font-bold text-gray-800 mb-4">

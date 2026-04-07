@@ -2,49 +2,71 @@
 import { db } from "../../../../db/index";
 import { bancas, materias, assuntos, questoes } from "../../../../db/schema";
 import { eq, sql } from "drizzle-orm";
-import { NovoSimuladoForm } from "./novo-simulado-form"; // Ajuste o nome do ficheiro se necessário
-import { BrainCircuit } from "lucide-react";
+import { NovoSimuladoForm } from "./novo-simulado-form";
+import { CopyPlus } from "lucide-react";
 
 export default async function NovoSimuladoPage() {
-  // 1. Busca Bancas + Contagem de Questões vinculadas
-  const listaBancas = await db
-    .select({
-      id: bancas.id,
-      nome: bancas.nome,
-      quantidadeQuestoes: sql<number>`count(${questoes.id})`.mapWith(Number),
-    })
-    .from(bancas)
-    .leftJoin(questoes, eq(bancas.id, questoes.bancaId))
-    .groupBy(bancas.id);
+  const todasBancas = await db.select().from(bancas);
+  const todasMaterias = await db.select().from(materias);
 
-  // 2. Busca Matérias + Contagem de Questões vinculadas
-  const listaMaterias = await db
-    .select({
-      id: materias.id,
-      nome: materias.nome,
-      quantidadeQuestoes: sql<number>`count(${questoes.id})`.mapWith(Number),
-    })
-    .from(materias)
-    .leftJoin(questoes, eq(materias.id, questoes.materiaId))
-    .groupBy(materias.id);
-
-  // 3. Busca Assuntos + Contagem de Questões vinculadas
-  const listaAssuntos = await db
+  // AQUI MUDOU: Agora puxamos o nome da matéria junto com o assunto!
+  const todosAssuntos = await db
     .select({
       id: assuntos.id,
       nome: assuntos.nome,
-      quantidadeQuestoes: sql<number>`count(${questoes.id})`.mapWith(Number),
+      materiaNome: materias.nome,
     })
     .from(assuntos)
-    .leftJoin(questoes, eq(assuntos.id, questoes.assuntoId))
-    .groupBy(assuntos.id);
+    .leftJoin(materias, eq(assuntos.materiaId, materias.id));
+
+  const contagemBancasQuery = await db
+    .select({
+      id: questoes.bancaId,
+      total: sql<number>`count(${questoes.id})`.mapWith(Number),
+    })
+    .from(questoes)
+    .groupBy(questoes.bancaId);
+
+  const contagemMateriasQuery = await db
+    .select({
+      id: questoes.materiaId,
+      total: sql<number>`count(${questoes.id})`.mapWith(Number),
+    })
+    .from(questoes)
+    .groupBy(questoes.materiaId);
+
+  const contagemAssuntosQuery = await db
+    .select({
+      id: questoes.assuntoId,
+      total: sql<number>`count(${questoes.id})`.mapWith(Number),
+    })
+    .from(questoes)
+    .groupBy(questoes.assuntoId);
+
+  const listaBancas = todasBancas.map((b) => ({
+    ...b,
+    quantidadeQuestoes:
+      contagemBancasQuery.find((q) => q.id === b.id)?.total || 0,
+  }));
+
+  const listaMaterias = todasMaterias.map((m) => ({
+    ...m,
+    quantidadeQuestoes:
+      contagemMateriasQuery.find((q) => q.id === m.id)?.total || 0,
+  }));
+
+  const listaAssuntos = todosAssuntos.map((a) => ({
+    ...a,
+    quantidadeQuestoes:
+      contagemAssuntosQuery.find((q) => q.id === a.id)?.total || 0,
+  }));
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500 mt-6">
+    <div className="mx-auto space-y-8 animate-in fade-in duration-500 mt-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <h1 className="text-3xl font-bold text-white flex items-center gap-3 mb-2">
-            <BrainCircuit className="w-8 h-8 text-emerald-500" />
+            <CopyPlus className="w-8 h-8 text-emerald-500" />
             Criar Simulado
           </h1>
           <p className="text-neutral-400">
@@ -56,7 +78,6 @@ export default async function NovoSimuladoPage() {
 
       <div className="border-t mt-7 mb-9 border-neutral-800"></div>
 
-      {/* A DIV estática saiu daqui. Agora o formulário gere o layout de duas colunas! */}
       <NovoSimuladoForm
         bancas={listaBancas}
         materias={listaMaterias}
