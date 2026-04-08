@@ -2,13 +2,19 @@
 
 import { db } from "../db/index";
 import { questoes, simulados, simuladoQuestoes } from "../db/schema";
-import { eq, inArray, and, sql, desc } from "drizzle-orm";
+import { eq, inArray, and, sql, desc, or } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 interface GerarSimuladoParams {
   userId: string;
   titulo: string;
-  quantidade: number;
+  quantidadeTotal: number;
+  bancasIds?: number[];
+  materiasConfig?: { id: number; qtd: number }[];
+  assuntosConfig?: { id: number; qtd: number }[];
+}
+
+interface ContarProps {
   bancasIds?: number[];
   materiasIds?: number[];
   assuntosIds?: number[];
@@ -29,42 +35,81 @@ function gerarIdAlfanumerico(tamanho = 15) {
 
 export async function gerarSimuladoAleatorio(params: GerarSimuladoParams) {
   try {
-    // 1. Montamos os filtros de busca dinâmica
-    const filtros = [];
+    let questoesSorteadas: { id: number }[] = [];
+    const promises = [];
 
-    if (params.bancasIds && params.bancasIds.length > 0) {
-      filtros.push(inArray(questoes.bancaId, params.bancasIds));
-    }
-    if (params.materiasIds && params.materiasIds.length > 0) {
-      filtros.push(inArray(questoes.materiaId, params.materiasIds));
-    }
-    if (params.assuntosIds && params.assuntosIds.length > 0) {
-      filtros.push(inArray(questoes.assuntoId, params.assuntosIds));
-    }
-
-    // 2. Buscamos as questões aleatórias no banco de dados
-    const questoesSorteadas = await db
-      .select({ id: questoes.id })
-      .from(questoes)
-      .where(filtros.length > 0 ? and(...filtros) : undefined)
-      .orderBy(sql`RANDOM()`) // O Segredo da aleatoriedade!
-      .limit(params.quantidade);
-
-    if (questoesSorteadas.length === 0) {
-      return { error: "Nenhuma questão encontrada com esses filtros." };
+    // Junta promessas de matérias inteiras
+    if (params.materiasConfig && params.materiasConfig.length > 0) {
+      const matPromises = params.materiasConfig.map(async (config) => {
+        const filtros = [eq(questoes.materiaId, config.id)];
+        if (params.bancasIds && params.bancasIds.length > 0) {
+          filtros.push(inArray(questoes.bancaId, params.bancasIds));
+        }
+        return db
+          .select({ id: questoes.id })
+          .from(questoes)
+          .where(and(...filtros))
+          .orderBy(sql`RANDOM()`)
+          .limit(config.qtd);
+      });
+      promises.push(...matPromises);
     }
 
-    // Geramos o ID customizado aqui!
+    // Junta promessas de assuntos específicos
+    if (params.assuntosConfig && params.assuntosConfig.length > 0) {
+      const assPromises = params.assuntosConfig.map(async (config) => {
+        const filtros = [eq(questoes.assuntoId, config.id)];
+        if (params.bancasIds && params.bancasIds.length > 0) {
+          filtros.push(inArray(questoes.bancaId, params.bancasIds));
+        }
+        return db
+          .select({ id: questoes.id })
+          .from(questoes)
+          .where(and(...filtros))
+          .orderBy(sql`RANDOM()`)
+          .limit(config.qtd);
+      });
+      promises.push(...assPromises);
+    }
+
+    // Executa tudo ao mesmo tempo ou cai no puramente aleatório
+    if (promises.length > 0) {
+      const resultados = await Promise.all(promises);
+      questoesSorteadas = resultados.flat();
+    } else {
+      // MODO PURAMENTE ALEATÓRIO
+      const filtros = [];
+      if (params.bancasIds && params.bancasIds.length > 0) {
+        filtros.push(inArray(questoes.bancaId, params.bancasIds));
+      }
+      questoesSorteadas = await db
+        .select({ id: questoes.id })
+        .from(questoes)
+        .where(filtros.length > 0 ? and(...filtros) : undefined)
+        .orderBy(sql`RANDOM()`)
+        .limit(params.quantidadeTotal);
+    }
+
+    const idsUnicos = Array.from(new Set(questoesSorteadas.map((q) => q.id)));
+
+    if (idsUnicos.length === 0) {
+      return {
+        error:
+          "Nenhuma questão encontrada com esses filtros no banco de dados.",
+      };
+    }
+
+    // Geramos o ID customizado
     const customId = gerarIdAlfanumerico();
 
-    // 3. Criamos o "Cabeçalho" do Simulado com o novo ID
+    // 3. Criamos o "Cabeçalho" do Simulado com o novo ID e a quantidade REAL de questões encontradas
     const novoSimulado = await db
       .insert(simulados)
       .values({
-        id: customId, // Injetando o ID customizado
+        id: customId,
         userId: params.userId,
         titulo: params.titulo,
-        quantidadeQuestoes: questoesSorteadas.length,
+        quantidadeQuestoes: idsUnicos.length,
         status: "Pendente",
       })
       .returning({ id: simulados.id });
@@ -72,9 +117,9 @@ export async function gerarSimuladoAleatorio(params: GerarSimuladoParams) {
     const simuladoId = novoSimulado[0].id;
 
     // 4. Vinculamos as questões sorteadas a este novo simulado
-    const vinculacoes = questoesSorteadas.map((q) => ({
+    const vinculacoes = idsUnicos.map((questaoId) => ({
       simuladoId: simuladoId,
-      questaoId: q.id,
+      questaoId: questaoId,
     }));
 
     await db.insert(simuladoQuestoes).values(vinculacoes);
@@ -90,7 +135,7 @@ export async function gerarSimuladoAleatorio(params: GerarSimuladoParams) {
 }
 
 export async function finalizarSimulado(
-  simuladoId: string, // <--- MUDOU DE number PARA string AQUI
+  simuladoId: string,
   respostas: Record<number, string>,
 ) {
   try {
@@ -161,8 +206,6 @@ export async function obterMeusSimulados(userId: string) {
 
 export async function deletarSimulado(simuladoId: string) {
   try {
-    // Como configuramos 'onDelete: cascade' na tabela simulado_questoes,
-    // ao deletar o simulado pai, todas as questões vinculadas a ele sumirão automaticamente!
     await db.delete(simulados).where(eq(simulados.id, simuladoId));
 
     revalidatePath("/aluno/simulados");
@@ -170,5 +213,39 @@ export async function deletarSimulado(simuladoId: string) {
   } catch (error) {
     console.error("Erro ao deletar simulado:", error);
     return { error: "Falha ao excluir o simulado." };
+  }
+}
+
+export async function contarQuestoesDisponiveis(filtros: ContarProps) {
+  try {
+    const filtrosDb = [];
+
+    if (filtros.bancasIds && filtros.bancasIds.length > 0) {
+      filtrosDb.push(inArray(questoes.bancaId, filtros.bancasIds));
+    }
+
+    const orConditions = [];
+    if (filtros.materiasIds && filtros.materiasIds.length > 0) {
+      orConditions.push(inArray(questoes.materiaId, filtros.materiasIds));
+    }
+    if (filtros.assuntosIds && filtros.assuntosIds.length > 0) {
+      orConditions.push(inArray(questoes.assuntoId, filtros.assuntosIds));
+    }
+
+    // Junta os ORs (Matérias OU Assuntos selecionados)
+    if (orConditions.length > 0) {
+      filtrosDb.push(or(...orConditions));
+    }
+
+    const resultado = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(questoes)
+      .where(filtrosDb.length > 0 ? and(...filtrosDb) : undefined);
+
+    const total = Number(resultado[0]?.count || 0);
+    return { total };
+  } catch (error) {
+    console.error("Erro na contagem:", error);
+    return { total: 0 };
   }
 }

@@ -32,6 +32,7 @@ export default async function EditalAlunoPage(props: {
     .select({
       id: assuntos.id,
       nome: assuntos.nome,
+      materiaId: materias.id,
       materiaNome: materias.nome,
       tipo: editalAssuntos.tipoConhecimento,
       qtdAulas: count(aulas.id),
@@ -44,6 +45,7 @@ export default async function EditalAlunoPage(props: {
     .groupBy(
       assuntos.id,
       assuntos.nome,
+      materias.id,
       materias.nome,
       editalAssuntos.tipoConhecimento,
     );

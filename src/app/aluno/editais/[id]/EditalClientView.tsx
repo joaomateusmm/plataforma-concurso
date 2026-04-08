@@ -4,7 +4,7 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import Link from "next/link"; // <-- ADICIONADO IMPORT DO LINK
+import Link from "next/link";
 import {
   ChevronLeft,
   ChevronDown,
@@ -14,6 +14,7 @@ import {
   Video,
   LayersPlus,
 } from "lucide-react";
+import { toast } from "sonner";
 
 interface EditalClientViewProps {
   edital: any;
@@ -26,6 +27,36 @@ export default function EditalClientView({
 }: EditalClientViewProps) {
   const router = useRouter();
   const [expandedMaterias, setExpandedMaterias] = useState<string[]>([]);
+
+  const handleCriarSimulado = (assuntosParaAdicionar?: any[]) => {
+    const baseDeAssuntos = assuntosParaAdicionar || assuntosDb;
+
+    if (baseDeAssuntos.length === 0) {
+      toast.error("Não há assuntos mapeados para criar um simulado.");
+      return;
+    }
+
+    // Extrai apenas os IDs únicos de assuntos e matérias para enviar para a outra página
+    const idsAssuntos = baseDeAssuntos.map((a) => a.id);
+    const idsMaterias = Array.from(
+      new Set(baseDeAssuntos.map((a) => a.materiaId).filter(Boolean)),
+    );
+
+    // Guardamos no sessionStorage. Assim, ao chegar na página /simulados/novo, ela lê estes dados!
+    sessionStorage.setItem(
+      "simulado_pre_selecionado",
+      JSON.stringify({
+        titulo: `Simulado Baseado: ${edital.titulo}`,
+        materias: idsMaterias,
+        assuntos: idsAssuntos,
+      }),
+    );
+
+    toast.success("Preparando o seu simulado...");
+
+    // Redireciona o aluno
+    router.push("/aluno/simulados/novo");
+  };
 
   const agrupamentoBasico = useMemo(() => {
     const basicos = assuntosDb.filter((a) => a.tipo === "Básico");
@@ -97,10 +128,11 @@ export default function EditalClientView({
                 </div>
 
                 <div className="flex items-center gap-4">
-                  <a className="text-[11px] cursor-pointer font-bold flex items-center gap-2  px-2.5 py-1 rounded hover:bg-black hover:text-neutral-100 duration-300 bg-neutral-950 border border-neutral-800 text-neutral-400">
-                    <LayersPlus className="w-4 h-4" />
+                  {/* Botão de Bloco de Questões (Isolado e sem a função do Simulado) */}
+                  <button className="text-[11px] font-bold px-2.5 py-1 rounded bg-neutral-950 border border-neutral-800 text-neutral-400 flex items-center gap-2 hover:bg-neutral-800 transition-colors">
+                    <LayersPlus className="w-4 h-4 text-emerald-500" />
                     Criar Caderno de Questões
-                  </a>
+                  </button>
                   <span className="text-[11px] font-bold px-2.5 py-1 rounded bg-neutral-950 border border-neutral-800 text-neutral-400">
                     {quantidadeAssuntos} tópicos
                   </span>
@@ -129,7 +161,7 @@ export default function EditalClientView({
                         return (
                           <li
                             key={assunto.id}
-                            className="flex items-center  gap-3 px-3 py-2 rounded-xl hover:bg-neutral-900 transition-colors group cursor-default"
+                            className="flex items-center justify-between gap-3 px-3 py-2 rounded-xl hover:bg-neutral-900 transition-colors group cursor-default"
                           >
                             <span className="text-sm text-neutral-400 group-hover:text-neutral-200 transition-colors leading-relaxed">
                               {index + 1} - {assunto.nome}
@@ -140,7 +172,7 @@ export default function EditalClientView({
                                   ⟶
                                 </span>
                                 <Link
-                                  href={`/aluno/aulas?assuntoId=${assunto.id}`}
+                                  href={`/aluno/materiais?assuntoId=${assunto.id}`}
                                   className="text-[11px] cursor-pointer font-bold flex items-center gap-1.5 px-2.5 py-1 rounded hover:bg-emerald-500/10 hover:text-emerald-400 hover:border-emerald-500/30 duration-300 bg-neutral-950 border border-neutral-800 text-neutral-400"
                                 >
                                   <Video className="h-3.5 w-3.5" />
@@ -215,13 +247,17 @@ export default function EditalClientView({
               </a>
             )}
 
-            <a className="px-3 py-1.5 text-[10px] cursor-pointer hover:bg-neutral-900/80 duration-200 font-medium uppercase tracking-wider rounded-lg border bg-neutral-950/80 border-neutral-800 text-neutral-400 hover:text-white flex items-center gap-1.5 backdrop-blur-sm">
+            {/* BOTÃO PRINCIPAL CRIAR SIMULADO (TODO O EDITAL) */}
+            <button
+              onClick={() => handleCriarSimulado()}
+              className="px-3 py-1.5 text-[10px] cursor-pointer hover:bg-neutral-900/80 duration-200 font-medium uppercase tracking-wider rounded-lg border bg-neutral-950/80 border-neutral-800 text-neutral-400 hover:text-white flex items-center gap-1.5 backdrop-blur-sm"
+            >
               <CopyPlus className="h-4 w-4 mr-1 text-emerald-500" /> Criar
-              Simulado
-            </a>
+              Simulado do Edital
+            </button>
           </div>
 
-          <h1 className="text-3xl  font-medium mb-4 text-white tracking-tight leading-tight">
+          <h1 className="text-3xl font-medium mb-4 text-white tracking-tight leading-tight">
             {edital.titulo}
           </h1>
 

@@ -1,25 +1,21 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import {
-  Loader2,
-  Settings2,
-  Play,
-  Check,
-  Search,
-  FileText,
-  Target,
-  Layers,
-  Folder,
-  FolderOpen,
-  ChevronDown,
-  CornerDownRight,
-} from "lucide-react";
+import { Loader2, Settings2, Play, FileText } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
-import { gerarSimuladoAleatorio } from "../../../../actions/simulados";
+import {
+  gerarSimuladoAleatorio,
+  contarQuestoesDisponiveis,
+} from "../../../../actions/simulados";
+
+import {
+  FilterCardBancas,
+  FilterCardMaterias,
+  FilterCardAssuntosAvancado,
+} from "./FilterCards";
 
 interface DadosProps {
   bancas: any[];
@@ -27,444 +23,196 @@ interface DadosProps {
   assuntos: any[];
 }
 
-// --------------------------------------------------------------------------------
-// FILTER CARD PADRÃO (Usado para Bancas e Matérias - Lista Plana)
-// --------------------------------------------------------------------------------
-function FilterCard({
-  title,
-  items,
-  selectedIds,
-  onToggle,
-  placeholder,
-}: {
-  title: string;
-  items: any[];
-  selectedIds: number[];
-  onToggle: (id: number) => void;
-  placeholder: string;
-}) {
-  const [searchTerm, setSearchTerm] = useState("");
-
-  const filteredItems = useMemo(() => {
-    let result = [...items];
-    if (searchTerm.trim()) {
-      const lowerSearch = searchTerm.toLowerCase();
-      result = result.filter((item) =>
-        item.nome.toLowerCase().includes(lowerSearch),
-      );
-    }
-    return result.sort((a, b) => a.nome.localeCompare(b.nome));
-  }, [items, searchTerm]);
-
-  return (
-    <div className="flex flex-col">
-      <label className="text-sm font-semibold text-neutral-300 mb-3 flex justify-between items-center">
-        {title}
-        <span className="text-[10px] bg-neutral-800 px-2 py-0.5 rounded-full text-emerald-400">
-          {selectedIds.length} marcadas
-        </span>
-      </label>
-
-      <div className="flex flex-col h-160 bg-neutral-950 border border-neutral-800 rounded-xl overflow-hidden shadow-inner">
-        <div className="flex items-center px-4 h-12 shrink-0 border-b border-neutral-800/60 bg-neutral-950">
-          <Search className="w-4 h-4 text-neutral-500 mr-2" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder={placeholder}
-            className="flex-1 bg-transparent border-none text-white text-sm focus:outline-none focus:ring-0 placeholder:text-neutral-600"
-          />
-        </div>
-
-        <div
-          data-lenis-prevent="true"
-          className="custom-scrollbar relative flex-1 min-h-0 overflow-x-hidden overflow-y-auto"
-          style={{ overscrollBehavior: "contain" }}
-        >
-          {filteredItems.length === 0 ? (
-            <div className="py-8 text-center text-sm text-neutral-500">
-              Nenhum resultado encontrado.
-            </div>
-          ) : (
-            <div className="flex flex-col py-1">
-              {filteredItems.map((item) => {
-                const isSelected = selectedIds.includes(item.id);
-                const qtd = item.quantidadeQuestoes || 0;
-
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => onToggle(item.id)}
-                    className={`flex items-center gap-3 w-full text-left px-4 py-3 transition-colors ${
-                      isSelected
-                        ? "bg-neutral-900 text-white"
-                        : "text-neutral-400 hover:bg-neutral-900/50 hover:text-neutral-200"
-                    }`}
-                  >
-                    <div
-                      className={`w-5 h-5 rounded border shrink-0 flex items-center justify-center transition-colors ${
-                        isSelected
-                          ? "bg-emerald-500 border-emerald-500"
-                          : "border-neutral-700 bg-neutral-900"
-                      }`}
-                    >
-                      {isSelected && (
-                        <Check className="w-3.5 h-3.5 text-neutral-950 stroke-3" />
-                      )}
-                    </div>
-                    <div className="flex flex-1 items-center justify-between gap-3 overflow-hidden">
-                      <span className="truncate leading-snug text-sm">
-                        {item.nome}
-                      </span>
-                      <span
-                        className={`shrink-0 text-[10px] font-bold px-2 py-1 rounded-md border ${
-                          qtd > 0
-                            ? "bg-neutral-800/50 text-neutral-300 border-neutral-800"
-                            : "bg-neutral-800/50 text-neutral-500 border-neutral-800"
-                        }`}
-                      >
-                        {qtd} {qtd === 1 ? "Questão" : "Questões"}
-                      </span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// --------------------------------------------------------------------------------
-// FILTER CARD DE ASSUNTOS (Design Hierárquico em Pastas)
-// --------------------------------------------------------------------------------
-function FilterCardAssuntos({
-  items,
-  selectedIds,
-  onToggle,
-}: {
-  items: any[];
-  selectedIds: number[];
-  onToggle: (id: number) => void;
-}) {
-  const [searchTerm, setSearchTerm] = useState("");
-  // Estado que guarda as pastas manualmente expandidas pelo utilizador
-  const [manuallyExpandedFolders, setManuallyExpandedFolders] = useState<
-    string[]
-  >([]);
-
-  const groupedAndFilteredItems = useMemo(() => {
-    let result = [...items];
-    const isSearching = searchTerm.trim().length > 0;
-
-    if (isSearching) {
-      const lowerSearch = searchTerm.toLowerCase();
-      result = result.filter(
-        (item) =>
-          item.nome.toLowerCase().includes(lowerSearch) ||
-          (item.materiaNome &&
-            item.materiaNome.toLowerCase().includes(lowerSearch)),
-      );
-    }
-
-    result.sort((a, b) => a.nome.localeCompare(b.nome));
-
-    const groups: Record<string, any[]> = {};
-    result.forEach((item) => {
-      const materia = item.materiaNome || "Outros Assuntos";
-      if (!groups[materia]) groups[materia] = [];
-      groups[materia].push(item);
-    });
-
-    return Object.keys(groups)
-      .sort((a, b) => a.localeCompare(b))
-      .map((materiaNome) => ({
-        materiaNome,
-        assuntos: groups[materiaNome],
-        // Se estiver pesquisando, forçamos todas as pastas que têm resultados a ficarem abertas
-        isAutoExpanded: isSearching,
-      }));
-  }, [items, searchTerm]);
-
-  const toggleFolder = (materiaNome: string) => {
-    setManuallyExpandedFolders((prev) =>
-      prev.includes(materiaNome)
-        ? prev.filter((name) => name !== materiaNome)
-        : [...prev, materiaNome],
-    );
-  };
-
-  return (
-    <div className="flex flex-col">
-      <label className="text-sm font-semibold text-neutral-300 mb-3 flex justify-between items-center">
-        Assuntos
-        <span className="text-[10px] bg-neutral-800 px-2 py-0.5 rounded-full text-emerald-400">
-          {selectedIds.length} marcados
-        </span>
-      </label>
-
-      <div className="flex flex-col h-120 bg-neutral-950 border border-neutral-800 rounded-xl overflow-hidden shadow-inner">
-        <div className="flex items-center px-4 h-12 shrink-0 border-b border-neutral-800/60 bg-neutral-950">
-          <Search className="w-4 h-4 text-neutral-500 mr-2" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Pesquisar por matéria ou assunto..."
-            className="flex-1 bg-transparent border-none text-white text-sm focus:outline-none focus:ring-0 placeholder:text-neutral-600"
-          />
-        </div>
-
-        <div
-          data-lenis-prevent="true"
-          className="custom-scrollbar relative flex-1 min-h-0 overflow-x-hidden overflow-y-auto"
-          style={{ overscrollBehavior: "contain" }}
-        >
-          {groupedAndFilteredItems.length === 0 ? (
-            <div className="py-8 text-center text-sm text-neutral-500">
-              Nenhum resultado encontrado.
-            </div>
-          ) : (
-            <div className="flex flex-col">
-              {groupedAndFilteredItems.map((group) => {
-                // A pasta está aberta se: o usuário abriu manualmente OU se estamos pesquisando e o grupo apareceu
-                const isExpanded =
-                  group.isAutoExpanded ||
-                  manuallyExpandedFolders.includes(group.materiaNome);
-                const selectedInGroup = group.assuntos.filter((a) =>
-                  selectedIds.includes(a.id),
-                ).length;
-
-                return (
-                  <div
-                    key={group.materiaNome}
-                    className="border-b border-neutral-800/50 last:border-0"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => toggleFolder(group.materiaNome)}
-                      className="flex items-center justify-between w-full px-4 py-3.5 hover:bg-neutral-900/50 transition-colors group"
-                    >
-                      <div className="flex items-center gap-3 overflow-hidden">
-                        {isExpanded ? (
-                          <FolderOpen className="w-4 h-4 text-emerald-500 shrink-0" />
-                        ) : (
-                          <Folder className="w-4 h-4 text-neutral-400 group-hover:text-neutral-300 shrink-0 transition-colors" />
-                        )}
-                        <span className="font-semibold text-sm text-neutral-300 truncate">
-                          {group.materiaNome}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-3 shrink-0">
-                        {selectedInGroup > 0 && (
-                          <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                            {selectedInGroup}/{group.assuntos.length}
-                          </span>
-                        )}
-                        <ChevronDown
-                          className={`w-4 h-4 text-neutral-500 transition-transform duration-200 ${
-                            isExpanded ? "rotate-180" : ""
-                          }`}
-                        />
-                      </div>
-                    </button>
-
-                    {isExpanded && (
-                      <div className="flex flex-col bg-neutral-950 pb-2">
-                        {group.assuntos.map((item) => {
-                          const isSelected = selectedIds.includes(item.id);
-                          const qtd = item.quantidadeQuestoes || 0;
-
-                          return (
-                            <button
-                              key={item.id}
-                              type="button"
-                              onClick={() => onToggle(item.id)}
-                              className={`flex items-start gap-3 w-full text-left pr-4 py-2.5 transition-colors group ${
-                                isSelected
-                                  ? "bg-neutral-900 text-white"
-                                  : "hover:bg-neutral-900/40 text-neutral-400 hover:text-neutral-200"
-                              }`}
-                            >
-                              <div className="w-12 shrink-0 flex justify-end opacity-40 group-hover:opacity-100 transition-opacity">
-                                <CornerDownRight
-                                  className={`w-4 h-4 mt-0.5 ${isSelected ? "text-emerald-500" : "text-neutral-600"}`}
-                                />
-                              </div>
-
-                              <div
-                                className={`w-4 h-4 mt-0.5 rounded border shrink-0 flex items-center justify-center transition-colors ${
-                                  isSelected
-                                    ? "bg-emerald-500 border-emerald-500"
-                                    : "border-neutral-700 bg-neutral-900"
-                                }`}
-                              >
-                                {isSelected && (
-                                  <Check className="w-3 h-3 text-neutral-950 stroke-3" />
-                                )}
-                              </div>
-
-                              <div className="flex flex-1 items-center justify-between gap-3 overflow-hidden">
-                                <span className="truncate leading-snug text-[13px]">
-                                  {item.nome}
-                                </span>
-                                <span
-                                  className={`shrink-0 text-[9px] font-bold px-2 py-0.5 rounded-md border ${
-                                    qtd > 0
-                                      ? "bg-neutral-800/50 text-neutral-400 border-neutral-800"
-                                      : "bg-neutral-800/30 text-neutral-600 border-neutral-800/50"
-                                  }`}
-                                >
-                                  {qtd} Qts
-                                </span>
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// --------------------------------------------------------------------------------
-// FORMULÁRIO PRINCIPAL
-// --------------------------------------------------------------------------------
 export function NovoSimuladoForm({ bancas, materias, assuntos }: DadosProps) {
   const router = useRouter();
   const { data: session } = authClient.useSession();
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [titulo, setTitulo] = useState("");
-  const [quantidade, setQuantidade] = useState<number>(10);
 
-  const [bancasSelecionadas, setBancasSelecionadas] = useState<number[]>([]);
-  const [materiasSelecionadas, setMateriasSelecionadas] = useState<number[]>(
-    [],
-  );
-  const [assuntosSelecionados, setAssuntosSelecionados] = useState<number[]>(
-    [],
-  );
+  const [bancasSel, setBancasSel] = useState<number[]>([]);
+  const [materiasSel, setMateriasSel] = useState<Record<number, number>>({});
+  const [assuntosSel, setAssuntosSel] = useState<Record<number, number>>({});
 
-  const toggleSelection = (id: number, state: number[], setState: any) => {
-    if (state.includes(id)) {
-      setState(state.filter((itemId) => itemId !== id));
+  const [questoesDisponiveis, setQuestoesDisponiveis] = useState<number>(0);
+  const [isLoadingCount, setIsLoadingCount] = useState(false);
+
+  // Efeito do Contador
+  useEffect(() => {
+    const fetchCount = async () => {
+      setIsLoadingCount(true);
+      try {
+        const materiasIds = Object.keys(materiasSel).map(Number);
+        const assuntosIds = Object.keys(assuntosSel).map(Number);
+
+        const res = await contarQuestoesDisponiveis({
+          bancasIds: bancasSel.length > 0 ? bancasSel : undefined,
+          materiasIds: materiasIds.length > 0 ? materiasIds : undefined,
+          assuntosIds: assuntosIds.length > 0 ? assuntosIds : undefined,
+        });
+
+        setQuestoesDisponiveis(res.total || 0);
+      } catch (error) {
+        console.error("Erro ao buscar questões:", error);
+        setQuestoesDisponiveis(0);
+      } finally {
+        setIsLoadingCount(false);
+      }
+    };
+
+    const timeoutId = setTimeout(() => fetchCount(), 500);
+    return () => clearTimeout(timeoutId);
+  }, [bancasSel, materiasSel, assuntosSel]);
+
+  // Resgate do Edital
+  useEffect(() => {
+    const savedData = sessionStorage.getItem("simulado_pre_selecionado");
+    if (savedData) {
+      try {
+        const dados = JSON.parse(savedData);
+        if (dados.titulo) setTitulo(dados.titulo);
+        if (dados.materias) {
+          const matsObj: Record<number, number> = {};
+          dados.materias.forEach((id: number) => (matsObj[id] = 10));
+          setMateriasSel(matsObj);
+        }
+        if (dados.assuntos) {
+          const assObj: Record<number, number> = {};
+          dados.assuntos.forEach((id: number) => (assObj[id] = 10));
+          setAssuntosSel(assObj);
+        }
+        sessionStorage.removeItem("simulado_pre_selecionado");
+      } catch {
+        /* ignorado */
+      }
+    }
+  }, []);
+
+  const toggleBanca = (id: number) => {
+    setBancasSel((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
+    );
+  };
+
+  // HELPER: Garante a extração do ID da matéria seja qual for a estrutura que o backend enviou
+  const obterMateriaId = (a: any) => {
+    let id = Number(a.materiaId || a.materia_id || 0);
+    if (!id && (a.materiaNome || a.materia?.nome)) {
+      const nomeBusca = a.materiaNome || a.materia?.nome;
+      const mat = materias.find((m: any) => m.nome === nomeBusca);
+      if (mat) id = Number(mat.id);
+    }
+    return id;
+  };
+
+  const handleToggleMateria = (materiaId: number) => {
+    setMateriasSel((prev) => {
+      const next = { ...prev };
+      if (next[materiaId]) delete next[materiaId];
+      else next[materiaId] = 10;
+      return next;
+    });
+
+    setAssuntosSel((prev) => {
+      const next = { ...prev };
+      const assuntosDestaMateria = assuntos.filter(
+        (a) => obterMateriaId(a) === materiaId,
+      );
+      assuntosDestaMateria.forEach((a) => delete next[a.id]);
+      return next;
+    });
+  };
+
+  const handleToggleAssunto = (assuntoId: number, materiaId: number) => {
+    const isMateriaFullySelected = !!materiasSel[materiaId];
+
+    if (isMateriaFullySelected) {
+      // Desmarca a pasta principal
+      setMateriasSel((prev) => {
+        const next = { ...prev };
+        delete next[materiaId];
+        return next;
+      });
+      // Marca todos os outros filhos como customizados (exceto o que clicaste)
+      setAssuntosSel((prev) => {
+        const next = { ...prev };
+        const assuntosDestaMateria = assuntos.filter(
+          (a) => obterMateriaId(a) === materiaId,
+        );
+        assuntosDestaMateria.forEach((a) => {
+          if (a.id !== assuntoId) next[a.id] = 10;
+        });
+        return next;
+      });
     } else {
-      setState([...state, id]);
+      setAssuntosSel((prev) => {
+        const next = { ...prev };
+        if (next[assuntoId]) delete next[assuntoId];
+        else next[assuntoId] = 10;
+
+        // [INTELIGÊNCIA] Se marcarmos todos manualmente, transforma em pasta selecionada!
+        const assuntosDestaMateria = assuntos.filter(
+          (a) => obterMateriaId(a) === materiaId,
+        );
+        const allSelectedNow =
+          assuntosDestaMateria.length > 0 &&
+          assuntosDestaMateria.every((a) => next[a.id]);
+
+        if (allSelectedNow) {
+          assuntosDestaMateria.forEach((a) => delete next[a.id]);
+          setMateriasSel((mPrev) => ({ ...mPrev, [materiaId]: 10 }));
+        }
+
+        return next;
+      });
     }
   };
 
-  const nomesBancas = bancas
-    .filter((b) => bancasSelecionadas.includes(b.id))
-    .map((b) => b.nome);
-  const nomesMaterias = materias
-    .filter((m) => materiasSelecionadas.includes(m.id))
-    .map((m) => m.nome);
-  const nomesAssuntos = assuntos
-    .filter((a) => assuntosSelecionados.includes(a.id))
-    .map((a) => a.nome);
+  const updateQtd = (id: number, qtd: number, setState: any) => {
+    setState((prev: any) => ({ ...prev, [id]: qtd }));
+  };
 
-  const estimativaQuestoes = useMemo(() => {
-    const totalBanco = bancas.reduce(
-      (acc, curr) => acc + (Number(curr.quantidadeQuestoes) || 0),
-      0,
-    );
-
-    const totalB =
-      bancasSelecionadas.length > 0
-        ? bancas
-            .filter((b) => bancasSelecionadas.includes(b.id))
-            .reduce(
-              (acc, curr) => acc + (Number(curr.quantidadeQuestoes) || 0),
-              0,
-            )
-        : totalBanco;
-
-    const totalM =
-      materiasSelecionadas.length > 0
-        ? materias
-            .filter((m) => materiasSelecionadas.includes(m.id))
-            .reduce(
-              (acc, curr) => acc + (Number(curr.quantidadeQuestoes) || 0),
-              0,
-            )
-        : totalBanco;
-
-    const totalA =
-      assuntosSelecionados.length > 0
-        ? assuntos
-            .filter((a) => assuntosSelecionados.includes(a.id))
-            .reduce(
-              (acc, curr) => acc + (Number(curr.quantidadeQuestoes) || 0),
-              0,
-            )
-        : totalBanco;
-
-    return Math.min(totalB, totalM, totalA);
-  }, [
-    bancas,
-    materias,
-    assuntos,
-    bancasSelecionadas,
-    materiasSelecionadas,
-    assuntosSelecionados,
-  ]);
+  const totalMaterias = Object.values(materiasSel).reduce((a, b) => a + b, 0);
+  const totalAssuntos = Object.values(assuntosSel).reduce((a, b) => a + b, 0);
+  const quantidadeTotalCalculada =
+    totalMaterias + totalAssuntos > 0 ? totalMaterias + totalAssuntos : 60;
 
   const handleGerarSimulado = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!session?.user?.id) {
-      toast.error("Erro de Autenticação", {
-        description: "Você precisa estar logado para gerar simulados.",
-      });
-      return;
-    }
-    if (!titulo.trim()) {
-      toast.error("Aviso", {
-        description: "Por favor, dê um título ao seu simulado.",
-      });
-      return;
-    }
+    if (!session?.user?.id) return toast.error("Você precisa estar logado.");
+    if (!titulo.trim()) return toast.error("Dê um título ao seu simulado.");
 
     setIsGenerating(true);
+
+    const payloadMaterias = Object.entries(materiasSel).map(([id, qtd]) => ({
+      id: Number(id),
+      qtd,
+    }));
+    const payloadAssuntos = Object.entries(assuntosSel).map(([id, qtd]) => ({
+      id: Number(id),
+      qtd,
+    }));
 
     try {
       const resultado = await gerarSimuladoAleatorio({
         userId: session.user.id,
         titulo: titulo,
-        quantidade: quantidade,
-        bancasIds:
-          bancasSelecionadas.length > 0 ? bancasSelecionadas : undefined,
-        materiasIds:
-          materiasSelecionadas.length > 0 ? materiasSelecionadas : undefined,
-        assuntosIds:
-          assuntosSelecionados.length > 0 ? assuntosSelecionados : undefined,
+        quantidadeTotal: quantidadeTotalCalculada,
+        bancasIds: bancasSel.length > 0 ? bancasSel : undefined,
+        materiasConfig:
+          payloadMaterias.length > 0 ? payloadMaterias : undefined,
+        assuntosConfig:
+          payloadAssuntos.length > 0 ? payloadAssuntos : undefined,
       });
 
       if (resultado.error) {
         toast.error("Ops!", { description: resultado.error });
       } else if (resultado.simuladoId) {
-        toast.success("Simulado Gerado!", {
-          description: "Prepare-se, a prova vai começar!",
-        });
+        toast.success("Simulado Gerado com Sucesso!");
         router.push(`/aluno/simulados/${resultado.simuladoId}`);
       }
     } catch {
-      // <-- Erro 2 resolvido: Variável "error" removida
-      toast.error("Erro Fatal", {
-        description: "Falha ao conectar com o servidor.",
-      });
+      toast.error("Erro Fatal no Servidor.");
     } finally {
       setIsGenerating(false);
     }
@@ -473,17 +221,15 @@ export function NovoSimuladoForm({ bancas, materias, assuntos }: DadosProps) {
   return (
     <>
       <style>{`
-        .hide-native-scroll::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
-        .hide-native-scroll { scrollbar-width: none !important; -ms-overflow-style: none !important; }
         .custom-scrollbar::-webkit-scrollbar { display: block !important; width: 6px !important; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent !important; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #3f3f46 !important; border-radius: 10px !important; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #52525b !important; }
         .custom-scrollbar { scrollbar-width: thin !important; scrollbar-color: #3f3f46 transparent !important; }
       `}</style>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         <form
+          id="form-simulado"
           onSubmit={handleGerarSimulado}
           className="lg:col-span-2 space-y-6"
         >
@@ -494,7 +240,6 @@ export function NovoSimuladoForm({ bancas, materias, assuntos }: DadosProps) {
                 Configurações Gerais
               </h2>
             </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-semibold text-neutral-300">
@@ -506,25 +251,18 @@ export function NovoSimuladoForm({ bancas, materias, assuntos }: DadosProps) {
                   value={titulo}
                   onChange={(e) => setTitulo(e.target.value)}
                   placeholder="Ex: Treino Reta Final PMCE"
-                  className="bg-neutral-950 border border-neutral-800 text-white p-3 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all placeholder:text-neutral-600"
+                  className="bg-neutral-950 border border-neutral-800 text-white px-3 h-12 rounded-xl focus:ring-1 duration-200 shadow-md focus:ring-neutral-500 outline-none"
                 />
               </div>
-
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-semibold text-neutral-300">
-                  Quantidade de Questões *
+                  Total a Gerar (Soma dos filtros)
                 </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="120"
-                  required
-                  value={quantidade}
-                  onChange={(e) => setQuantidade(parseInt(e.target.value))}
-                  className="bg-neutral-950 border border-neutral-800 text-white p-3 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all placeholder:text-neutral-600"
-                />
-                <span className="text-xs text-neutral-500">
-                  Mín: 1 | Máx: 120
+                <div className="bg-neutral-950 border border-neutral-800 text-neutral-400 h-12 font-semibold text-xl px-3 shadow-md rounded-xl flex items-center justify-center">
+                  {quantidadeTotalCalculada} Questões
+                </div>
+                <span className="text-xs text-neutral-500 text-center mt-1">
+                  Quantidade que será incluída no simulado
                 </span>
               </div>
             </div>
@@ -533,48 +271,38 @@ export function NovoSimuladoForm({ bancas, materias, assuntos }: DadosProps) {
           <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-sm">
             <div className="mb-6 border-b border-neutral-800 pb-3">
               <h2 className="text-xl font-bold text-white">
-                Filtros de Questões
+                Selecione os Filtros
               </h2>
               <p className="text-sm text-neutral-400 mt-1">
-                Se não marcar nenhuma opção, o simulado sorteará questões de
-                forma aleatória de todo o banco.
+                Marque matérias completas ou escolha assuntos específicos
+                clicando nas pastas.
               </p>
             </div>
 
             <div className="flex flex-col gap-8">
-              <FilterCard
+              <FilterCardBancas
                 title="Bancas"
                 placeholder="Pesquisar banca..."
                 items={bancas}
-                selectedIds={bancasSelecionadas}
-                onToggle={(id) =>
-                  toggleSelection(id, bancasSelecionadas, setBancasSelecionadas)
-                }
+                selectedIds={bancasSel}
+                onToggle={toggleBanca}
               />
-              <FilterCard
+
+              <FilterCardMaterias
                 title="Matérias"
                 placeholder="Pesquisar matéria..."
                 items={materias}
-                selectedIds={materiasSelecionadas}
-                onToggle={(id) =>
-                  toggleSelection(
-                    id,
-                    materiasSelecionadas,
-                    setMateriasSelecionadas,
-                  )
-                }
+                selections={materiasSel}
+                onToggle={handleToggleMateria}
               />
 
-              <FilterCardAssuntos
+              <FilterCardAssuntosAvancado
                 items={assuntos}
-                selectedIds={assuntosSelecionados}
-                onToggle={(id) =>
-                  toggleSelection(
-                    id,
-                    assuntosSelecionados,
-                    setAssuntosSelecionados,
-                  )
-                }
+                materias={materias}
+                selections={assuntosSel}
+                materiasSel={materiasSel}
+                onToggleAssunto={handleToggleAssunto}
+                onToggleMateria={handleToggleMateria}
               />
             </div>
           </div>
@@ -585,98 +313,203 @@ export function NovoSimuladoForm({ bancas, materias, assuntos }: DadosProps) {
             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-3xl rounded-full pointer-events-none" />
             <div>
               <div className="flex items-center gap-2 text-xs font-bold text-emerald-500 tracking-widest mb-3">
-                <FileText className="w-3.5 h-3.5" />
-                Visualize seu simulado:
+                <FileText className="w-3.5 h-3.5" /> Visualize seu simulado:
               </div>
-              <h3 className="text-2xl font-bold text-white wrap-break-word leading-tight">
-                {" "}
+              <h3 className="text-2xl font-bold text-white leading-tight">
                 {titulo || "Novo Simulado"}
               </h3>
             </div>
 
-            <div className="space-y-5">
-              <div className="bg-neutral-950/50 p-3 rounded-xl border border-neutral-800/60">
-                <span className="flex items-center gap-1.5 text-[11px] text-neutral-500 font-bold uppercase tracking-wider mb-1.5">
-                  <Target className="w-3.5 h-3.5" /> Quantidade Desejada
-                </span>
-                <div className="text-sm font-medium text-neutral-200">
-                  {quantidade} {quantidade === 1 ? "Questão" : "Questões"}
-                </div>
-              </div>
-
+            <div className="space-y-4">
               <div>
-                <span className="text-xs text-neutral-500 font-semibold flex justify-between items-center mb-1">
-                  BANCAS{" "}
+                <span className="text-xs text-neutral-500 font-semibold flex justify-between items-center mb-2">
+                  BANCAS SELECIONADAS
                   <span className="bg-neutral-800 px-1.5 rounded-full text-[10px]">
-                    {bancasSelecionadas.length}
+                    {bancasSel.length}
                   </span>
                 </span>
-                <div className="text-sm font-medium text-neutral-300 line-clamp-3">
-                  {nomesBancas.length > 0
-                    ? nomesBancas.join(", ")
-                    : "Todas as Bancas da Plataforma"}
-                </div>
+                {bancasSel.length === 0 ? (
+                  <div className="text-sm text-neutral-500 italic">
+                    Nenhuma específica.
+                  </div>
+                ) : (
+                  <div
+                    className="flex flex-col gap-2 max-h-32 overflow-y-auto custom-scrollbar pr-1 overscroll-contain"
+                    data-lenis-prevent="true"
+                  >
+                    {bancasSel.map((id) => (
+                      <div
+                        key={id}
+                        className="flex items-center bg-neutral-950/50 p-2.5 rounded-lg border border-neutral-800/60"
+                      >
+                        <span className="text-xs text-neutral-300 truncate">
+                          {bancas.find((b) => b.id === id)?.nome ||
+                            "Desconhecida"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              <div>
-                <span className="text-xs text-neutral-500 font-semibold flex justify-between items-center mb-1">
-                  MATÉRIAS{" "}
+              <div className="border-t border-neutral-800/80 pt-4">
+                <span className="text-xs text-neutral-500 font-semibold flex justify-between items-center mb-3">
+                  MATÉRIAS SELECIONADAS
                   <span className="bg-neutral-800 px-1.5 rounded-full text-[10px]">
-                    {materiasSelecionadas.length}
+                    {Object.keys(materiasSel).length}
                   </span>
                 </span>
-                <div className="text-sm font-medium text-neutral-300 line-clamp-3">
-                  {nomesMaterias.length > 0
-                    ? nomesMaterias.join(", ")
-                    : "Todas as Matérias"}
-                </div>
+                {Object.keys(materiasSel).length === 0 ? (
+                  <div className="text-sm text-neutral-500 italic">
+                    Nenhuma específica.
+                  </div>
+                ) : (
+                  <div
+                    className="flex flex-col gap-2 max-h-60 overflow-y-auto custom-scrollbar pr-1 overscroll-contain"
+                    data-lenis-prevent="true"
+                  >
+                    {Object.entries(materiasSel).map(([idStr, qtd]) => {
+                      const id = Number(idStr);
+                      const matName =
+                        materias.find((m) => m.id === id)?.nome ||
+                        "Desconhecida";
+                      return (
+                        <div
+                          key={id}
+                          className="flex items-center justify-between bg-neutral-950/50 p-2.5 rounded-lg border border-neutral-800/60"
+                        >
+                          <span
+                            className="text-xs text-neutral-300 truncate pr-2"
+                            title={matName}
+                          >
+                            {matName}
+                          </span>
+                          <input
+                            type="number"
+                            min="1"
+                            max="100"
+                            value={qtd}
+                            onChange={(e) =>
+                              updateQtd(
+                                id,
+                                parseInt(e.target.value) || 1,
+                                setMateriasSel,
+                              )
+                            }
+                            className="w-14 h-8 bg-neutral-900 border border-emerald-500/50 text-emerald-400 text-xs font-bold text-center rounded focus:outline-none focus:ring-1 focus:ring-emerald-500 shrink-0"
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
-              <div>
-                <span className="text-xs text-neutral-500 font-semibold flex justify-between items-center mb-1">
-                  ASSUNTOS{" "}
+              <div className="border-t border-neutral-800/80 pt-4">
+                <span className="text-xs text-neutral-500 font-semibold flex justify-between items-center mb-3">
+                  ASSUNTOS SELECIONADOS
                   <span className="bg-neutral-800 px-1.5 rounded-full text-[10px]">
-                    {assuntosSelecionados.length}
+                    {Object.keys(materiasSel).length +
+                      Object.keys(assuntosSel).length}
                   </span>
                 </span>
-                <div className="text-sm font-medium text-neutral-300 line-clamp-3">
-                  {nomesAssuntos.length > 0
-                    ? nomesAssuntos.join(", ")
-                    : "Todos os Assuntos"}
-                </div>
+
+                {Object.keys(materiasSel).length === 0 &&
+                Object.keys(assuntosSel).length === 0 ? (
+                  <div className="text-sm text-neutral-500 italic">
+                    Nenhum específico.
+                  </div>
+                ) : (
+                  <div
+                    className="flex flex-col gap-2 max-h-60 overflow-y-auto custom-scrollbar pr-1 overscroll-contain"
+                    data-lenis-prevent="true"
+                  >
+                    {Object.keys(materiasSel).map((idStr) => {
+                      const id = Number(idStr);
+                      const matName =
+                        materias.find((m) => m.id === id)?.nome ||
+                        "Desconhecida";
+                      return (
+                        <div
+                          key={`all-${id}`}
+                          className="flex items-center justify-between bg-neutral-950/50 p-2.5 rounded-lg border border-emerald-500/30"
+                        >
+                          <span className="text-xs text-emerald-400 truncate pr-2 italic">
+                            Todos os assuntos de {matName}
+                          </span>
+                          <span className="text-[10px] text-emerald-500 font-bold bg-emerald-500/10 px-2 py-1 rounded">
+                            INCLUÍDO
+                          </span>
+                        </div>
+                      );
+                    })}
+                    {Object.entries(assuntosSel).map(([idStr, qtd]) => {
+                      const id = Number(idStr);
+                      const assName =
+                        assuntos.find((a) => a.id === id)?.nome ||
+                        "Desconhecido";
+                      return (
+                        <div
+                          key={id}
+                          className="flex items-center justify-between bg-neutral-950/50 p-2.5 rounded-lg border border-neutral-800/60"
+                        >
+                          <span
+                            className="text-xs text-neutral-300 truncate pr-2"
+                            title={assName}
+                          >
+                            {assName}
+                          </span>
+                          <input
+                            type="number"
+                            min="1"
+                            max="100"
+                            value={qtd}
+                            onChange={(e) =>
+                              updateQtd(
+                                id,
+                                parseInt(e.target.value) || 1,
+                                setAssuntosSel,
+                              )
+                            }
+                            className="w-14 h-8 bg-neutral-900 border border-emerald-500/50 text-emerald-400 text-xs font-bold text-center rounded focus:outline-none focus:ring-1 focus:ring-emerald-500 shrink-0"
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-end justify-start border-t gap-1.5 text-2xl font-semibold border-neutral-800/80 pt-4">
+                {isLoadingCount ? (
+                  <Loader2 className="w-5 h-5 animate-spin text-emerald-500" />
+                ) : (
+                  questoesDisponiveis
+                )}
+                <span className=" text-sm mb-1 text-neutral-500 font-medium">
+                  Questões encontradas.
+                </span>
               </div>
             </div>
 
-            <div className="mt-2 pt-5 border-t border-neutral-800/80">
-              <span className="flex items-center gap-1.5 text-[11px] text-emerald-500 font-bold uppercase tracking-wider mb-2">
-                <Layers className="w-3.5 h-3.5" /> Questões Disponíveis
-              </span>
-              <div className="text-3xl font-semibold text-emerald-400 tracking-tight">
-                {estimativaQuestoes.toLocaleString("pt-BR")}{" "}
-                <span className="text-sm font-medium text-neutral-500">
-                  Qts no Banco
-                </span>
-              </div>
+            <div className="flex justify-center pt-4">
+              <button
+                type="submit"
+                form="form-simulado"
+                disabled={isGenerating}
+                className="flex items-center w-full justify-center gap-2 bg-emerald-600 hover:scale-[1.02] text-white py-4 rounded-xl font-bold text-lg duration-300 disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" /> Gerando...
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-5 h-5 fill-current" /> Criar Simulado
+                  </>
+                )}
+              </button>
             </div>
-          </div>
-          <div className="flex justify-center pt-6">
-            <button
-              type="submit"
-              disabled={isGenerating}
-              className="flex items-center justify-center cursor-pointer gap-2 bg-emerald-600 px-4 hover:scale-[1.02] text-white py-4 rounded-xl font-bold text-lg duration-300 disabled:opacity-70 disabled:cursor-not-allowed"
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" /> Sorteando
-                  Questões...
-                </>
-              ) : (
-                <>
-                  <Play className="w-5 h-5 fill-current" /> Criar e Começar
-                  Simulado
-                </>
-              )}
-            </button>
           </div>
         </div>
       </div>

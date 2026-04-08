@@ -14,6 +14,7 @@ import {
   Grid2x2Check,
   X,
   LayersPlus,
+  Layers,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -56,6 +57,7 @@ const navItems: NavItem[] = [
   { title: "Aulas", url: "/aluno/aulas", icon: Video },
   { title: "Desafio", url: "/aluno/desafio", icon: Sword, status: "em_breve" },
   { title: "Meus Simulados", url: "/aluno/simulados", icon: NotebookPen },
+  { title: "Meus Cadernos", url: "/aluno/cadernos", icon: Layers },
 ];
 
 const navItems2: NavItem[] = [
@@ -67,19 +69,18 @@ const navItems2: NavItem[] = [
   },
   {
     title: "Flip Clock",
-    url: "/aluno/simulados/relogio",
+    url: "/aluno/relogio",
     icon: ClockFading,
     status: "em_breve",
   },
   {
     title: "Year in pixels",
-    url: "/aluno/simulados/year-in-ixels",
+    url: "/aluno/year-in-pixels",
     icon: Grid2x2Check,
-    status: "em_breve",
   },
   {
-    title: "Cadernos",
-    url: "/aluno/simulados/relogio",
+    title: "Criar Caderno",
+    url: "/aluno/cadernos/novo",
     icon: LayersPlus,
     status: "em_breve",
   },
@@ -179,21 +180,33 @@ export function AlunoSidebar() {
                   <ul className="ml-2 flex flex-col gap-1 border-l border-white/10 text-sm">
                     {navItems.map((item) => {
                       const active = isActive(item.url);
+                      const isEmBreve = item.status === "em_breve";
+
+                      // Extraímos o conteúdo do <li> para reutilizar
+                      const liContent = (
+                        <li
+                          className={`group relative -ml-px flex items-center gap-3 py-2 pr-2 pl-4 transition-all duration-200 before:absolute before:top-1/2 before:left-0 before:h-4 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:transition-colors ${
+                            isEmBreve
+                              ? "cursor-not-allowed opacity-70 text-neutral-500" // Estilo bloqueado
+                              : active
+                                ? "cursor-pointer font-medium text-emerald-400 before:bg-white hover:text-white"
+                                : "cursor-pointer text-neutral-400 before:bg-transparent hover:before:bg-neutral-500 hover:text-white"
+                          }`}
+                        >
+                          <item.icon className="w-4 h-4 shrink-0" />
+                          <span className="truncate">{item.title}</span>
+                          <RenderBadge status={item.status} />
+                        </li>
+                      );
+
+                      // Se for "Em breve", retornamos apenas a <div> visual. Se não, envolvemos com o <Link> do Next.js
+                      if (isEmBreve) {
+                        return <div key={item.title}>{liContent}</div>;
+                      }
 
                       return (
                         <Link href={item.url} key={item.title}>
-                          <li
-                            className={`group relative -ml-px flex cursor-pointer items-center gap-3 py-2 pr-2 pl-4 transition-all duration-200 before:absolute before:top-1/2 before:left-0 before:h-4 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:transition-colors hover:text-white ${
-                              active
-                                ? "font-medium text-emerald-400 before:bg-white"
-                                : "text-neutral-400 before:bg-transparent hover:before:bg-neutral-500"
-                            }`}
-                          >
-                            <item.icon className="w-4 h-4 shrink-0" />
-                            <span className="truncate">{item.title}</span>
-                            {/* RENDERIZA O BADGE SE EXISTIR STATUS */}
-                            <RenderBadge status={item.status} />
-                          </li>
+                          {liContent}
                         </Link>
                       );
                     })}
@@ -210,20 +223,32 @@ export function AlunoSidebar() {
                   <ul className="ml-2 flex flex-col gap-1 border-l border-white/10 text-sm">
                     {navItems2.map((item) => {
                       const active = isActive(item.url);
+                      const isEmBreve = item.status === "em_breve";
+
+                      // Mesma lógica de separação
+                      const liContent = (
+                        <li
+                          className={`group relative -ml-px flex items-center gap-3 py-2 pr-2 pl-4 transition-all duration-200 before:absolute before:top-1/2 before:left-0 before:h-4 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:transition-colors ${
+                            isEmBreve
+                              ? "cursor-not-allowed opacity-70 text-neutral-500"
+                              : active
+                                ? "cursor-pointer font-medium text-emerald-400 before:bg-white hover:text-white"
+                                : "cursor-pointer text-neutral-400 before:bg-transparent hover:before:bg-neutral-500 hover:text-white"
+                          }`}
+                        >
+                          <item.icon className="w-4 h-4 shrink-0" />
+                          <span className="truncate">{item.title}</span>
+                          <RenderBadge status={item.status} />
+                        </li>
+                      );
+
+                      if (isEmBreve) {
+                        return <div key={item.title}>{liContent}</div>;
+                      }
 
                       return (
                         <Link href={item.url} key={item.title}>
-                          <li
-                            className={`group relative -ml-px flex cursor-pointer items-center gap-3 py-2 pr-2 pl-4 transition-all duration-200 before:absolute before:top-1/2 before:left-0 before:h-4 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:transition-colors hover:text-white ${
-                              active
-                                ? "font-medium text-emerald-400 before:bg-white"
-                                : "text-neutral-400 before:bg-transparent hover:before:bg-neutral-500"
-                            }`}
-                          >
-                            <item.icon className="w-4 h-4 shrink-0" />
-                            <span className="truncate">{item.title}</span>
-                            <RenderBadge status={item.status} />
-                          </li>
+                          {liContent}
                         </Link>
                       );
                     })}

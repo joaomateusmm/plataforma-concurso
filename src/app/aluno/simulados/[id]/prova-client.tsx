@@ -277,7 +277,7 @@ function ResultDashboard({ acertos, totalCount }: any) {
 
   return (
     <div className="mb-8 p-8 border border-neutral-800 rounded-3xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-linear-to-br from-emerald-500/5 to-transparent pointer-events-none" />
       <div className="relative z-10 text-center md:text-left">
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 font-bold text-sm border border-emerald-500/20 mb-4">
           <Award className="w-4 h-4" /> Simulado Finalizado
