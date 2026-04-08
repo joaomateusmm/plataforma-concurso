@@ -1,9 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { alternarLembreteConcurso } from "@/actions/lembretes";
+// 1. IMPORTAÇÃO CORRIGIDA PARA toggleLembrete
+import { toggleLembrete } from "@/actions/lembretes";
 import { toast } from "sonner";
 import { BellRing, Loader2 } from "lucide-react";
+
+// 2. IMPORTAÇÃO DO AUTH-CLIENT PARA PEGAR O USER ID
+import { authClient } from "@/lib/auth-client";
 
 import Image from "next/image";
 import * as React from "react";
@@ -50,17 +54,22 @@ function extrairSalario(texto: string | null): number {
   return Math.max(...valores);
 }
 
+// ATUALIZADO: Suporte para os novos status
 const getStatusBadge = (status: string) => {
   switch (status) {
     case "Inscrições Abertas":
-      return "text-neutral-400 border-none";
+    case "Edital Lançado":
+      return "text-emerald-400 border-emerald-500/30 bg-emerald-500/10";
+    case "Concurso Autorizado":
+    case "Banca Definida":
+    case "Edital Iminente":
     case "Em Breve":
     case "Edital Em Breve":
-      return "text-neutral-400 border-none";
+      return "text-yellow-400 border-yellow-500/30 bg-yellow-500/10";
     case "Inscrições Encerradas":
-      return "text-neutral-400 border-none";
+    case "Concurso Encerrado":
     case "Encerrado":
-      return "text-neutral-400 border-none";
+      return "text-neutral-400 border-neutral-700 bg-neutral-800";
     default:
       return "text-neutral-400 border-none";
   }
@@ -73,38 +82,54 @@ function ConcursoCard({
   concurso: any;
   lembretesAtivosIniciais?: number[];
 }) {
-  const isEmBreve =
-    concurso.status === "Em Breve" || concurso.status === "Edital Em Breve";
+  // 3. PEGAR O ID DO USUÁRIO LOGADO
+  const { data: session } = authClient.useSession();
+  const userId = session?.user?.id;
+
+  // ATUALIZADO: Agrupamento das lógicas dos botões com base nos novos status
+  const isEmBreve = [
+    "Concurso Autorizado",
+    "Banca Definida",
+    "Edital Iminente",
+    "Em Breve",
+    "Edital Em Breve",
+  ].includes(concurso.status);
+
   const isInscricoesEncerradas = concurso.status === "Inscrições Encerradas";
-  const isEncerradoTudo = concurso.status === "Encerrado";
+  const isEncerradoTudo =
+    concurso.status === "Concurso Encerrado" || concurso.status === "Encerrado";
 
   const [mostrarDescricaoCompleta, setMostrarDescricaoCompleta] =
     useState(false);
 
-  // Inicializa o estado olhando se o ID do concurso está no array de lembretes
   const [isLembreteAtivo, setIsLembreteAtivo] = useState(
     lembretesAtivosIniciais.includes(concurso.id),
   );
   const [isLoadingLembrete, setIsLoadingLembrete] = useState(false);
 
   const handleToggleLembrete = async () => {
+    // Verificação de segurança
+    if (!userId) {
+      toast.error("Você precisa estar logado para ativar lembretes.");
+      return;
+    }
+
     setIsLoadingLembrete(true);
-    const res = await alternarLembreteConcurso(concurso.id);
+    // 4. CHAMAR A NOVA FUNÇÃO PASSANDO userId e concurso.id
+    const res = await toggleLembrete(userId, concurso.id);
 
     if (res.error) {
       toast.error(res.error);
     } else {
       setIsLembreteAtivo(res.active ?? false);
 
-      // Lógica do Toast atualizada:
       if (res.active) {
         toast.success("Lembrete ativado com sucesso!", {
           description:
             "Você será avisado no seu e-mail sempre que o status deste concurso for atualizado (ex: edital lançado, inscrições abertas).",
-          duration: 6000, // Deixamos o toast um pouco mais de tempo na tela para o usuário conseguir ler
+          duration: 6000,
         });
       } else {
-        // Quando o usuário desativa o lembrete
         toast.info("Lembrete desativado.", {
           description:
             "Você não receberá mais notificações sobre este concurso.",
@@ -130,10 +155,10 @@ function ConcursoCard({
         </div>
       )}
 
-      {/* HEADER DO CARD (STATUS E BANCA) */}
+      {/* HEADER DO CARD */}
       <div className="px-6 py-3 border-b border-neutral-800/50 flex items-center justify-between bg-neutral-950/30 relative z-10">
         <span
-          className={`py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getStatusBadge(concurso.status)}`}
+          className={`py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border px-2 ${getStatusBadge(concurso.status)}`}
         >
           {concurso.status}
         </span>
@@ -166,7 +191,7 @@ function ConcursoCard({
         </button>
       </div>
 
-      {/* CORPO DO CARD (INFORMAÇÕES) */}
+      {/* CORPO DO CARD */}
       <div className="px-6 py-4 flex-1 flex flex-col gap-4 relative z-10">
         <div>
           <h2 className="text-xl font-extrabold text-neutral-200 group-hover:text-emerald-400 transition-colors leading-tight">
@@ -177,7 +202,6 @@ function ConcursoCard({
           </p>
         </div>
 
-        {/* LÓGICA DE DESCRIÇÃO EXPANSÍVEL */}
         {concurso.descricao && (
           <div className="flex flex-col">
             <p
@@ -267,7 +291,6 @@ function ConcursoCard({
 
       {/* AÇÕES (BOTÕES E LINKS INFERIORES) */}
       <div className="p-5 pt-0 mt-auto flex flex-col gap-3 relative z-10">
-        {/* BOTÃO PRINCIPAL */}
         {isEmBreve ? (
           <button
             disabled
@@ -300,9 +323,7 @@ function ConcursoCard({
           </a>
         )}
 
-        {/* LINKS SECUNDÁRIOS */}
         <div className="flex flex-wrap gap-x-4 gap-y-2 items-center justify-center mt-1">
-          {/* LÓGICA: EM BREVE */}
           {isEmBreve && (
             <>
               <Link
@@ -330,7 +351,6 @@ function ConcursoCard({
             </>
           )}
 
-          {/* LÓGICA: INSCRIÇÕES ENCERRADAS (Prova a caminho) */}
           {isInscricoesEncerradas && (
             <>
               {concurso.linkEdital && (
@@ -362,7 +382,6 @@ function ConcursoCard({
             </>
           )}
 
-          {/* LÓGICA: ENCERRADO TUDO (Histórico) */}
           {isEncerradoTudo && concurso.linkEdital && (
             <a
               href={concurso.linkEdital}
@@ -377,7 +396,6 @@ function ConcursoCard({
             </a>
           )}
 
-          {/* LÓGICA: ABERTO (PADRÃO) */}
           {!isEmBreve &&
             !isInscricoesEncerradas &&
             !isEncerradoTudo &&
@@ -404,12 +422,12 @@ function SecaoConcursos({
   titulo,
   concursos,
   badgeColor = "bg-neutral-800 text-neutral-400",
-  lembretesAtivosIniciais = [], // <-- ADICIONADO AQUI
+  lembretesAtivosIniciais = [],
 }: {
   titulo: string;
   concursos: any[];
   badgeColor?: string;
-  lembretesAtivosIniciais?: number[]; // <-- ADICIONADO AQUI
+  lembretesAtivosIniciais?: number[];
 }) {
   if (concursos.length === 0) return null;
 
@@ -430,7 +448,7 @@ function SecaoConcursos({
           <ConcursoCard
             key={concurso.id}
             concurso={concurso}
-            lembretesAtivosIniciais={lembretesAtivosIniciais} // <-- PASSANDO PARA O CARD
+            lembretesAtivosIniciais={lembretesAtivosIniciais}
           />
         ))}
       </div>
@@ -443,10 +461,10 @@ function SecaoConcursos({
 // --------------------------------------------------------------------------------
 export function ListaConcursos({
   concursosIniciais,
-  lembretesAtivosIniciais = [], // <-- ADICIONADO AQUI PARA RECEBER DO PAGE.TSX
+  lembretesAtivosIniciais = [],
 }: {
   concursosIniciais: any[];
-  lembretesAtivosIniciais?: number[]; // <-- ADICIONADO AQUI
+  lembretesAtivosIniciais?: number[];
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filtroBanca, setFiltroBanca] = useState<string | null>(null);
@@ -522,17 +540,24 @@ export function ListaConcursos({
     filtroSalario,
   ]);
 
+  // ATUALIZADO: Distribuição das secções
   const concursosAbertos = concursosFiltrados.filter(
-    (c) => c.status === "Inscrições Abertas",
+    (c) => c.status === "Inscrições Abertas" || c.status === "Edital Lançado",
   );
-  const concursosEmBreve = concursosFiltrados.filter(
-    (c) => c.status === "Em Breve" || c.status === "Edital Em Breve",
+  const concursosEmBreve = concursosFiltrados.filter((c) =>
+    [
+      "Concurso Autorizado",
+      "Banca Definida",
+      "Edital Iminente",
+      "Em Breve",
+      "Edital Em Breve",
+    ].includes(c.status),
   );
   const concursosInscricoesEncerradas = concursosFiltrados.filter(
     (c) => c.status === "Inscrições Encerradas",
   );
   const concursosTotalmenteEncerrados = concursosFiltrados.filter(
-    (c) => c.status === "Encerrado",
+    (c) => c.status === "Concurso Encerrado" || c.status === "Encerrado",
   );
 
   const formatarMoeda = (valor: number) => {
@@ -810,25 +835,25 @@ export function ListaConcursos({
             titulo="Em Andamento (Inscrições Fechadas):"
             concursos={concursosInscricoesEncerradas}
             badgeColor="bg-neutral-500/10 text-neutral-400 border border-neutral-500/20"
-            lembretesAtivosIniciais={lembretesAtivosIniciais} // <-- PASSANDO PARA SEÇÃO
+            lembretesAtivosIniciais={lembretesAtivosIniciais}
           />
           <SecaoConcursos
             titulo="Inscrições Abertas:"
             concursos={concursosAbertos}
             badgeColor="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-            lembretesAtivosIniciais={lembretesAtivosIniciais} // <-- PASSANDO PARA SEÇÃO
+            lembretesAtivosIniciais={lembretesAtivosIniciais}
           />
           <SecaoConcursos
             titulo="Próximos Concursos:"
             concursos={concursosEmBreve}
             badgeColor="bg-yellow-500/10 text-yellow-400 border border-yellow-500/20"
-            lembretesAtivosIniciais={lembretesAtivosIniciais} // <-- PASSANDO PARA SEÇÃO
+            lembretesAtivosIniciais={lembretesAtivosIniciais}
           />
           <SecaoConcursos
             titulo="Concursos Encerrados (Histórico):"
             concursos={concursosTotalmenteEncerrados}
             badgeColor="bg-neutral-800 text-neutral-500 border border-neutral-700"
-            lembretesAtivosIniciais={lembretesAtivosIniciais} // <-- PASSANDO PARA SEÇÃO
+            lembretesAtivosIniciais={lembretesAtivosIniciais}
           />
         </div>
       )}

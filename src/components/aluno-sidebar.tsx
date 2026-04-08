@@ -48,16 +48,16 @@ const navItems: NavItem[] = [
   { title: "Painel do Aluno", url: "/aluno", icon: LayoutDashboard },
   { title: "Concursos Abertos", url: "/aluno/concursos", icon: BellRing },
   { title: "Editais", url: "/aluno/editais", icon: NotepadText },
+  { title: "Aulas", url: "/aluno/aulas", icon: Video },
+  { title: "Meus Simulados", url: "/aluno/simulados", icon: NotebookPen },
+  { title: "Meus Cadernos", url: "/aluno/cadernos", icon: Layers, status: "em_breve", },
   {
     title: "Notícias",
     url: "/aluno/noticias",
     icon: Megaphone,
     status: "em_breve",
   },
-  { title: "Aulas", url: "/aluno/aulas", icon: Video },
   { title: "Desafio", url: "/aluno/desafio", icon: Sword, status: "em_breve" },
-  { title: "Meus Simulados", url: "/aluno/simulados", icon: NotebookPen },
-  { title: "Meus Cadernos", url: "/aluno/cadernos", icon: Layers },
 ];
 
 const navItems2: NavItem[] = [
@@ -65,23 +65,24 @@ const navItems2: NavItem[] = [
     title: "Criar Simulado",
     url: "/aluno/simulados/novo",
     icon: CopyPlus,
-    status: "novo",
   },
-  {
-    title: "Flip Clock",
-    url: "/aluno/relogio",
-    icon: ClockFading,
-    status: "em_breve",
-  },
+
   {
     title: "Year in pixels",
     url: "/aluno/year-in-pixels",
     icon: Grid2x2Check,
+    status: "em_breve",
   },
   {
     title: "Criar Caderno",
     url: "/aluno/cadernos/novo",
     icon: LayersPlus,
+    status: "em_breve",
+  },
+  {
+    title: "Flip Clock",
+    url: "/aluno/relogio",
+    icon: ClockFading,
     status: "em_breve",
   },
 ];

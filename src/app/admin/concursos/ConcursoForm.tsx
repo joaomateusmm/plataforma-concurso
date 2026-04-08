@@ -3,10 +3,23 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Loader2, ImageIcon, X } from "lucide-react";
+import { Loader2, ImageIcon, X, CalendarIcon } from "lucide-react";
 import { salvarConcurso, atualizarConcurso } from "../../../actions/concursos";
 import { generateReactHelpers } from "@uploadthing/react";
 import type { OurFileRouter } from "@/app/api/uploadthing/core";
+
+// IMPORTAÇÕES DO SHADCN E DATAS
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { DateRange } from "react-day-picker";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const { useUploadThing } = generateReactHelpers<OurFileRouter>();
 
@@ -21,9 +34,32 @@ export function ConcursoForm({
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // 1. SINCRONIZA A IMAGEM SEMPRE QUE O CONCURSO EDITANDO MUDAR
+  // 1. ESTADOS PARA OS NOVOS DATE PICKERS
+  const [dateInscricao, setDateInscricao] = useState<DateRange | undefined>();
+  const [dateIsencao, setDateIsencao] = useState<DateRange | undefined>();
+  const [dateProva, setDateProva] = useState<Date | undefined>();
+
+  // EFEITO DE INICIALIZAÇÃO AO EDITAR
   useEffect(() => {
     setThumbnailUrl(concursoEditando?.thumbnailUrl || "");
+
+    // Puxar a Data da Prova Real
+    if (concursoEditando?.dataProvaReal) {
+      // Garantir que é um objeto Date válido independentemente de vir do JSON/banco como string ou Date
+      const parsedDataProva = new Date(concursoEditando.dataProvaReal);
+      if (!isNaN(parsedDataProva.getTime())) {
+        setDateProva(parsedDataProva);
+      }
+    } else {
+      setDateProva(undefined); // Limpa se for nulo
+    }
+
+    // Como o DateRange pede um 'from' e um 'to', mas nós só guardámos a data de FIM (to)
+    // para o sistema de alertas, não é possível reconstruir o range visual completo.
+    // A melhor abordagem UX aqui é manter o 'undefined' se for uma edição, e mostrar o texto atual "Atual: DD/MM a DD/MM" abaixo do botão.
+    // Se o usuário clicar no calendário, ele reescreve o range.
+    setDateInscricao(undefined);
+    setDateIsencao(undefined);
   }, [concursoEditando]);
 
   const { startUpload, isUploading: isUploadingImage } = useUploadThing(
@@ -54,7 +90,50 @@ export function ConcursoForm({
 
   async function handleAction(formData: FormData) {
     setIsSubmitting(true);
-    formData.append("thumbnailUrl", thumbnailUrl); // Adiciona a URL da imagem ao FormData
+    formData.append("thumbnailUrl", thumbnailUrl);
+
+    // 2. INJETAR AS DATAS DO CALENDÁRIO NO FORMDATA ANTES DE ENVIAR
+    // Lógica para manter os dados caso o utilizador não tenha alterado as datas durante a edição
+
+    // Período de Inscrição
+    if (dateInscricao?.from) {
+      let str = format(dateInscricao.from, "dd/MM/yyyy");
+      if (dateInscricao.to) {
+        str += ` a ${format(dateInscricao.to, "dd/MM/yyyy")}`;
+        formData.append("fimInscricao", dateInscricao.to.toISOString());
+      }
+      formData.append("periodoInscricao", str);
+    } else if (concursoEditando?.periodoInscricao) {
+      // Se não mexeu no calendário, envia o texto antigo
+      formData.append("periodoInscricao", concursoEditando.periodoInscricao);
+      // Se tinha uma data limite antiga, envia a antiga
+      if (concursoEditando.fimInscricao) {
+        formData.append(
+          "fimInscricao",
+          new Date(concursoEditando.fimInscricao).toISOString(),
+        );
+      }
+    }
+
+    // Período de Isenção
+    if (dateIsencao?.from) {
+      let str = format(dateIsencao.from, "dd/MM/yyyy");
+      if (dateIsencao.to) {
+        str += ` a ${format(dateIsencao.to, "dd/MM/yyyy")}`;
+      }
+      formData.append("periodoIsencao", str);
+    } else if (concursoEditando?.periodoIsencao) {
+      formData.append("periodoIsencao", concursoEditando.periodoIsencao);
+    }
+
+    // Data da Prova
+    if (dateProva) {
+      formData.append("dataProva", format(dateProva, "dd/MM/yyyy"));
+      formData.append("dataProvaReal", dateProva.toISOString());
+    } else {
+      // Lógica de Limpeza: Se dateProva for explicitamente undefined,
+      // não acrescentamos nada ao FormData, o que fará com que não salvemos dataProvaReal
+    }
 
     try {
       if (concursoEditando) {
@@ -169,17 +248,20 @@ export function ConcursoForm({
             className="border p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
           >
             <option value="">Selecione o status...</option>
-            <option value="Edital Em Breve">Edital Em Breve</option>
-            <option value="Em Breve">Em Breve</option>
+            <option value="Concurso Autorizado">Concurso Autorizado</option>
+            <option value="Edital Iminente">Edital Iminente</option>
+            <option value="Banca Definida">Banca Definida</option>
+            <option value="Edital Lançado">Edital Lançado</option>
             <option value="Inscrições Abertas">Inscrições Abertas</option>
             <option value="Inscrições Encerradas">Inscrições Encerradas</option>
-            <option value="Encerrado">Encerrado</option>
+            <option value="Concurso Encerrado">Concurso Encerrado</option>
           </select>
         </div>
       </div>
 
-      {/* LINHA 4 */}
+      {/* LINHA 4 - OS NOVOS DATE PICKERS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* PERÍODO DE INSCRIÇÃO (DATE RANGE) */}
         <div className="flex flex-col">
           <label className="font-semibold mb-1 text-gray-800">
             Período de Inscrição{" "}
@@ -187,14 +269,64 @@ export function ConcursoForm({
               (Opcional)
             </span>
           </label>
-          <input
-            name="periodoInscricao"
-            type="text"
-            defaultValue={concursoEditando?.periodoInscricao || ""}
-            className="border p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-            placeholder="Ex: 09/03 a 02/04/2026"
-          />
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant={"outline"}
+                className={cn(
+                  "w-full justify-start text-left font-normal border p-3 rounded-md h-auto focus:ring-2 focus:ring-green-500 bg-white hover:bg-gray-50",
+                  !dateInscricao && "text-muted-foreground",
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dateInscricao?.from ? (
+                  dateInscricao.to ? (
+                    <>
+                      {format(dateInscricao.from, "dd/MM/yy", { locale: ptBR })}{" "}
+                      a {format(dateInscricao.to, "dd/MM/yy", { locale: ptBR })}
+                    </>
+                  ) : (
+                    format(dateInscricao.from, "dd/MM/yyyy", { locale: ptBR })
+                  )
+                ) : (
+                  <span>Selecione o período</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-auto p-0 bg-white shadow-xl border border-gray-200 z-50 rounded-xl"
+              align="start"
+            >
+              <Calendar
+                initialFocus
+                mode="range"
+                defaultMonth={dateInscricao?.from}
+                selected={dateInscricao}
+                onSelect={setDateInscricao}
+                numberOfMonths={2}
+                locale={ptBR}
+                className="bg-white rounded-t-xl"
+              />
+              <div className="p-2 border-t border-gray-100 bg-gray-50 rounded-b-xl flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => setDateInscricao(undefined)}
+                  className="text-xs font-bold text-gray-500 hover:text-red-500 transition-colors w-full py-1"
+                >
+                  Limpar Data
+                </button>
+              </div>
+            </PopoverContent>
+          </Popover>
+          {concursoEditando?.periodoInscricao && !dateInscricao && (
+            <span className="text-xs text-gray-400 mt-1">
+              Atual: {concursoEditando.periodoInscricao}
+            </span>
+          )}
         </div>
+
+        {/* PERÍODO DE ISENÇÃO (DATE RANGE) */}
         <div className="flex flex-col">
           <label className="font-semibold mb-1 text-gray-800">
             Período de Isenção{" "}
@@ -202,14 +334,64 @@ export function ConcursoForm({
               (Opcional)
             </span>
           </label>
-          <input
-            name="periodoIsencao"
-            type="text"
-            defaultValue={concursoEditando?.periodoIsencao || ""}
-            className="border p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-            placeholder="Ex: 09/03 a 11/03/2026"
-          />
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant={"outline"}
+                className={cn(
+                  "w-full justify-start text-left font-normal border p-3 rounded-md h-auto focus:ring-2 focus:ring-green-500 bg-white hover:bg-gray-50",
+                  !dateIsencao && "text-muted-foreground",
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dateIsencao?.from ? (
+                  dateIsencao.to ? (
+                    <>
+                      {format(dateIsencao.from, "dd/MM/yy", { locale: ptBR })} a{" "}
+                      {format(dateIsencao.to, "dd/MM/yy", { locale: ptBR })}
+                    </>
+                  ) : (
+                    format(dateIsencao.from, "dd/MM/yyyy", { locale: ptBR })
+                  )
+                ) : (
+                  <span>Selecione o período</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-auto p-0 bg-white shadow-xl border border-gray-200 z-50 rounded-xl"
+              align="start"
+            >
+              <Calendar
+                initialFocus
+                mode="range"
+                defaultMonth={dateIsencao?.from}
+                selected={dateIsencao}
+                onSelect={setDateIsencao}
+                numberOfMonths={2}
+                locale={ptBR}
+                className="bg-white rounded-t-xl"
+              />
+              <div className="p-2 border-t border-gray-100 bg-gray-50 rounded-b-xl flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => setDateIsencao(undefined)}
+                  className="text-xs font-bold text-gray-500 hover:text-red-500 transition-colors w-full py-1"
+                >
+                  Limpar Data
+                </button>
+              </div>
+            </PopoverContent>
+          </Popover>
+          {concursoEditando?.periodoIsencao && !dateIsencao && (
+            <span className="text-xs text-gray-400 mt-1">
+              Atual: {concursoEditando.periodoIsencao}
+            </span>
+          )}
         </div>
+
+        {/* DATA DA PROVA (SINGLE DATE) */}
         <div className="flex flex-col">
           <label className="font-semibold mb-1 text-gray-800">
             Data da Prova{" "}
@@ -217,13 +399,52 @@ export function ConcursoForm({
               (Opcional)
             </span>
           </label>
-          <input
-            name="dataProva"
-            type="text"
-            defaultValue={concursoEditando?.dataProva || ""}
-            className="border p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-            placeholder="Ex: 15/05/2026"
-          />
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant={"outline"}
+                className={cn(
+                  "w-full justify-start text-left font-normal border p-3 rounded-md h-auto focus:ring-2 focus:ring-green-500 bg-white hover:bg-gray-50",
+                  !dateProva && "text-muted-foreground",
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dateProva ? (
+                  format(dateProva, "dd/MM/yyyy", { locale: ptBR })
+                ) : (
+                  <span>Selecione a data</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-auto p-0 bg-white shadow-xl border border-gray-200 z-50 rounded-xl"
+              align="start"
+            >
+              <Calendar
+                mode="single"
+                selected={dateProva}
+                onSelect={setDateProva}
+                initialFocus
+                locale={ptBR}
+                className="bg-white rounded-t-xl"
+              />
+              <div className="p-2 border-t border-gray-100 bg-gray-50 rounded-b-xl flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => setDateProva(undefined)}
+                  className="text-xs font-bold text-gray-500 hover:text-red-500 transition-colors w-full py-1"
+                >
+                  Limpar Data
+                </button>
+              </div>
+            </PopoverContent>
+          </Popover>
+          {concursoEditando?.dataProva && !dateProva && (
+            <span className="text-xs text-gray-400 mt-1">
+              Atual: {concursoEditando.dataProva}
+            </span>
+          )}
         </div>
       </div>
 
