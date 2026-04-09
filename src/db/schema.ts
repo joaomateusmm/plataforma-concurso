@@ -175,3 +175,37 @@ export const lembretesConcursos = pgTable("lembretes_concursos", {
     .notNull()
     .references(() => concursos.id, { onDelete: "cascade" }),
 });
+
+export const noticias = pgTable("noticias", {
+  id: serial("id").primaryKey(),
+  titulo: varchar("titulo", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 300 }).notNull(),
+  conteudo: text("conteudo").notNull(),
+  dataPublicacao: timestamp("data_publicacao").notNull(),
+  publicadoPor: varchar("publicado_por", { length: 255 }).notNull(),
+  tipoConcurso: varchar("tipo_concurso", { length: 100 }).notNull(),
+  estado: varchar("estado", { length: 2 }),
+  municipio: varchar("municipio", { length: 255 }),
+  thumbnailUrl: text("thumbnail_url").notNull(),
+  criadoEm: timestamp("criado_em").defaultNow(),
+});
+
+export const noticiaConcursos = pgTable("noticia_concursos", {
+  id: serial("id").primaryKey(),
+  noticiaId: integer("noticia_id")
+    .notNull()
+    .references(() => noticias.id, { onDelete: "cascade" }),
+  concursoId: integer("concurso_id")
+    .notNull()
+    .references(() => concursos.id, { onDelete: "cascade" }),
+});
+
+export const noticiaEditais = pgTable("noticia_editais", {
+  id: serial("id").primaryKey(),
+  noticiaId: integer("noticia_id")
+    .notNull()
+    .references(() => noticias.id, { onDelete: "cascade" }),
+  editalId: varchar("edital_id", { length: 50 })
+    .notNull()
+    .references(() => editais.id, { onDelete: "cascade" }),
+});

@@ -50,13 +50,19 @@ const navItems: NavItem[] = [
   { title: "Editais", url: "/aluno/editais", icon: NotepadText },
   { title: "Aulas", url: "/aluno/aulas", icon: Video },
   { title: "Meus Simulados", url: "/aluno/simulados", icon: NotebookPen },
-  { title: "Meus Cadernos", url: "/aluno/cadernos", icon: Layers, status: "em_breve", },
   {
     title: "Notícias",
     url: "/aluno/noticias",
     icon: Megaphone,
+    status: "novo",
+  },
+  {
+    title: "Meus Cadernos",
+    url: "/aluno/cadernos",
+    icon: Layers,
     status: "em_breve",
   },
+
   { title: "Desafio", url: "/aluno/desafio", icon: Sword, status: "em_breve" },
 ];
 

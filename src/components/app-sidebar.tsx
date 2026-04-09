@@ -10,6 +10,7 @@ import {
   BellRing,
   NotepadText,
   LayoutDashboard,
+  Megaphone,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -27,13 +28,14 @@ import {
 
 const nav2Items = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
-  { title: "Gerenciar Questões", url: "/admin/questoes", icon: FileText },
-  { title: "Gerenciar Bancas", url: "/admin/bancas", icon: Library },
-  { title: "Gerenciar Matérias", url: "/admin/materias", icon: Layers },
-  { title: "Gerenciar Assuntos", url: "/admin/assuntos", icon: BookOpen },
-  { title: "Gerenciar Aulas", url: "/admin/aulas", icon: Video },
-  { title: "Gerenciar Concursos", url: "/admin/concursos", icon: BellRing },
-  { title: "Gerenciar Editais", url: "/admin/editais", icon: NotepadText },
+  { title: "Questões", url: "/admin/questoes", icon: FileText },
+  { title: "Bancas", url: "/admin/bancas", icon: Library },
+  { title: "Matérias", url: "/admin/materias", icon: Layers },
+  { title: "Assuntos", url: "/admin/assuntos", icon: BookOpen },
+  { title: "Aulas", url: "/admin/aulas", icon: Video },
+  { title: "Concursos", url: "/admin/concursos", icon: BellRing },
+  { title: "Editais", url: "/admin/editais", icon: NotepadText },
+  { title: "Notícias", url: "/admin/noticias", icon: Megaphone },
 ];
 
 export function AppSidebar() {
@@ -95,7 +97,7 @@ export function AppSidebar() {
                 Menu de Gestão
               </SidebarGroupLabel>
               <SidebarGroupContent>
-                <ul className="ml-2 flex flex-col gap-1 border-l border-gray-200 text-sm">
+                <ul className="ml-2 flex flex-col border-l border-gray-200 text-sm">
                   {nav2Items.map((item) => {
                     const active = isActive(item.url);
 

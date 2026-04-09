@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -18,10 +18,11 @@ import {
   ImageIcon,
   X,
   UploadCloud,
+  FileJson,
 } from "lucide-react";
 import { criarEditalAdmin } from "@/actions/editais";
 
-// 1. IMPORTAÇÕES DA NOVA ABORDAGEM (Igual ao seu projeto que funciona)
+// 1. IMPORTAÇÕES DA NOVA ABORDAGEM
 import { generateReactHelpers } from "@uploadthing/react";
 import type { OurFileRouter } from "@/app/api/uploadthing/core";
 
@@ -46,6 +47,9 @@ export default function NovoEditalForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
+  // Referência para o input de ficheiro JSON escondido
+  const jsonInputRef = useRef<HTMLInputElement>(null);
+
   // Guarda QUAIS pastas o usuário abriu ou fechou manualmente clicando.
   const [manuallyExpandedMaterias, setManuallyExpandedMaterias] = useState<
     string[]
@@ -60,6 +64,95 @@ export default function NovoEditalForm({
     abaAtiva === "basico" ? assuntosBasicos : assuntosEspecificos;
   const setSelecionadosAtuais =
     abaAtiva === "basico" ? setAssuntosBasicos : setAssuntosEspecificos;
+
+  // --- LÓGICA DE IMPORTAÇÃO JSON ---
+  const handleJsonUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const json = JSON.parse(event.target?.result as string);
+
+        // 1. Preenche campos de texto
+        if (json.titulo) setTitulo(json.titulo);
+        if (json.banca) setBanca(json.banca);
+        if (json.descricao) setDescricao(json.descricao);
+
+        const basicosIds: number[] = [];
+        const especificosIds: number[] = [];
+        const naoEncontrados: string[] = [];
+
+        // Função auxiliar para procurar o ID do assunto no banco
+        const findAssuntoId = (assuntoNome: string, materiaNome?: string) => {
+          const found = assuntosDb.find(
+            (a) =>
+              a.nome.toLowerCase().trim() ===
+                assuntoNome.toLowerCase().trim() &&
+              (!materiaNome ||
+                (a.materiaNome &&
+                  a.materiaNome.toLowerCase().trim() ===
+                    materiaNome.toLowerCase().trim())),
+          );
+          return found ? found.id : null;
+        };
+
+        // 2. Mapeia Conhecimentos Básicos
+        if (Array.isArray(json.conhecimentosBasicos)) {
+          json.conhecimentosBasicos.forEach((item: any) => {
+            if (Array.isArray(item.assuntos)) {
+              item.assuntos.forEach((assunto: string) => {
+                const id = findAssuntoId(assunto, item.materia);
+                if (id) basicosIds.push(id);
+                else naoEncontrados.push(`${item.materia} - ${assunto}`);
+              });
+            }
+          });
+        }
+
+        // 3. Mapeia Conhecimentos Específicos
+        if (Array.isArray(json.conhecimentosEspecificos)) {
+          json.conhecimentosEspecificos.forEach((item: any) => {
+            if (Array.isArray(item.assuntos)) {
+              item.assuntos.forEach((assunto: string) => {
+                const id = findAssuntoId(assunto, item.materia);
+                if (id) especificosIds.push(id);
+                else naoEncontrados.push(`${item.materia} - ${assunto}`);
+              });
+            }
+          });
+        }
+
+        // 4. Aplica os IDs encontrados aos estados
+        setAssuntosBasicos(basicosIds);
+        setAssuntosEspecificos(especificosIds);
+
+        toast.success("JSON importado com sucesso!", {
+          description: `Mapeados ${basicosIds.length + especificosIds.length} assuntos automaticamente.`,
+        });
+
+        // 5. Alerta caso algo tenha sido escrito com erro de digitação no JSON
+        if (naoEncontrados.length > 0) {
+          console.warn("Assuntos não encontrados no banco:", naoEncontrados);
+          toast.warning(`${naoEncontrados.length} assuntos não encontrados.`, {
+            description:
+              "Eles podem ter nomes diferentes no seu banco de dados. Veja o F12 (Console) para a lista.",
+            duration: 8000,
+          });
+        }
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (err) {
+        toast.error("Erro ao ler JSON", {
+          description: "O formato do arquivo é inválido.",
+        });
+      }
+    };
+
+    reader.readAsText(file);
+    // Limpa o input para poder carregar o mesmo arquivo duas vezes se necessário
+    e.target.value = "";
+  };
 
   // --- CONFIGURAÇÃO DO UPLOADTHING (IMAGEM) ---
   const { startUpload: uploadImage, isUploading: isUploadingImage } =
@@ -81,11 +174,8 @@ export default function NovoEditalForm({
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Preview local imediato (optimistic update)
     const objectUrl = URL.createObjectURL(file);
     setThumbnailUrl(objectUrl);
-
-    // Inicia o upload para o UploadThing
     await uploadImage([file]);
   };
 
@@ -113,13 +203,10 @@ export default function NovoEditalForm({
       toast.error("Por favor, selecione apenas arquivos PDF.");
       return;
     }
-
-    // Inicia o upload para o UploadThing
     await uploadPdf([file]);
   };
   // --------------------------------------------------------------------
 
-  // Vê se estamos atualmente numa pesquisa
   const isSearching = searchTerm.trim().length > 0;
 
   const assuntosAgrupados = useMemo(() => {
@@ -211,8 +298,8 @@ export default function NovoEditalForm({
         titulo,
         banca,
         descricao,
-        thumbnailUrl, // Passamos a URL gerada da imagem
-        pdfUrl, // Passamos a URL gerada do PDF
+        thumbnailUrl,
+        pdfUrl,
         assuntosMapeados: {
           basico: assuntosBasicos,
           especifico: assuntosEspecificos,
@@ -246,6 +333,15 @@ export default function NovoEditalForm({
         .hide-native-scroll { scrollbar-width: none !important; -ms-overflow-style: none !important; }
       `}</style>
 
+      {/* Input JSON Oculto */}
+      <input
+        type="file"
+        accept=".json"
+        ref={jsonInputRef}
+        onChange={handleJsonUpload}
+        className="hidden"
+      />
+
       <div className="max-w-7xl mx-auto space-y-8 animate-in mb-12 fade-in duration-500">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white border border-gray-200 p-8 rounded-3xl shadow-sm">
           <div>
@@ -261,6 +357,15 @@ export default function NovoEditalForm({
               Básicos e Específicos.
             </p>
           </div>
+
+          {/* BOTÃO PARA IMPORTAR JSON */}
+          <button
+            onClick={() => jsonInputRef.current?.click()}
+            className="flex items-center gap-2 px-5 py-3 rounded-xl bg-emerald-100 text-emerald-700 hover:bg-emerald-200 hover:text-emerald-800 font-bold border border-emerald-200 transition-all duration-300 shadow-sm"
+          >
+            <FileJson className="w-5 h-5" />
+            Importar via JSON
+          </button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

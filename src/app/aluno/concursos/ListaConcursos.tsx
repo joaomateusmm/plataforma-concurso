@@ -86,6 +86,28 @@ function ConcursoCard({
   const { data: session } = authClient.useSession();
   const userId = session?.user?.id;
 
+  // --------------------------------------------------------------------------------
+  // NOVA LÓGICA DE LINKS INTELIGENTES (Navegação SPA Natural)
+  // --------------------------------------------------------------------------------
+  const formatarLink = (url: string) => {
+    if (!url) return "#";
+    if (url.startsWith("/")) return url;
+    if (url.includes("mateusdev.shop")) {
+      try {
+        const parsed = new URL(url);
+        return parsed.pathname + parsed.search; // Retorna apenas o caminho interno
+      } catch {
+        return url;
+      }
+    }
+    return url; // Retorna o link original se for de outro site
+  };
+
+  const isLinkInterno = (url: string) => {
+    if (!url) return true;
+    return url.startsWith("/") || url.includes("mateusdev.shop");
+  };
+
   // ATUALIZADO: Agrupamento das lógicas dos botões com base nos novos status
   const isEmBreve = [
     "Concurso Autorizado",
@@ -313,14 +335,18 @@ function ConcursoCard({
             Concurso Encerrado
           </button>
         ) : (
-          <a
-            href={concurso.linkInscricao || "#"}
-            target={concurso.linkInscricao ? "_blank" : "_self"}
-            rel="noopener noreferrer"
+          <Link
+            href={formatarLink(concurso.linkInscricao)}
+            target={isLinkInterno(concurso.linkInscricao) ? "_self" : "_blank"}
+            rel={
+              !isLinkInterno(concurso.linkInscricao)
+                ? "noopener noreferrer"
+                : undefined
+            }
             className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all duration-300 bg-emerald-600 text-white hover:bg-emerald-500 shadow-lg shadow-emerald-900/20"
           >
             Fazer Inscrição <ExternalLink className="w-4 h-4" />
-          </a>
+          </Link>
         )}
 
         <div className="flex flex-wrap gap-x-4 gap-y-2 items-center justify-center mt-1">
@@ -336,17 +362,23 @@ function ConcursoCard({
                 </span>
               </Link>
               {concurso.linkEdital && (
-                <a
-                  href={concurso.linkEdital}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <Link
+                  href={formatarLink(concurso.linkEdital)}
+                  target={
+                    isLinkInterno(concurso.linkEdital) ? "_self" : "_blank"
+                  }
+                  rel={
+                    !isLinkInterno(concurso.linkEdital)
+                      ? "noopener noreferrer"
+                      : undefined
+                  }
                   className="flex items-center gap-1.5 text-xs font-medium text-neutral-400 hover:text-emerald-400 transition-colors  group/link"
                 >
                   <FileText className="w-3.5 h-3.5" />
                   <span className="group-hover/link:underline underline-offset-2">
                     Ver Edital Passado
                   </span>
-                </a>
+                </Link>
               )}
             </>
           )}
@@ -354,63 +386,83 @@ function ConcursoCard({
           {isInscricoesEncerradas && (
             <>
               {concurso.linkEdital && (
-                <a
-                  href={concurso.linkEdital}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <Link
+                  href={formatarLink(concurso.linkEdital)}
+                  target={
+                    isLinkInterno(concurso.linkEdital) ? "_self" : "_blank"
+                  }
+                  rel={
+                    !isLinkInterno(concurso.linkEdital)
+                      ? "noopener noreferrer"
+                      : undefined
+                  }
                   className="flex items-center gap-1.5 text-xs font-medium text-neutral-400 hover:text-emerald-400 transition-colors group/link"
                 >
                   <FileText className="w-3.5 h-3.5" />
                   <span className="group-hover/link:underline underline-offset-2">
                     Ver edital Atual
                   </span>
-                </a>
+                </Link>
               )}
               {concurso.linkCronograma && (
-                <a
-                  href={concurso.linkCronograma}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <Link
+                  href={formatarLink(concurso.linkCronograma)}
+                  target={
+                    isLinkInterno(concurso.linkCronograma) ? "_self" : "_blank"
+                  }
+                  rel={
+                    !isLinkInterno(concurso.linkCronograma)
+                      ? "noopener noreferrer"
+                      : undefined
+                  }
                   className="flex items-center gap-1.5 text-xs font-medium text-neutral-400 hover:text-emerald-400 transition-colors group/link"
                 >
                   <CalendarDays className="w-3.5 h-3.5" />
                   <span className="group-hover/link:underline underline-offset-2">
                     Ver cronograma
                   </span>
-                </a>
+                </Link>
               )}
             </>
           )}
 
           {isEncerradoTudo && concurso.linkEdital && (
-            <a
-              href={concurso.linkEdital}
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              href={formatarLink(concurso.linkEdital)}
+              target={isLinkInterno(concurso.linkEdital) ? "_self" : "_blank"}
+              rel={
+                !isLinkInterno(concurso.linkEdital)
+                  ? "noopener noreferrer"
+                  : undefined
+              }
               className="flex items-center gap-1.5 text-xs font-medium text-neutral-400 hover:text-emerald-400 transition-colors group/link"
             >
               <FileText className="w-3.5 h-3.5" />
               <span className="group-hover/link:underline underline-offset-2">
                 Ver Edital Passado
               </span>
-            </a>
+            </Link>
           )}
 
           {!isEmBreve &&
             !isInscricoesEncerradas &&
             !isEncerradoTudo &&
             concurso.linkEdital && (
-              <a
-                href={concurso.linkEdital}
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                href={formatarLink(concurso.linkEdital)}
+                target={isLinkInterno(concurso.linkEdital) ? "_self" : "_blank"}
+                rel={
+                  !isLinkInterno(concurso.linkEdital)
+                    ? "noopener noreferrer"
+                    : undefined
+                }
                 className="flex items-center gap-1.5 text-xs font-medium text-neutral-400 hover:text-emerald-400 transition-colors py-1 group/link"
               >
                 <FileText className="w-3.5 h-3.5" />
                 <span className="group-hover/link:underline underline-offset-2">
                   Acessar Edital Oficial
                 </span>
-              </a>
+              </Link>
             )}
         </div>
       </div>

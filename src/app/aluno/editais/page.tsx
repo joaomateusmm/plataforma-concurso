@@ -1,16 +1,37 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
-import Image from "next/image"; // <-- Importação correta do Next Image
+import Image from "next/image";
 import { toast } from "sonner";
-import { ArrowRight, Loader2, Sparkles, NotepadText } from "lucide-react";
+import {
+  ArrowRight,
+  Loader2,
+  Sparkles,
+  NotepadText,
+  Search,
+  GalleryVerticalEnd,
+} from "lucide-react";
 import { obterEditaisPublicados } from "@/actions/editais";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 export default function EditaisAlunoPage() {
   const [editais, setEditais] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Estados dos Filtros
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filtroBanca, setFiltroBanca] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -42,6 +63,28 @@ export default function EditaisAlunoPage() {
     };
   }, []);
 
+  // Extrai as bancas únicas dos editais que vieram do banco para preencher o Dropdown
+  const opcoesBancas = useMemo(() => {
+    return Array.from(
+      new Set(editais.map((e) => e.banca).filter(Boolean))
+    );
+  }, [editais]);
+
+  // Lógica de Filtragem
+  const editaisFiltrados = useMemo(() => {
+    return editais.filter((e) => {
+      const lowerSearch = searchTerm.toLowerCase();
+      const matchSearch =
+        !searchTerm.trim() ||
+        e.titulo.toLowerCase().includes(lowerSearch) ||
+        (e.descricao && e.descricao.toLowerCase().includes(lowerSearch));
+
+      const matchBanca = !filtroBanca || e.banca === filtroBanca;
+
+      return matchSearch && matchBanca;
+    });
+  }, [editais, searchTerm, filtroBanca]);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -67,28 +110,107 @@ export default function EditaisAlunoPage() {
 
       <div className="border-t mt-7 mb-9 border-neutral-800"></div>
 
+      {/* BARRA DE PESQUISA E FILTROS */}
+      <div className="mb-9 flex flex-col md:flex-row items-start md:items-center justify-start gap-4">
+        {/* BUSCA EM TEXTO */}
+        <div className="group relative flex h-10 w-full max-w-md cursor-text items-center justify-between rounded-full bg-neutral-900 px-4 duration-300 hover:ring-1 hover:ring-neutral-800">
+          <div className="flex w-full items-center">
+            <Search className="mr-3 h-4 w-4 text-neutral-500 shrink-0" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Pesquisar por título ou palavras-chave..."
+              className="w-full bg-transparent text-sm font-medium text-neutral-200 transition-colors placeholder:text-neutral-500 focus:outline-none"
+            />
+          </div>
+          <div className="hidden sm:flex items-center gap-1 text-[10px] font-bold text-neutral-600 shrink-0 pl-2">
+            <kbd className="rounded bg-neutral-800 px-1.5 py-0.5 font-sans">
+              ⌘
+            </kbd>
+            <kbd className="rounded bg-neutral-800 px-1.5 py-0.5 font-sans">
+              K
+            </kbd>
+          </div>
+        </div>
+
+        <div className="w-1 border-r h-10 border-neutral-800 hidden md:block"></div>
+
+        {/* DROPDOWNS DINÂMICOS */}
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="text-neutral-700 font-medium text-sm hidden sm:block">
+            Filtros:
+          </span>
+
+          {/* BANCA */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                className={`bg-neutral-900 cursor-pointer duration-300 hover:ring-[0.6px] ring-neutral-700 py-5 rounded-full px-4 border-none shadow-none ${
+                  filtroBanca
+                    ? " text-neutral-300 hover:bg-neutral-900"
+                    : " text-neutral-500"
+                }`}
+              >
+                <GalleryVerticalEnd className="mr-1.5 h-4 w-4 shrink-0" />
+                <span className="truncate max-w-30">
+                  {filtroBanca || "Banca"}
+                </span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="bg-neutral-900 border border-neutral-800 text-neutral-300">
+              <DropdownMenuGroup>
+                <DropdownMenuLabel className="text-neutral-500">
+                  Filtrar por Banca
+                </DropdownMenuLabel>
+                <DropdownMenuItem
+                  onClick={() => setFiltroBanca(null)}
+                  className="cursor-pointer focus:bg-neutral-800 border-t rounded-none border-neutral-700/70 focus:text-white py-3 duration-200"
+                >
+                  Todas as Bancas
+                </DropdownMenuItem>
+                {opcoesBancas.map((banca) => (
+                  <DropdownMenuItem
+                    key={banca as string}
+                    onClick={() => setFiltroBanca(banca as string)}
+                    className="cursor-pointer focus:bg-neutral-800 border-t rounded-none border-neutral-700/70 focus:text-white py-3 duration-200"
+                  >
+                    {banca as string}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+
       {/* LISTAGEM DE EDITAIS EM GRID */}
-      {editais.length === 0 ? (
+      {editaisFiltrados.length === 0 ? (
         <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-16 text-center flex flex-col items-center justify-center shadow-sm">
           <div className="w-20 h-20 bg-neutral-950 border border-neutral-800 rounded-full flex items-center justify-center mb-6">
             <Sparkles className="w-10 h-10 text-neutral-600" />
           </div>
           <h3 className="text-xl font-bold text-white mb-2">
-            Nenhum edital disponível no momento
+            Nenhum edital encontrado
           </h3>
           <p className="text-neutral-400 max-w-md">
-            A nossa equipa está a trabalhar no mapeamento de novos concursos.
-            Volte em breve para conferir as novidades!
+            Tente pesquisar por outro termo ou limpar os filtros para ver todos os editais.
           </p>
+          <Button 
+            onClick={() => { setSearchTerm(""); setFiltroBanca(null); }}
+            variant="outline" 
+            className="mt-6 border-neutral-700 text-neutral-300 hover:text-white hover:bg-neutral-800"
+          >
+            Limpar Filtros
+          </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {editais.map((edital) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {editaisFiltrados.map((edital) => (
             <div
               key={edital.id}
-              className="bg-neutral-900 border border-neutral-800 rounded-3xl flex flex-col overflow-hidden hover:ring-1 ring-neutral-700 duration-300 group relative"
+              className="bg-neutral-900 border border-neutral-800 rounded-3xl flex flex-col overflow-hidden hover:ring-1 ring-neutral-700 duration-300 group relative min-h-80"
             >
-              {/* IMAGEM DE FUNDO DO CARD (Thumbnail) */}
               {edital.thumbnailUrl && (
                 <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
                   <Image
@@ -98,14 +220,12 @@ export default function EditaisAlunoPage() {
                     unoptimized
                     className="object-cover opacity-50 group-hover:scale-105 transition-transform duration-700"
                   />
-                  {/* Máscara: Fade da Esquerda para a Direita (Garante a leitura do título) */}
                   <div className="absolute inset-0 bg-linear-to-r from-neutral-900 via-neutral-900/80 to-transparent" />
-                  {/* Máscara: Fade de Baixo para Cima (Protege a zona do botão inferior) */}
                   <div className="absolute inset-0 bg-linear-to-t from-neutral-900 via-neutral-900/40 to-transparent" />
                 </div>
               )}
 
-              {/* CONTEÚDO DO CARD (com z-10 para ficar por cima do fundo) */}
+              {/* CONTEÚDO DO CARD */}
               <div className="relative z-10 p-6 flex-1 flex flex-col">
                 {/* Meta Header */}
                 <div className="flex justify-between items-start mb-5">
