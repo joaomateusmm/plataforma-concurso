@@ -232,7 +232,7 @@ export default function ProvaClient({ simulado, questoes }: ProvaClientProps) {
 
         {/* LÓGICA DE ESCONDER O MAPA AQUI */}
         {isMapVisible && (
-          <aside className="w-full lg:w-72 shrink-0 lg:sticky lg:top-28 max-h-[calc(100vh-8rem)] overflow-y-auto flex flex-col gap-4 pb-4 animate-in slide-in-from-right-4 duration-300">
+          <aside className="w-full lg:w-72 shrink-0 lg:sticky lg:top-28 max-h-full overflow-y-auto flex flex-col gap-4 pb-4 animate-in slide-in-from-right-4 duration-300">
             <QuestionMap
               questoes={questoes}
               respostas={respostas}

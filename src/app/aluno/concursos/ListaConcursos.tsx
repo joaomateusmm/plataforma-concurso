@@ -65,13 +65,13 @@ const getStatusBadge = (status: string) => {
     case "Edital Iminente":
     case "Em Breve":
     case "Edital Em Breve":
-      return "text-yellow-400 border-yellow-500/30 bg-yellow-500/10";
+      return "text-neutral-300 border-neutral-500/30 bg-neutral-500/10";
     case "Inscrições Encerradas":
     case "Concurso Encerrado":
     case "Encerrado":
-      return "text-neutral-400 border-neutral-700 bg-neutral-800";
+      return "text-neutral-300 border-neutral-700 bg-neutral-800";
     default:
-      return "text-neutral-400 border-none";
+      return "text-neutral-300 border-none";
   }
 };
 
@@ -82,25 +82,20 @@ function ConcursoCard({
   concurso: any;
   lembretesAtivosIniciais?: number[];
 }) {
-  // 3. PEGAR O ID DO USUÁRIO LOGADO
   const { data: session } = authClient.useSession();
   const userId = session?.user?.id;
-
-  // --------------------------------------------------------------------------------
-  // NOVA LÓGICA DE LINKS INTELIGENTES (Navegação SPA Natural)
-  // --------------------------------------------------------------------------------
   const formatarLink = (url: string) => {
     if (!url) return "#";
     if (url.startsWith("/")) return url;
     if (url.includes("mateusdev.shop")) {
       try {
         const parsed = new URL(url);
-        return parsed.pathname + parsed.search; // Retorna apenas o caminho interno
+        return parsed.pathname + parsed.search;
       } catch {
         return url;
       }
     }
-    return url; // Retorna o link original se for de outro site
+    return url;
   };
 
   const isLinkInterno = (url: string) => {
@@ -108,7 +103,6 @@ function ConcursoCard({
     return url.startsWith("/") || url.includes("mateusdev.shop");
   };
 
-  // ATUALIZADO: Agrupamento das lógicas dos botões com base nos novos status
   const isEmBreve = [
     "Concurso Autorizado",
     "Banca Definida",
@@ -130,14 +124,12 @@ function ConcursoCard({
   const [isLoadingLembrete, setIsLoadingLembrete] = useState(false);
 
   const handleToggleLembrete = async () => {
-    // Verificação de segurança
     if (!userId) {
       toast.error("Você precisa estar logado para ativar lembretes.");
       return;
     }
 
     setIsLoadingLembrete(true);
-    // 4. CHAMAR A NOVA FUNÇÃO PASSANDO userId e concurso.id
     const res = await toggleLembrete(userId, concurso.id);
 
     if (res.error) {
@@ -177,16 +169,15 @@ function ConcursoCard({
         </div>
       )}
 
-      {/* HEADER DO CARD */}
       <div className="px-6 py-3 border-b border-neutral-800/50 flex items-center justify-between bg-neutral-950/30 relative z-10">
         <span
-          className={`py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border px-2 ${getStatusBadge(concurso.status)}`}
+          className={`text-xs font-semibold text-neutral-300 bg-neutral-800 px-2.5 py-1 rounded-md ${getStatusBadge(concurso.status)}`}
         >
           {concurso.status}
         </span>
         <div className="flex gap-1 items-center justify-center text-sm font-medium text-neutral-500">
           Banca:
-          <span className="text-xs font-bold text-neutral-500 bg-neutral-800 px-2.5 py-1 rounded-md">
+          <span className="text-xs font-semibold text-neutral-300 bg-neutral-800 px-2.5 py-1 rounded-md">
             {concurso.banca}
           </span>
         </div>
@@ -213,7 +204,6 @@ function ConcursoCard({
         </button>
       </div>
 
-      {/* CORPO DO CARD */}
       <div className="px-6 py-4 flex-1 flex flex-col gap-4 relative z-10">
         <div>
           <h2 className="text-xl font-extrabold text-neutral-200 group-hover:text-emerald-400 transition-colors leading-tight">
@@ -898,7 +888,7 @@ export function ListaConcursos({
           <SecaoConcursos
             titulo="Próximos Concursos:"
             concursos={concursosEmBreve}
-            badgeColor="bg-yellow-500/10 text-yellow-400 border border-yellow-500/20"
+            badgeColor="bg-neutral-500/10 text-neutral-400 border border-neutral-500/20"
             lembretesAtivosIniciais={lembretesAtivosIniciais}
           />
           <SecaoConcursos

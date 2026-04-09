@@ -1,10 +1,8 @@
-// src/app/page.tsx
 "use client";
 
 import Link from "next/link";
 import dynamic from "next/dynamic";
 
-// 1. IMPORTAÇÃO DINÂMICA: Desativamos o SSR para o WebGL funcionar no Next.js
 const SpiralGallery = dynamic(() => import("@/components/SpiralGallery"), {
   ssr: false,
   loading: () => (
@@ -19,9 +17,7 @@ const SpiralGallery = dynamic(() => import("@/components/SpiralGallery"), {
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-white overflow-hidden relative">
-      {/* SEÇÃO HERO (Textos e Botões no Topo) */}
       <main className="flex flex-col items-center justify-start pt-24 px-8 z-10 relative">
-        {/* Adicionei um design mais "Apple" para a tipografia, inspirado no seu print */}
         <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 mb-6 text-center max-w-3xl leading-tight">
           Acelere a sua <span className="text-green-600">Aprovação</span>
         </h1>

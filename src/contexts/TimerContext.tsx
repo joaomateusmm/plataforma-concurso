@@ -57,6 +57,10 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     type: "focus" | "break" | "finish" | "ticktack",
   ) => {
     if (typeof window !== "undefined") {
+      if (sessionStorage.getItem("muteTimerAudio") === "true") {
+        return;
+      }
+
       try {
         const audio = new Audio(`/sounds/${type}.mp3`);
         audio.play().catch((e) => {

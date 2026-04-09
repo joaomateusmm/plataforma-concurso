@@ -7,8 +7,8 @@ import { Maximize, Minimize, ArrowLeft } from "lucide-react";
 function ClockSeparator() {
   return (
     <div className="flex flex-col gap-4 md:gap-16 mx-2 md:mx-4">
-      <div className="w-3 h-3 md:w-5 md:h-5 rounded-full bg-neutral-800 "></div>
-      <div className="w-3 h-3 md:w-5 md:h-5 rounded-full bg-neutral-800 "></div>
+      <div className="w-3 h-3 md:w-5 md:h-5 rounded-full bg-neutral-950 "></div>
+      <div className="w-3 h-3 md:w-5 md:h-5 rounded-full bg-neutral-950 "></div>
     </div>
   );
 }
@@ -31,18 +31,18 @@ function TimeDisplayHuge({ value }: { value: string }) {
 
   return (
     <div className="relative flex flex-col items-center justify-center bg-[#000000] rounded-3xl w-40 h-32 md:w-64 md:h-56 lg:w-80 lg:h-72 transition-all perspective-1000">
-      <div className="absolute top-0 w-full h-1/2 overflow-hidden bg-[#070707] rounded-t-3xl flex items-end justify-center">
+      <div className="absolute top-0 w-full h-1/2 overflow-hidden bg-neutral-950 rounded-t-3xl flex items-end justify-center">
         <span className="text-neutral-400 font-bold text-8xl md:text-[10rem] lg:text-[14rem] select-none translate-y-[50%]">
           {value}
         </span>
       </div>
-      <div className="absolute bottom-0 w-full h-1/2 overflow-hidden bg-[#070707] rounded-b-3xl flex items-start justify-center">
+      <div className="absolute bottom-0 w-full h-1/2 overflow-hidden bg-neutral-950 rounded-b-3xl flex items-start justify-center">
         <span className="text-neutral-400 font-bold text-8xl md:text-[10rem] lg:text-[14rem] select-none -translate-y-[50%]">
           {isFlipping ? prevValue : value}
         </span>
       </div>
       <div
-        className={`absolute top-0 w-full h-1/2 overflow-hidden bg-[#070707] rounded-t-3xl flex items-end justify-center transform-origin-bottom ${isFlipping ? "animate-flipTop" : ""}`}
+        className={`absolute top-0 w-full h-1/2 overflow-hidden bg-neutral-950 rounded-t-3xl flex items-end justify-center transform-origin-bottom ${isFlipping ? "animate-flipTop" : ""}`}
         style={{ backfaceVisibility: "hidden", zIndex: 20 }}
       >
         <span className="text-neutral-400 font-bold text-8xl md:text-[10rem] lg:text-[14rem] select-none translate-y-[50%]">
@@ -50,7 +50,7 @@ function TimeDisplayHuge({ value }: { value: string }) {
         </span>
       </div>
       <div
-        className={`absolute bottom-0 w-full h-1/2 overflow-hidden bg-[#070707] rounded-b-3xl flex items-start justify-center transform-origin-top ${isFlipping ? "animate-flipBottom" : ""}`}
+        className={`absolute bottom-0 w-full h-1/2 overflow-hidden bg-neutral-950 rounded-b-3xl flex items-start justify-center transform-origin-top ${isFlipping ? "animate-flipBottom" : ""}`}
         style={{
           backfaceVisibility: "hidden",
           transform: isFlipping ? "rotateX(90deg)" : "rotateX(0deg)",
@@ -61,12 +61,23 @@ function TimeDisplayHuge({ value }: { value: string }) {
           {value}
         </span>
       </div>
-      <div className="absolute top-1/2 -translate-y-1/2 w-full h-1.5 md:h-2.5 bg-[#040404] z-30 shadow-inner pointer-events-none"></div>
+      <div className="absolute top-1/2 -translate-y-1/2 w-full h-1.5 md:h-2.5 bg-neutral-950 z-30 shadow-inner pointer-events-none"></div>
     </div>
   );
 }
 
 export default function FullscreenTimerPage() {
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("muteTimerAudio", "true");
+    }
+    return () => {
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("muteTimerAudio");
+      }
+    };
+  }, []);
+
   const {
     activeTimerMode,
     stopwatchTime,
@@ -129,23 +140,25 @@ export default function FullscreenTimerPage() {
       setIsFullscreen(false);
     }
   };
+
   let currentTime = 0;
-  let title = "Relógio Atual";
+  let title = ""; // Título padrão agora é vazio (remove o "Relógio Atual")
   let titleColor = "text-neutral-500";
 
   if (activeTimerMode === "cronometro") {
     currentTime = stopwatchTime;
-    title = "Cronômetro";
-    titleColor = "text-emerald-500";
+    title = ""; // Vazio
+    titleColor = "text-neutral-500";
   } else if (activeTimerMode === "temporizador") {
     currentTime = temporizadorTime;
-    title = "Contagem Decrescente";
+    title = ""; // Removeu "Contagem Decrescente"
     titleColor = "text-blue-500";
   } else if (activeTimerMode === "pomodoro") {
     currentTime = pomodoroTime;
+    // Mantém apenas o título do Pomodoro!
     title = pomodoroPhase === "focus" ? "" : "Intervalo";
     titleColor =
-      pomodoroPhase === "focus" ? "text-neutral-500" : "text-emerald-500";
+      pomodoroPhase === "focus" ? "text-neutral-500" : "text-neutral-500";
   }
   const h =
     activeTimerMode === "none"
@@ -200,11 +213,6 @@ export default function FullscreenTimerPage() {
           {isFullscreen ? "Sair da Tela Cheia" : "Tela Cheia"}
         </button>
       </div>
-      <div
-        className={`mb-12 text-sm md:text-xl font-bold tracking-[0.3em] uppercase ${titleColor} transition-opacity duration-1000 ${showControls ? "opacity-100" : "opacity-30"}`}
-      >
-        {title}
-      </div>
 
       <div className="flex items-center justify-center gap-2 md:gap-6 select-none">
         {(h !== "00" || activeTimerMode === "none") && (
@@ -216,6 +224,11 @@ export default function FullscreenTimerPage() {
         <TimeDisplayHuge value={m} />
         <ClockSeparator />
         <TimeDisplayHuge value={s} />
+      </div>
+      <div
+        className={`absolute top-1/2 left-1/2 -translate-x-1/2 translate-y-24 md:translate-y-40 lg:translate-y-52 text-sm md:text-xl font-semibold tracking-[0.2em] whitespace-nowrap z-50 ${titleColor} transition-opacity duration-1000 ${showControls ? "opacity-100" : "opacity-30"}`}
+      >
+        {title}
       </div>
     </main>
   );
