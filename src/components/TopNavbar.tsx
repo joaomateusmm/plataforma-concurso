@@ -7,6 +7,7 @@ import SearchBar from "./SearchBar";
 import UpdatesNotification from "./UpdatesNotification";
 import UserNav from "./UserNav";
 import Grainient from "@/components/Grainient";
+import { HeaderMiniTimer } from "./HeaderMiniTimer";
 
 export default function TopNavbar() {
   return (
@@ -55,8 +56,10 @@ export default function TopNavbar() {
         </div>
       </div>
 
-      <header className="flex h-14 px-4 w-full justify-between items-center border-b border-neutral-800 bg-neutral-950/60 backdrop-blur-md transition-all duration-300">
-        <div>
+      {/* ADICIONADO "relative" AQUI NO HEADER */}
+      <header className="relative flex h-14 px-4 w-full justify-between items-center border-b border-neutral-800 bg-neutral-950/60 backdrop-blur-md transition-all duration-300">
+        {/* LADO ESQUERDO: Logo */}
+        <div className="flex gap-12 ml-4">
           <Link
             className="flex items-center justify-center hover:opacity-80 transition-opacity w-full"
             href="/"
@@ -73,16 +76,24 @@ export default function TopNavbar() {
             </span>
           </Link>
         </div>
-        <div className="flex w-full justify-end gap-4 items-center">
+
+        {/* CENTRO: MiniTimer com Posição Absoluta */}
+        {/* Isto impede que ele empurre os itens da esquerda e da direita */}
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+          <HeaderMiniTimer />
+        </div>
+
+        {/* LADO DIREITO: Ações */}
+        <div className="flex justify-end gap-4 items-center">
           <UpdatesNotification />
 
           <UserNav />
 
           <SearchBar />
 
-          <div className=" h-6 border-r border-neutral-800"></div>
+          <div className="h-6 border-r border-neutral-800"></div>
 
-          <button className="inline-flex items-center justify-center gap-2 bg-neutral-100 hover:ring-2 active:scale-95 ring-neutral-300 duration-300 text-xs text-neutral-800 px-4 cursor-pointer py-2 rounded-xl font-bold  transition-all">
+          <button className="inline-flex items-center justify-center gap-2 bg-neutral-100 hover:ring-2 active:scale-95 ring-neutral-300 duration-300 text-xs text-neutral-800 px-4 cursor-pointer py-2 rounded-xl font-bold transition-all">
             Apoiar Projeto
           </button>
         </div>

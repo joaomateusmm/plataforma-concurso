@@ -54,7 +54,6 @@ const navItems: NavItem[] = [
     title: "Notícias",
     url: "/aluno/noticias",
     icon: Megaphone,
-    status: "novo",
   },
   {
     title: "Meus Cadernos",
@@ -72,12 +71,11 @@ const navItems2: NavItem[] = [
     url: "/aluno/simulados/novo",
     icon: CopyPlus,
   },
-
   {
-    title: "Year in pixels",
-    url: "/aluno/year-in-pixels",
-    icon: Grid2x2Check,
-    status: "em_breve",
+    title: "Flip Clock",
+    url: "/aluno/timer",
+    icon: ClockFading,
+    status: "novo",
   },
   {
     title: "Criar Caderno",
@@ -86,9 +84,9 @@ const navItems2: NavItem[] = [
     status: "em_breve",
   },
   {
-    title: "Flip Clock",
-    url: "/aluno/relogio",
-    icon: ClockFading,
+    title: "Year in pixels",
+    url: "/aluno/year-in-pixels",
+    icon: Grid2x2Check,
     status: "em_breve",
   },
 ];

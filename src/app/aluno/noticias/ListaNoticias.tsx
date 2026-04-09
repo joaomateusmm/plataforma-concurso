@@ -6,7 +6,6 @@ import Link from "next/link";
 import {
   Search,
   ArrowRight,
-  Sparkles,
   Filter,
   MapPin,
   Map,
@@ -132,7 +131,7 @@ export function ListaNoticias({
               </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>
-          
+
           {/* FILTRO: ESTADO */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -186,10 +185,7 @@ export function ListaNoticias({
       </div>
 
       {noticiasFiltradas.length === 0 ? (
-        <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-16 text-center flex flex-col items-center justify-center shadow-sm">
-          <div className="w-20 h-20 bg-neutral-950 border border-neutral-800 rounded-full flex items-center justify-center mb-6">
-            <Sparkles className="w-10 h-10 text-neutral-600" />
-          </div>
+        <div className=" p-32 text-center flex flex-col items-center justify-center shadow-sm">
           <h3 className="text-xl font-bold text-white mb-2">
             Nenhuma notícia encontrada
           </h3>

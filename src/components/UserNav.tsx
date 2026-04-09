@@ -2,13 +2,19 @@
 "use client";
 
 import {
+  BellRing,
   ChevronDown,
   LayoutDashboard,
   LogIn,
   LogOut,
+  Megaphone,
+  NotebookPen,
+  NotepadText,
   Settings,
+  User,
   UserPlus,
   UserRound,
+  Video,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -82,7 +88,7 @@ export default function UserNav() {
 
       {/* --- DROPDOWN MENU --- */}
       {isOpen && (
-        <div className="animate-in fade-in slide-in-from-top-2 absolute top-full right-0 w-60 pt-2 duration-200">
+        <div className="animate-in fade-in slide-in-from-top-2 bg-neutral-950 absolute top-full right-0 w-60 pt-2 duration-200">
           {/* Espaço invisível para não perder o hover ao mover o rato */}
           <div className="absolute -top-2 right-0 left-0 h-2" />
 
@@ -108,27 +114,64 @@ export default function UserNav() {
               )}
             </div>
 
-            {/* Links de Navegação */}
-            <div className="space-y-1">
-              <MenuLink
-                href="/aluno"
-                icon={<LayoutDashboard size={14} />}
-                label="Painel de Estudos"
-                onClick={() => setIsOpen(false)}
-              />
-
-              {session && (
-                <>
+            {session && (
+              <>
+                <div className="space-y-1 mt-1">
                   <MenuLink
-                    href="/aluno/perfil"
-                    icon={<UserRound size={14} />}
-                    label="Meu Perfil"
+                    href="/aluno"
+                    icon={<User size={14} />}
+                    label="Perfil do Aluno"
                     onClick={() => setIsOpen(false)}
                   />
                   <MenuLink
                     href="/aluno/configuracoes"
                     icon={<Settings size={14} />}
                     label="Configurações"
+                    onClick={() => setIsOpen(false)}
+                  />
+                </div>
+                <div className="border-b w-full border-neutral-800 pt-1"></div>
+              </>
+            )}
+
+            <div className="space-y-1 mt-1">
+              <MenuLink
+                href="/aluno"
+                icon={<LayoutDashboard size={14} />}
+                label="Painel do Aluno"
+                onClick={() => setIsOpen(false)}
+              />
+
+              {session && (
+                <>
+                  <MenuLink
+                    href="/aluno/concursos"
+                    icon={<BellRing size={14} />}
+                    label="Concursos Abertos"
+                    onClick={() => setIsOpen(false)}
+                  />
+                  <MenuLink
+                    href="/aluno/editais"
+                    icon={<NotepadText size={14} />}
+                    label="Editais"
+                    onClick={() => setIsOpen(false)}
+                  />
+                  <MenuLink
+                    href="/aluno/aulas"
+                    icon={<Video size={14} />}
+                    label="Aulas"
+                    onClick={() => setIsOpen(false)}
+                  />
+                  <MenuLink
+                    href="/aluno/aulas"
+                    icon={<NotebookPen size={14} />}
+                    label="Meus Simulados"
+                    onClick={() => setIsOpen(false)}
+                  />
+                  <MenuLink
+                    href="/aluno/aulas"
+                    icon={<Megaphone size={14} />}
+                    label="Notícias"
                     onClick={() => setIsOpen(false)}
                   />
                 </>

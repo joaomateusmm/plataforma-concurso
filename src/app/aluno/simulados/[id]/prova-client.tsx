@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -11,14 +11,18 @@ import {
   XCircle,
   Loader2,
   SkipForward,
-  Zap,
   CheckCheck,
   Target,
   BarChart3,
   Award,
-  AlertCircle, // <-- Ícone importado aqui!
+  TriangleAlert,
+  AlertCircle,
+  ScanEye,
+  X,
 } from "lucide-react";
 import { finalizarSimulado } from "../../../../actions/simulados";
+import { HeaderMiniTimer } from "@/components/HeaderMiniTimer";
+import { Button } from "@/components/ui/button";
 
 interface ProvaClientProps {
   simulado: any;
@@ -28,12 +32,23 @@ interface ProvaClientProps {
 export default function ProvaClient({ simulado, questoes }: ProvaClientProps) {
   const router = useRouter();
   const isConcluido = simulado.status === "Concluido";
-
-  // ==========================================
-  // ESTADOS E LÓGICA DE NEGÓCIO
-  // ==========================================
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Estados Visuais
+  const [isFocusMode, setIsFocusMode] = useState(false);
+  const [isMapVisible, setIsMapVisible] = useState(true); // <-- NOVO ESTADO AQUI
+
+  useEffect(() => {
+    if (isFocusMode) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isFocusMode]);
 
   const [respostas, setRespostas] = useState<Record<number, string>>(() => {
     const initial: Record<number, string> = {};
@@ -45,20 +60,15 @@ export default function ProvaClient({ simulado, questoes }: ProvaClientProps) {
     return initial;
   });
 
-  // Novos Estados para guardar as marcações e eliminações
   const [eliminated, setEliminated] = useState<Record<number, string[]>>({});
   const [marked, setMarked] = useState<Record<number, string[]>>({});
-
   const questaoAtual = questoes[currentIndex];
-
-  // Estatísticas
   const totalCount = questoes.length;
   const answeredCount = Object.keys(respostas).length;
   const remainingCount = totalCount - answeredCount;
   const allAnswered = answeredCount === totalCount;
   const progressPercentage = (answeredCount / totalCount) * 100;
 
-  // Funções de Ação
   const handleSelectOption = (opcao: string) => {
     if (isConcluido) return;
     setRespostas((prev) => ({ ...prev, [questaoAtual.sqId]: opcao }));
@@ -67,9 +77,21 @@ export default function ProvaClient({ simulado, questoes }: ProvaClientProps) {
   const handleToggleEliminated = (sqId: number, opcao: string) => {
     setEliminated((prev) => {
       const current = prev[sqId] || [];
+      const isCurrentlyEliminated = current.includes(opcao);
+
+      if (!isCurrentlyEliminated) {
+        setMarked((prevMarked) => {
+          const currentMarked = prevMarked[sqId] || [];
+          return {
+            ...prevMarked,
+            [sqId]: currentMarked.filter((o) => o !== opcao),
+          };
+        });
+      }
+
       return {
         ...prev,
-        [sqId]: current.includes(opcao)
+        [sqId]: isCurrentlyEliminated
           ? current.filter((o) => o !== opcao)
           : [...current, opcao],
       };
@@ -79,9 +101,21 @@ export default function ProvaClient({ simulado, questoes }: ProvaClientProps) {
   const handleToggleMarked = (sqId: number, opcao: string) => {
     setMarked((prev) => {
       const current = prev[sqId] || [];
+      const isCurrentlyMarked = current.includes(opcao);
+
+      if (!isCurrentlyMarked) {
+        setEliminated((prevEliminated) => {
+          const currentEliminated = prevEliminated[sqId] || [];
+          return {
+            ...prevEliminated,
+            [sqId]: currentEliminated.filter((o) => o !== opcao),
+          };
+        });
+      }
+
       return {
         ...prev,
-        [sqId]: current.includes(opcao)
+        [sqId]: isCurrentlyMarked
           ? current.filter((o) => o !== opcao)
           : [...current, opcao],
       };
@@ -128,28 +162,40 @@ export default function ProvaClient({ simulado, questoes }: ProvaClientProps) {
       toast.success("Simulado Finalizado!", {
         description: `Você acertou ${result.acertos} questões!`,
       });
+
+      setIsFocusMode(false);
       router.refresh();
     }
   };
 
-  // ==========================================
-  // RENDERIZAÇÃO LIMPA E COMPONENTIZADA
-  // ==========================================
   return (
-    <div className="min-h-screen text-neutral-300 font-sans pb-24">
+    <div
+      data-lenis-prevent={isFocusMode ? "true" : undefined}
+      className={`text-neutral-300 font-sans pb-24 transition-all duration-300 ${
+        isFocusMode
+          ? "fixed inset-0 z-100 bg-[#070707] overflow-y-auto h-dvh w-full"
+          : "min-h-screen"
+      }`}
+    >
       <ProvaHeader
         titulo={simulado.titulo}
         isConcluido={isConcluido}
         answeredCount={answeredCount}
         totalCount={totalCount}
         progressPercentage={progressPercentage}
-        onBack={() => router.push("/aluno/simulados")}
+        onBack={() => {
+          if (isFocusMode) setIsFocusMode(false);
+          else router.push("/aluno/simulados");
+        }}
         onAutoTest={autoCompleteForTesting}
+        isFocusMode={isFocusMode}
+        toggleFocusMode={() => setIsFocusMode(!isFocusMode)}
+        isMapVisible={isMapVisible}
+        toggleMap={() => setIsMapVisible(!isMapVisible)}
       />
 
-      <main className="mx-auto max-w-7xl px-4 py-8 flex flex-col lg:flex-row gap-8">
-        {/* COLUNA ESQUERDA: Questões */}
-        <div className="flex-1 w-full max-w-full">
+      <main className="mx-auto max-w-7xl px-4 py-8 flex flex-col lg:flex-row gap-8 relative">
+        <div className="flex-1 w-full max-w-full transition-all duration-300">
           {isConcluido && (
             <ResultDashboard
               acertos={simulado.acertos || 0}
@@ -168,6 +214,8 @@ export default function ProvaClient({ simulado, questoes }: ProvaClientProps) {
             onToggleEliminated={handleToggleEliminated}
             onToggleMarked={handleToggleMarked}
             setRespostas={setRespostas}
+            setEliminated={setEliminated}
+            setMarked={setMarked}
           />
 
           <NavigationButtons
@@ -182,25 +230,28 @@ export default function ProvaClient({ simulado, questoes }: ProvaClientProps) {
           />
         </div>
 
-        {/* COLUNA DIREITA: Mapa e Botão Finalizar */}
-        <aside className="w-full lg:w-72 shrink-0">
-          <QuestionMap
-            questoes={questoes}
-            respostas={respostas}
-            currentIndex={currentIndex}
-            isConcluido={isConcluido}
-            onSelectQuestion={setCurrentIndex}
-          />
-
-          {!isConcluido && (
-            <FinalizeButton
-              isSubmitting={isSubmitting}
-              allAnswered={allAnswered}
-              remainingCount={remainingCount}
-              onFinalizar={handleFinalizar}
+        {/* LÓGICA DE ESCONDER O MAPA AQUI */}
+        {isMapVisible && (
+          <aside className="w-full lg:w-72 shrink-0 lg:sticky lg:top-28 max-h-[calc(100vh-8rem)] overflow-y-auto flex flex-col gap-4 pb-4 animate-in slide-in-from-right-4 duration-300">
+            <QuestionMap
+              questoes={questoes}
+              respostas={respostas}
+              currentIndex={currentIndex}
+              isConcluido={isConcluido}
+              onSelectQuestion={setCurrentIndex}
+              onClose={() => setIsMapVisible(false)} // Passamos a prop de fechar
             />
-          )}
-        </aside>
+
+            {!isConcluido && (
+              <FinalizeButton
+                isSubmitting={isSubmitting}
+                allAnswered={allAnswered}
+                remainingCount={remainingCount}
+                onFinalizar={handleFinalizar}
+              />
+            )}
+          </aside>
+        )}
       </main>
     </div>
   );
@@ -218,15 +269,26 @@ function ProvaHeader({
   progressPercentage,
   onBack,
   onAutoTest,
+  isFocusMode,
+  toggleFocusMode,
+  isMapVisible,
+  toggleMap,
 }: any) {
   return (
     <header className="sticky top-0 z-40 border-b border-neutral-800 rounded-t-2xl bg-neutral-950/80 backdrop-blur-xl">
+      {isFocusMode && (
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+          <HeaderMiniTimer />
+        </div>
+      )}
+
       <div className="mx-auto max-w-7xl px-4 py-4">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-3 relative z-10">
           <div className="flex items-center gap-3">
             <button
               onClick={onBack}
               className="p-2 hover:bg-neutral-800 rounded-lg transition-colors text-neutral-400 hover:text-white"
+              title={isFocusMode ? "Sair do Modo Foco" : "Voltar"}
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -236,20 +298,51 @@ function ProvaHeader({
           </div>
 
           <div className="flex items-center gap-3">
+            {/* BOTÃO PARA MOSTRAR/ESCONDER MAPA */}
+            <button
+              onClick={toggleMap}
+              title={isMapVisible ? "Ocultar Mapa" : "Mostrar Mapa"}
+              className={`inline-flex items-center gap-1.5 rounded-md cursor-pointer border px-2.5 py-1.5 text-xs font-bold transition-colors ${
+                !isMapVisible
+                  ? "bg-white border-neutral-300 text-neutral-950"
+                  : "bg-neutral-900 border-neutral-700 text-neutral-300 hover:bg-neutral-500/20"
+              }`}
+            >
+              <BarChart3 className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Mapa</span>
+            </button>
+
+            {/* BOTÃO MODO FOCO DINÂMICO */}
+            <button
+              onClick={toggleFocusMode}
+              title={isFocusMode ? "Sair do Modo Foco" : "Ativar Modo Foco"}
+              className={`inline-flex items-center gap-1.5 rounded-md cursor-pointer border px-2.5 py-1.5 text-xs font-bold transition-colors ${
+                isFocusMode
+                  ? "bg-white border-neutral-300 text-neutral-950"
+                  : "bg-neutral-900 border-neutral-700 text-neutral-300 hover:bg-neutral-500/20"
+              }`}
+            >
+              <ScanEye className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">
+                {isFocusMode ? "Sair do Foco" : "Modo Foco"}
+              </span>
+            </button>
+
             {!isConcluido && (
               <button
                 onClick={onAutoTest}
                 title="Auto Completar para Testes"
-                className="inline-flex items-center gap-1.5 rounded-md bg-amber-500/10 border border-amber-500/20 px-2.5 py-1.5 text-xs font-bold text-amber-500 hover:bg-amber-500/20 transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-md cursor-pointer bg-neutral-900 border border-neutral-700 px-2.5 py-1.5 text-xs font-bold text-neutral-300 hover:bg-neutral-500/20 transition-colors"
               >
-                <Zap className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Auto Teste</span>
+                <TriangleAlert className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Marcar Tudo</span>
               </button>
             )}
+            <span className="text-neutral-500">|</span>
             <span
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold border ${isConcluido ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-neutral-800 text-neutral-300 border-neutral-700"}`}
+              className={` py-1.5 rounded-lg text-xs font-bold  ${isConcluido ? " text-emerald-400 " : " text-neutral-300 "}`}
             >
-              {isConcluido ? "Gabarito" : "Modo Campanha"}
+              {isConcluido ? "Gabarito" : "Prova"}
             </span>
           </div>
         </div>
@@ -274,7 +367,6 @@ function ProvaHeader({
 function ResultDashboard({ acertos, totalCount }: any) {
   const taxa = Math.round((acertos / totalCount) * 100);
   const erros = totalCount - acertos;
-
   return (
     <div className="mb-8 p-8 border border-neutral-800 rounded-3xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden">
       <div className="absolute inset-0 bg-linear-to-br from-emerald-500/5 to-transparent pointer-events-none" />
@@ -289,7 +381,6 @@ function ResultDashboard({ acertos, totalCount }: any) {
           Revise as suas respostas abaixo e veja onde precisa melhorar.
         </p>
       </div>
-
       <div className="relative z-10 flex gap-4 w-full md:w-auto">
         <div className="flex-1 md:w-32 bg-neutral-950 border border-neutral-800 rounded-2xl p-4 text-center">
           <CheckCircle2 className="w-6 h-6 text-emerald-500 mx-auto mb-2" />
@@ -328,14 +419,16 @@ function QuestionCard({
   onToggleEliminated,
   onToggleMarked,
   setRespostas,
+  setEliminated, // Recebemos a prop
+  setMarked, // Recebemos a prop
 }: any) {
   return (
     <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-sm">
-      {/* Metadados */}
       <div className="flex flex-wrap items-center gap-2 mb-8 pb-6 border-b border-neutral-800">
-        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-neutral-800 text-sm font-bold text-white">
+        <div className="text-[10px] font-bold uppercase bg-neutral-950 border border-neutral-800 text-neutral-400 px-2.5 py-1.5 rounded-full">
           {currentIndex + 1}
         </div>
+        <span className="text-neutral-800">|</span>
         {questaoAtual.bancaNome && (
           <span className="text-[10px] font-bold uppercase bg-neutral-950 border border-neutral-800 text-neutral-400 px-2.5 py-1.5 rounded-lg">
             {questaoAtual.bancaNome}
@@ -346,12 +439,11 @@ function QuestionCard({
             {questaoAtual.materiaNome}
           </span>
         )}
-        <span className="text-[10px] font-bold uppercase border border-neutral-700 text-neutral-500 px-2.5 py-1.5 rounded-lg ml-auto">
+        <span className="text-[10px] font-bold uppercase bg-neutral-950 border border-neutral-800 text-neutral-400 px-2.5 py-1.5 rounded-lg">
           {questaoAtual.tipo}
         </span>
       </div>
 
-      {/* Texto de Apoio */}
       {questaoAtual.textoApoio && (
         <div className="mb-8 p-5 bg-neutral-950 border-l-4 border-emerald-500/50 rounded-r-xl">
           <p className="text-sm text-neutral-400 leading-relaxed whitespace-pre-wrap italic">
@@ -360,12 +452,10 @@ function QuestionCard({
         </div>
       )}
 
-      {/* Enunciado Principal */}
-      <p className="text-lg sm:text-xl font-medium text-white leading-relaxed mb-8">
+      <p className="text-lg sm:text-lg font-medium text-white leading-relaxed mb-8">
         {questaoAtual.enunciado}
       </p>
 
-      {/* Alternativas Objetivas/Certo-Errado */}
       <div className="flex flex-col gap-4">
         {questaoAtual.opcoes?.map((opcao: string, index: number) => {
           const isSelected = respostas[questaoAtual.sqId] === opcao;
@@ -374,91 +464,135 @@ function QuestionCard({
           const isGabaritoErrado =
             isConcluido && isSelected && opcao !== questaoAtual.itemCorreto;
 
-          const isEliminated = eliminated[questaoAtual.sqId]?.includes(opcao);
-          const isMarked = marked[questaoAtual.sqId]?.includes(opcao);
+          const currentEliminated = eliminated[questaoAtual.sqId] || [];
+          const currentMarked = marked[questaoAtual.sqId] || [];
 
-          // Estilo base: Borda esquerda transparente para não "pular" quando selecionada
+          const isEliminated = currentEliminated.includes(opcao);
+          const isMarked = currentMarked.includes(opcao);
+
           let cardClass =
             "border border-neutral-800 bg-neutral-950 text-neutral-300 border-l-[6px] border-l-transparent hover:border-l-neutral-700 hover:bg-neutral-900";
 
           if (isConcluido) {
-            if (isGabaritoCorreto) {
+            if (isGabaritoCorreto)
               cardClass =
                 "border border-emerald-500/20 bg-emerald-500/5 text-emerald-300 border-l-[6px] border-l-emerald-500";
-            } else if (isGabaritoErrado) {
+            else if (isGabaritoErrado)
               cardClass =
                 "border border-red-500/20 bg-red-500/5 text-red-300 border-l-[6px] border-l-red-500";
-            } else {
+            else
               cardClass =
                 "border border-neutral-800 bg-neutral-950/30 opacity-40 text-neutral-600 border-l-[6px] border-l-transparent";
-            }
           } else {
-            if (isSelected) {
+            if (isSelected)
               cardClass =
-                "border border-emerald-900/50 bg-neutral-950 text-white border-l-[6px] border-l-emerald-500 shadow-[0_4px_10px_rgba(16,185,129,0.05)]";
-            } else if (isEliminated) {
+                "border border-white/80 bg-neutral-950 text-white border-l-[6px] border-l-white/80";
+            else if (isEliminated)
               cardClass =
                 "border border-neutral-800 bg-neutral-950/50 opacity-40 hover:opacity-60 text-neutral-500 border-l-[6px] border-l-red-900/50";
-            } else if (isMarked) {
+            else if (isMarked)
               cardClass =
                 "border border-blue-900/50 bg-neutral-950 text-neutral-200 border-l-[6px] border-l-blue-500";
-            }
           }
 
           return (
             <div
               key={index}
               onClick={() => {
-                if (!isConcluido) onSelectOption(opcao);
+                if (!isConcluido) {
+                  if (isSelected) {
+                    // DESSELECIONAR: Se já estava selecionada, apaga a resposta.
+                    setRespostas((prev: any) => {
+                      const novasRespostas = { ...prev };
+                      delete novasRespostas[questaoAtual.sqId];
+                      return novasRespostas;
+                    });
+                  } else {
+                    // SELECIONAR: Marca a opção como resposta principal
+                    onSelectOption(opcao);
+
+                    // Seletividade: Se o aluno marcou como resposta final,
+                    // temos de ter a certeza que limpamos os ícones de dúvida/eliminado.
+                    if (isEliminated) {
+                      setEliminated((prev: any) => ({
+                        ...prev,
+                        [questaoAtual.sqId]: currentEliminated.filter(
+                          (o: string) => o !== opcao,
+                        ),
+                      }));
+                    }
+                    if (isMarked) {
+                      setMarked((prev: any) => ({
+                        ...prev,
+                        [questaoAtual.sqId]: currentMarked.filter(
+                          (o: string) => o !== opcao,
+                        ),
+                      }));
+                    }
+                  }
+                }
               }}
-              className={`group relative flex items-center justify-between gap-4 py-4 px-5 sm:px-6 rounded-xl transition-all w-full cursor-pointer ${cardClass} ${isConcluido ? "cursor-default" : ""}`}
+              className={`group relative flex items-center justify-between gap-4 py-3 px-5 sm:px-6 rounded-xl transition-all w-full cursor-pointer ${cardClass} ${isConcluido ? "cursor-default" : ""}`}
             >
-              {/* Texto com classe condicional para "riscar" (line-through) */}
               <span
-                className={`text-[14.5px] leading-relaxed flex-1 py-1 ${isEliminated && !isSelected ? "line-through opacity-70 text-neural-400" : ""}`}
+                className={`text-[14.5px] leading-relaxed flex-1 py-1 ${isEliminated && !isSelected ? "line-through opacity-70 text-neutral-400" : ""}`}
               >
                 {opcao}
               </span>
-
-              {/* Botões de Ação Lateral (Marcar/Eliminar) - Alinhamento Vertical Perfeito */}
               <div className="flex items-center gap-1 shrink-0 ml-2">
                 {!isConcluido && (
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity sm:border-l sm:border-neutral-800 sm:pl-2">
+                    {/* BOTÃO DÚVIDA (AZUL) */}
                     <button
                       type="button"
                       onClick={(e) => {
-                        e.stopPropagation();
+                        e.stopPropagation(); // IMPEDE QUE A DIV PAI (onSelectOption) SEJA CHAMADA
+                        e.preventDefault();
+
+                        // Se a opção principal já estiver selecionada, apagamo-la
+                        // porque agora o aluno quer marcá-la apenas como dúvida.
+                        if (isSelected) {
+                          setRespostas((prev: any) => {
+                            const novas = { ...prev };
+                            delete novas[questaoAtual.sqId];
+                            return novas;
+                          });
+                        }
+
                         onToggleMarked(questaoAtual.sqId, opcao);
                       }}
-                      className={`rounded-lg p-2 transition-all ${
-                        isMarked
-                          ? "bg-blue-500/20 text-blue-500 hover:bg-blue-500/30"
-                          : "text-neutral-500 hover:bg-neutral-800 hover:text-blue-400"
-                      }`}
+                      className={`rounded-lg p-2 transition-all ${isMarked ? "bg-blue-500/20 text-blue-500 hover:bg-blue-500/30" : "text-neutral-500 hover:bg-neutral-800 hover:text-blue-400"}`}
                       title="Marcar como possível resposta"
                     >
                       <AlertCircle size={16} strokeWidth={isMarked ? 2.5 : 2} />
                     </button>
 
+                    {/* BOTÃO ELIMINAR (VERMELHO) */}
                     <button
                       type="button"
                       onClick={(e) => {
-                        e.stopPropagation();
+                        e.stopPropagation(); // IMPEDE QUE A DIV PAI (onSelectOption) SEJA CHAMADA
+                        e.preventDefault();
+
+                        // Se a opção principal já estiver selecionada, apagamo-la
+                        // porque agora o aluno decidiu eliminar esta opção.
+                        if (isSelected) {
+                          setRespostas((prev: any) => {
+                            const novas = { ...prev };
+                            delete novas[questaoAtual.sqId];
+                            return novas;
+                          });
+                        }
+
                         onToggleEliminated(questaoAtual.sqId, opcao);
                       }}
-                      className={`rounded-lg p-2 transition-all ${
-                        isEliminated
-                          ? "bg-red-500/20 text-red-500 hover:bg-red-500/30"
-                          : "text-neutral-500 hover:bg-neutral-800 hover:text-red-400"
-                      }`}
+                      className={`rounded-lg p-2 transition-all ${isEliminated ? "bg-red-500/20 text-red-500 hover:bg-red-500/30" : "text-neutral-500 hover:bg-neutral-800 hover:text-red-400"}`}
                       title="Eliminar esta alternativa"
                     >
                       <XCircle size={16} strokeWidth={isEliminated ? 2.5 : 2} />
                     </button>
                   </div>
                 )}
-
-                {/* Ícones de Certo/Errado no Gabarito */}
                 {isConcluido && isGabaritoCorreto && (
                   <div className="p-1 rounded-full bg-emerald-500/20 ml-2">
                     <CheckCircle2 className="w-5 h-5 text-emerald-500" />
@@ -475,18 +609,12 @@ function QuestionCard({
         })}
       </div>
 
-      {/* Questões Discursivas */}
       {questaoAtual.tipo === "Discursiva" && (
         <div className="mt-6">
           {!isConcluido ? (
             <textarea
               value={respostas[questaoAtual.sqId] || ""}
-              onChange={(e) =>
-                setRespostas((prev: any) => ({
-                  ...prev,
-                  [questaoAtual.sqId]: e.target.value,
-                }))
-              }
+              onChange={(e) => onSelectOption(e.target.value)}
               placeholder="Digite a sua resposta discursiva..."
               className="w-full p-5 bg-neutral-950 border border-neutral-800 rounded-2xl text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 resize-none h-48 placeholder:text-neutral-600"
             />
@@ -526,7 +654,6 @@ function NavigationButtons({
   onSkip,
 }: any) {
   const isUltimaQuestao = currentIndex === totalCount - 1;
-
   return (
     <div className="mt-6 flex items-center justify-between gap-3">
       <button
@@ -536,7 +663,6 @@ function NavigationButtons({
       >
         <ChevronLeft className="h-4 w-4" /> Anterior
       </button>
-
       {!isConcluido && (
         <button
           onClick={onSkip}
@@ -546,7 +672,6 @@ function NavigationButtons({
           <SkipForward className="h-4 w-4" /> Pular
         </button>
       )}
-
       <button
         onClick={onNext}
         disabled={isUltimaQuestao}
@@ -564,48 +689,45 @@ function QuestionMap({
   currentIndex,
   isConcluido,
   onSelectQuestion,
+  onClose, // <-- PROP RECEBIDA AQUI PARA FECHAR O MAPA
 }: any) {
   return (
-    <div className="lg:sticky lg:top-28 bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-sm">
-      <div className="flex items-center gap-2 mb-6 pb-4 border-b border-neutral-800">
-        <BarChart3 className="w-5 h-5 text-neutral-400" />
-        <h3 className="font-bold text-white">Mapa da Prova</h3>
+    <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-sm">
+      <div className="flex items-center justify-between gap-2 mb-6 pb-4 border-b border-neutral-800">
+        <div className="flex items-center gap-1">
+          <BarChart3 className="w-4 h-4 text-neutral-400" />
+          <h3 className="font-bold text-white">Mapa da Prova</h3>
+        </div>
+        {/* BOTÃO X AGORA COM A FUNÇÃO ONCLOSE */}
+        <Button
+          onClick={onClose}
+          className="w-8 h-8 rounded-full bg-neutral-950 cursor-pointer border-neutral-800 border hover:bg-neutral-800"
+        >
+          <X className="w-4 h-4 text-neutral-400" />
+        </Button>
       </div>
-
-      <div className="grid grid-cols-5 sm:grid-cols-8 lg:grid-cols-5 gap-2.5">
+      <div className="grid grid-cols-5 sm:grid-cols-8 lg:grid-cols-6 gap-1">
         {questoes.map((q: any, idx: number) => {
           const estaRespondida = !!respostas[q.sqId];
           let btnClass =
             "bg-neutral-950 text-neutral-500 border-neutral-800 hover:border-neutral-600";
-
-          if (isConcluido) {
-            const acertou = q.isCorreta;
-            btnClass = acertou
+          if (isConcluido)
+            btnClass = q.isCorreta
               ? "bg-emerald-500/20 text-emerald-500 border-emerald-500/30"
               : "bg-red-500/20 text-red-500 border-red-500/30";
-          } else if (estaRespondida) {
-            btnClass =
-              "bg-emerald-600/20 text-emerald-400 border-emerald-500/30";
-          }
-
-          if (currentIndex === idx) {
-            btnClass +=
-              " ring-2 ring-white ring-offset-2 ring-offset-neutral-900";
-          }
-
+          else if (estaRespondida) btnClass = "bg-white/50 text-black";
+          if (currentIndex === idx) btnClass += " ring-1 ring-neutral-400";
           return (
             <button
               key={q.sqId}
               onClick={() => onSelectQuestion(idx)}
-              className={`aspect-square rounded-xl text-xs font-black border flex items-center justify-center transition-all ${btnClass}`}
+              className={`aspect-square rounded-sm text-xs font-black border flex items-center justify-center transition-all ${btnClass}`}
             >
               {idx + 1}
             </button>
           );
         })}
       </div>
-
-      {/* Legenda do Mapa */}
       <div className="mt-8 flex flex-col gap-3 text-xs font-bold text-neutral-500">
         {isConcluido ? (
           <>
@@ -621,7 +743,7 @@ function QuestionMap({
         ) : (
           <>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded bg-emerald-600/20 border border-emerald-500/30" />{" "}
+              <div className="w-3 h-3 rounded bg-white/70 border border-white" />{" "}
               Respondidas
             </div>
             <div className="flex items-center gap-2">
@@ -642,26 +764,18 @@ function FinalizeButton({
   onFinalizar,
 }: any) {
   return (
-    <div className="mt-4">
+    <div>
       <button
         onClick={onFinalizar}
         disabled={isSubmitting || !allAnswered}
-        className={`w-full rounded-2xl p-3 mb-1 text-sm md:text-base font-extrabold transition-all duration-200 flex items-center justify-center gap-3 shadow-lg ${
-          allAnswered
-            ? "bg-emerald-600 text-white hover:bg-emerald-500 shadow-emerald-900/30 hover:shadow-emerald-900/50 active:scale-[0.99]"
-            : "bg-neutral-900 text-neutral-500 border border-neutral-800 cursor-not-allowed shadow-none"
-        }`}
+        className={`w-full rounded-2xl p-3 mb-1 text-sm md:text-base font-extrabold transition-all duration-200 flex items-center justify-center gap-3 shadow-lg ${allAnswered ? "bg-emerald-600 text-white hover:bg-emerald-500 shadow-emerald-900/30 hover:shadow-emerald-900/50 active:scale-[0.99]" : "bg-neutral-900 text-neutral-500 border border-neutral-800 cursor-not-allowed shadow-none"}`}
       >
         {isSubmitting ? (
           <Loader2 className="w-4 h-4 animate-spin" />
         ) : (
           <CheckCheck className="h-4 w-4" />
         )}
-        {isSubmitting
-          ? "Corrigindo prova..."
-          : allAnswered
-            ? "Finalizar Prova"
-            : "Finalizar Prova"}
+        {isSubmitting ? "Corrigindo prova..." : "Finalizar Prova"}
       </button>
       <p className="text-center text-xs text-neutral-500 mt-2">
         ({remainingCount} questões restante{remainingCount !== 1 ? "s" : ""})
