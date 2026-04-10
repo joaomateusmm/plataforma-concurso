@@ -17,52 +17,19 @@ function lerp(p1: number, p2: number, t: number) {
 }
 
 const defaultItems = [
-  {
-    image: "/bombeiro.webp",
-    text: "BMC",
-    href: "/aluno",
-  },
-  {
-    image: `/simulado.webp`,
-    text: "Provas",
-    href: "/aluno",
-  },
-  {
-    image: `/policial.webp`,
-    text: "PM",
-    href: "/aluno",
-  },
-  {
-    image: "/prf.webp",
-    text: "PRF",
-    href: "/aluno",
-  },
-  {
-    image: `/gcm.webp`,
-    text: "GCM",
-    href: "/aluno",
-  },
-  {
-    image: `/militar.webp`,
-    text: "ESA",
-    href: "/aluno",
-  },
-  {
-    image: `/pp.webp`,
-    text: "PCCE",
-    href: "/aluno",
-  },
-  {
-    image: `/pmce.webp`,
-    text: "PMCE",
-    href: "/aluno",
-  },
+  { image: "/bombeiro.webp", text: "BMC", href: "/aluno" },
+  { image: `/simulado.webp`, text: "Provas", href: "/aluno" },
+  { image: `/policial.webp`, text: "PM", href: "/aluno" },
+  { image: "/prf.webp", text: "PRF", href: "/aluno" },
+  { image: `/gcm.webp`, text: "GCM", href: "/aluno" },
+  { image: `/militar.webp`, text: "ESA", href: "/aluno" },
+  { image: `/pp.webp`, text: "PCCE", href: "/aluno" },
+  { image: `/pmce.webp`, text: "PMCE", href: "/aluno" },
 ];
 
 class Media {
   app: any;
   container: HTMLElement;
-  extra: number;
   geometry: any;
   gl: any;
   image: string;
@@ -86,13 +53,9 @@ class Media {
   scale: number = 0;
   padding: number = 0;
   width: number = 0;
-  widthTotal: number = 0;
-  x: number = 0;
-  speed: number = 0;
-  isBefore: boolean = false;
-  isAfter: boolean = false;
 
-  // Variáveis exclusivas para o controle local de Hover do Shader
+  baseAngle: number = 0;
+
   isHovered: boolean = false;
   hoverValue: number = 0;
 
@@ -118,7 +81,6 @@ class Media {
   }: any) {
     this.app = app;
     this.container = container;
-    this.extra = 0;
     this.geometry = geometry;
     this.gl = gl;
     this.image = image;
@@ -143,13 +105,10 @@ class Media {
   }
 
   createShader() {
-    const texture = new Texture(this.gl, {
-      generateMipmaps: true,
-    });
-
+    const texture = new Texture(this.gl, { generateMipmaps: true });
     this.program = new Program(this.gl, {
-      depthTest: false,
-      depthWrite: false,
+      depthTest: true, // LIGADO PARA PROFUNDIDADE: Esconde quem tá atrás de quem
+      depthWrite: true,
       vertex: `
         precision highp float;
         attribute vec3 position;
@@ -187,18 +146,17 @@ class Media {
             vUv.y * ratio.y + (1.0 - ratio.y) * 0.5
           );
 
-          // EFEITO DE ZOOM: Escala a textura suavemente mantendo ela centralizada
           float zoom = 1.0 - (uHover * 0.05); 
           uv = (uv - 0.5) * zoom + 0.5;
 
           vec4 color = texture2D(tMap, uv);
-          
-          // A máscara com border radius continua inalterada!
           float d = roundedBoxSDF(vUv - 0.5, vec2(0.5 - uBorderRadius), uBorderRadius);
           
           float edgeSmooth = 0.002;
           float alpha = 1.0 - smoothstep(-edgeSmooth, edgeSmooth, d);
           
+          if (alpha < 0.01) discard; // Garante que a transparência funcione com DepthTest
+
           gl_FragColor = vec4(color.rgb, alpha);
         }
       `,
@@ -207,7 +165,7 @@ class Media {
         uPlaneSizes: { value: [0, 0] },
         uImageSizes: { value: [0, 0] },
         uBorderRadius: { value: this.borderRadius },
-        uHover: { value: 0 }, // <-- Iniciando o Hover em 0
+        uHover: { value: 0 },
       },
       transparent: true,
     });
@@ -233,7 +191,6 @@ class Media {
   }
 
   createHtmlElements() {
-    // 1. O Título Original
     this.titleElement = document.createElement("div");
     this.titleElement.innerText = this.text;
     this.titleElement.style.position = "absolute";
@@ -249,7 +206,6 @@ class Media {
     }
     this.container.appendChild(this.titleElement);
 
-    // 2. A "Máscara de Vidro" (Hover & Clique)
     const isLink = this.href && this.href !== "#" && this.href !== "";
     this.hoverElement = document.createElement(isLink ? "a" : "div") as any;
 
@@ -264,7 +220,6 @@ class Media {
     this.hoverElement!.style.cursor = "pointer";
     this.hoverElement!.style.zIndex = "20";
 
-    // Modificado para alterar tanto o app global (parar scroll) quanto a imagem local (dar o zoom)
     this.hoverElement!.addEventListener("mouseenter", () => {
       this.app.isHovered = true;
       this.isHovered = true;
@@ -277,77 +232,78 @@ class Media {
     this.container.appendChild(this.hoverElement!);
   }
 
-  update(scroll: any, direction: string) {
-    // Animação suave para o hover via lerp
+  update(scroll: any) {
     this.hoverValue = lerp(this.hoverValue, this.isHovered ? 1 : 0, 0.08);
-    this.program.uniforms.uHover.value = this.hoverValue; // Manda pro Shader!
-
-    this.plane.position.x = this.x - scroll.current - this.extra;
-
-    const x = this.plane.position.x;
-    const H = this.viewport.width / 2;
+    this.program.uniforms.uHover.value = this.hoverValue;
 
     if (this.bend === 0) {
+      const totalWidth = this.width * this.length;
+      let currentX = this.width * this.index - scroll.current;
+      currentX = ((currentX % totalWidth) + totalWidth) % totalWidth;
+      if (currentX > totalWidth / 2) currentX -= totalWidth;
+
+      this.plane.position.x = currentX;
       this.plane.position.y = 0;
+      this.plane.position.z = 0;
       this.plane.rotation.z = 0;
     } else {
-      const B_abs = Math.abs(this.bend);
-      const a = (B_abs * 0.05) / H;
-      const yOffset = a * (x * x);
+      const radius = this.bend * 20; // Tente 15 ou 20
+      const scrollRotation = scroll.current / radius;
+      const currentAngle = this.baseAngle - scrollRotation;
 
-      if (this.bend > 0) {
-        this.plane.position.y = -yOffset;
-        this.plane.rotation.z = -Math.atan(2 * a * x);
-      } else {
-        this.plane.position.y = yOffset;
-        this.plane.rotation.z = Math.atan(2 * a * x);
-      }
+      // X e Y normais para círculo
+      this.plane.position.x = Math.sin(currentAngle) * radius;
+      this.plane.position.y = Math.cos(currentAngle) * radius - radius;
+
+      // MÁGICA 3D COMPLETA: Adiciona profundidade (Z)
+      // Faz o círculo virar um anel levemente inclinado. Os de trás ficam menores/escondidos
+      this.plane.position.z = Math.cos(currentAngle) * -(radius * 0.8);
+
+      // Rotação para acompanhar o círculo
+      this.plane.rotation.z = -currentAngle;
+
+      // Inclinamos os cards de trás para "fugirem" da câmera
+      this.plane.rotation.x = Math.cos(currentAngle) * 0.5;
     }
 
-    this.speed = scroll.current - scroll.last;
-
-    const planeOffset = this.plane.scale.x / 2;
-    const viewportOffset = this.viewport.width / 2;
-    const margin = this.plane.scale.x * 2.5;
-
-    this.isBefore =
-      this.plane.position.x + planeOffset < -viewportOffset - margin;
-    this.isAfter =
-      this.plane.position.x - planeOffset > viewportOffset + margin;
-
-    if (direction === "right" && this.isBefore) {
-      this.extra -= this.widthTotal;
-      this.isBefore = this.isAfter = false;
-    }
-    if (direction === "left" && this.isAfter) {
-      this.extra += this.widthTotal;
-      this.isBefore = this.isAfter = false;
-    }
-
-    // Calculo Base (Transformação 3D para Pixel)
     if (this.viewport && this.screen) {
+      // Ajuste de escala para interações HTML
+      const distance = this.app.camera.position.z - this.plane.position.z;
+      const scaleFactor = this.app.camera.position.z / Math.max(0.1, distance);
+
       const pixelX =
-        (this.plane.position.x / this.viewport.width) * this.screen.width;
+        (this.plane.position.x / this.viewport.width) *
+        this.screen.width *
+        scaleFactor;
       const pixelY =
-        -(this.plane.position.y / this.viewport.height) * this.screen.height;
+        -(this.plane.position.y / this.viewport.height) *
+        this.screen.height *
+        scaleFactor;
 
       const pixelWidth =
-        (this.plane.scale.x / this.viewport.width) * this.screen.width;
+        (this.plane.scale.x / this.viewport.width) *
+        this.screen.width *
+        scaleFactor;
       const pixelHeight =
-        (this.plane.scale.y / this.viewport.height) * this.screen.height;
+        (this.plane.scale.y / this.viewport.height) *
+        this.screen.height *
+        scaleFactor;
 
-      // Sincronização da Máscara de Vidro
       if (this.hoverElement) {
-        this.hoverElement.style.width = `${pixelWidth}px`;
-        this.hoverElement.style.height = `${pixelHeight}px`;
-
-        this.hoverElement.style.transform = `
-          translate(calc(-50% + ${pixelX}px), calc(-50% + ${pixelY}px)) 
-          rotate(${-this.plane.rotation.z}rad)
-        `;
+        // Se a posição Z for muito profunda (card tá na parte de trás da roda gigante), não deixa clicar
+        if (this.bend > 0 && this.plane.position.z < -(this.bend * 15 * 0.2)) {
+          this.hoverElement.style.display = "none";
+        } else {
+          this.hoverElement.style.display = "block";
+          this.hoverElement.style.width = `${pixelWidth}px`;
+          this.hoverElement.style.height = `${pixelHeight}px`;
+          this.hoverElement.style.transform = `
+            translate(calc(-50% + ${pixelX}px), calc(-50% + ${pixelY}px)) 
+            rotate(${-this.plane.rotation.z}rad)
+            `;
+        }
       }
 
-      // Sincronização do Título
       if (this.titleElement && this.showText) {
         const yGap = pixelHeight / 2 + 30;
         this.titleElement.style.transform = `
@@ -371,18 +327,18 @@ class Media {
       }
     }
 
-    this.plane.scale.y = this.viewport.height * 0.55;
-    this.plane.scale.x = this.plane.scale.y * 0.8;
+    this.plane.scale.y = this.viewport.height * 0.15;
+    this.plane.scale.x = this.plane.scale.y * 1.0;
 
     this.plane.program.uniforms.uPlaneSizes.value = [
       this.plane.scale.x,
       this.plane.scale.y,
     ];
 
-    this.padding = this.plane.scale.x * 0.15;
+    this.padding = this.plane.scale.x * 0.35;
     this.width = this.plane.scale.x + this.padding;
-    this.widthTotal = this.width * this.length;
-    this.x = this.width * this.index;
+
+    this.baseAngle = (this.index / this.length) * Math.PI * 2;
   }
 }
 
@@ -396,7 +352,6 @@ class App {
     current: number;
     target: number;
     last: number;
-    position?: number;
   };
   renderer: any;
   gl: any;
@@ -420,7 +375,6 @@ class App {
       font = "medium 30px Montserrat",
       autoSpeed = 0.05,
       showText = true,
-      startIndex = 2,
     }: any = {},
   ) {
     this.container = container;
@@ -432,14 +386,8 @@ class App {
     this.createScene();
     this.onResize();
     this.createGeometry();
-    this.createMedias(items, bend, textColor, borderRadius, font, showText);
 
-    if (this.medias && this.medias.length > 0) {
-      const initialScroll = this.medias[0].width * startIndex;
-      this.scroll.current = initialScroll;
-      this.scroll.target = initialScroll;
-      this.scroll.last = initialScroll;
-    }
+    this.createMedias(items, bend, textColor, borderRadius, font, showText);
 
     this.update();
     this.boundOnResize = this.onResize.bind(this);
@@ -458,9 +406,11 @@ class App {
   }
 
   createCamera() {
-    this.camera = new Camera(this.gl);
+    this.camera = new Camera(this.gl, { near: 0.1, far: 1000 });
     this.camera.fov = 45;
-    this.camera.position.z = 20;
+    // Câmera mais distante e um pouco inclinada para baixo
+    this.camera.position.z = 60;
+    this.camera.position.y = 5;
   }
 
   createScene() {
@@ -484,7 +434,8 @@ class App {
   ) {
     const galleryItems = items && items.length ? items : defaultItems;
 
-    this.mediasImages = galleryItems.concat(galleryItems).concat(galleryItems);
+    // Mais repetições porque a roda gigante agora dá a volta completa com profundidade 3D
+    this.mediasImages = [...galleryItems, ...galleryItems];
 
     this.medias = this.mediasImages.map((data, index) => {
       return new Media({
@@ -535,7 +486,6 @@ class App {
     const targetSpeed = this.isHovered ? 0 : this.autoSpeed;
 
     this.currentAutoSpeed = lerp(this.currentAutoSpeed, targetSpeed, 0.05);
-
     this.scroll.target += this.currentAutoSpeed;
 
     this.scroll.current = lerp(
@@ -543,10 +493,9 @@ class App {
       this.scroll.target,
       this.scroll.ease,
     );
-    const direction = this.scroll.current > this.scroll.last ? "right" : "left";
 
     if (this.medias) {
-      this.medias.forEach((media) => media.update(this.scroll, direction));
+      this.medias.forEach((media) => media.update(this.scroll));
     }
 
     this.renderer.render({ scene: this.scene, camera: this.camera });
@@ -557,20 +506,19 @@ class App {
   destroy() {
     window.cancelAnimationFrame(this.raf);
     window.removeEventListener("resize", this.boundOnResize);
-
     this.container.innerHTML = "";
   }
 }
 
 export default function SpiralGallery({
   items,
-  bend = 3,
+  bend = 1.5, // 1.5 é o sweet spot perfeito!
   textColor = "#ffffff",
   borderRadius = 0.05,
   font = "bold 30px sans-serif",
   autoSpeed = 0.03,
   showText = true,
-  startIndex = 2,
+  startIndex = 0,
   ...props
 }: any) {
   const containerRef = useRef<HTMLDivElement>(null);
