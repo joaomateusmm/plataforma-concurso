@@ -24,6 +24,10 @@ export async function salvarConcurso(formData: FormData) {
     vagas: formData.get("vagas") as string,
     salario: formData.get("salario") as string,
     escolaridade: formData.get("escolaridade") as string,
+
+    // NOVO CAMPO SENDO SALVO
+    cursoTecnico: formData.get("cursoTecnico") as string,
+
     status: formData.get("status") as string,
     linkInscricao: formData.get("linkInscricao") as string,
     linkEdital: formData.get("linkEdital") as string,
@@ -69,6 +73,10 @@ export async function atualizarConcurso(formData: FormData) {
       vagas: formData.get("vagas") as string,
       salario: formData.get("salario") as string,
       escolaridade: formData.get("escolaridade") as string,
+
+      // NOVO CAMPO SENDO ATUALIZADO
+      cursoTecnico: formData.get("cursoTecnico") as string,
+
       status: novoStatus,
       linkInscricao: formData.get("linkInscricao") as string,
       linkEdital: formData.get("linkEdital") as string,

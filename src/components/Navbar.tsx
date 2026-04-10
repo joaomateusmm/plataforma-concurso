@@ -145,7 +145,7 @@ export default function Navbar() {
           )}
         </Link>
         <Link href="/login">
-          <button className="bg-white dark:bg-neutral-900 border cursor-pointer shadow-sm text-[#009966] border-gray-200 dark:border-neutral-800 px-6 py-2 rounded-full text-sm font-bold hover:shadow-md dark:hover:shadow-neutral-900/50 duration-300 transition-colors">
+          <button className="bg-white dark:bg-neutral-900 border cursor-pointer shadow-sm text-[#009966] border-gray-200 dark:border-neutral-800 px-6 py-2 rounded-full text-sm font-bold hover:shadow-md dark:hover:shadow-neutral-900/50 duration-300">
             Criar Conta
           </button>
         </Link>

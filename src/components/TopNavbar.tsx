@@ -61,15 +61,15 @@ export default function TopNavbar() {
         {/* LADO ESQUERDO: Logo */}
         <div className="flex gap-12 ml-4">
           <Link
-            className="flex items-center justify-center hover:opacity-80 transition-opacity w-full"
+            className="flex items-center justify-center hover:brightness-120 duration-200 w-full"
             href="/"
           >
             <Image
-              className=""
+              className="mr-2"
               src="/logo.svg"
-              width={50}
-              height={50}
-              alt={""}
+              width={35}
+              height={35}
+              alt="Logo +Aprovado"
             />
             <span className="text-xl font-bold text-white tracking-tight leading-tight">
               +Aprovado

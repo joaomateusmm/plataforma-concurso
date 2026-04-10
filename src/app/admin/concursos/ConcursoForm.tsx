@@ -34,6 +34,11 @@ export function ConcursoForm({
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // ESTADO PARA VIGIAR A ESCOLARIDADE E ABRIR O CAMPO TÉCNICO
+  const [escolaridade, setEscolaridade] = useState(
+    concursoEditando?.escolaridade || "",
+  );
+
   // 1. ESTADOS PARA OS NOVOS DATE PICKERS
   const [dateInscricao, setDateInscricao] = useState<DateRange | undefined>();
   const [dateIsencao, setDateIsencao] = useState<DateRange | undefined>();
@@ -42,22 +47,18 @@ export function ConcursoForm({
   // EFEITO DE INICIALIZAÇÃO AO EDITAR
   useEffect(() => {
     setThumbnailUrl(concursoEditando?.thumbnailUrl || "");
+    setEscolaridade(concursoEditando?.escolaridade || "");
 
     // Puxar a Data da Prova Real
     if (concursoEditando?.dataProvaReal) {
-      // Garantir que é um objeto Date válido independentemente de vir do JSON/banco como string ou Date
       const parsedDataProva = new Date(concursoEditando.dataProvaReal);
       if (!isNaN(parsedDataProva.getTime())) {
         setDateProva(parsedDataProva);
       }
     } else {
-      setDateProva(undefined); // Limpa se for nulo
+      setDateProva(undefined);
     }
 
-    // Como o DateRange pede um 'from' e um 'to', mas nós só guardámos a data de FIM (to)
-    // para o sistema de alertas, não é possível reconstruir o range visual completo.
-    // A melhor abordagem UX aqui é manter o 'undefined' se for uma edição, e mostrar o texto atual "Atual: DD/MM a DD/MM" abaixo do botão.
-    // Se o usuário clicar no calendário, ele reescreve o range.
     setDateInscricao(undefined);
     setDateIsencao(undefined);
   }, [concursoEditando]);
@@ -93,9 +94,6 @@ export function ConcursoForm({
     formData.append("thumbnailUrl", thumbnailUrl);
 
     // 2. INJETAR AS DATAS DO CALENDÁRIO NO FORMDATA ANTES DE ENVIAR
-    // Lógica para manter os dados caso o utilizador não tenha alterado as datas durante a edição
-
-    // Período de Inscrição
     if (dateInscricao?.from) {
       let str = format(dateInscricao.from, "dd/MM/yyyy");
       if (dateInscricao.to) {
@@ -104,9 +102,7 @@ export function ConcursoForm({
       }
       formData.append("periodoInscricao", str);
     } else if (concursoEditando?.periodoInscricao) {
-      // Se não mexeu no calendário, envia o texto antigo
       formData.append("periodoInscricao", concursoEditando.periodoInscricao);
-      // Se tinha uma data limite antiga, envia a antiga
       if (concursoEditando.fimInscricao) {
         formData.append(
           "fimInscricao",
@@ -115,7 +111,6 @@ export function ConcursoForm({
       }
     }
 
-    // Período de Isenção
     if (dateIsencao?.from) {
       let str = format(dateIsencao.from, "dd/MM/yyyy");
       if (dateIsencao.to) {
@@ -126,13 +121,9 @@ export function ConcursoForm({
       formData.append("periodoIsencao", concursoEditando.periodoIsencao);
     }
 
-    // Data da Prova
     if (dateProva) {
       formData.append("dataProva", format(dateProva, "dd/MM/yyyy"));
       formData.append("dataProvaReal", dateProva.toISOString());
-    } else {
-      // Lógica de Limpeza: Se dateProva for explicitamente undefined,
-      // não acrescentamos nada ao FormData, o que fará com que não salvemos dataProvaReal
     }
 
     try {
@@ -143,7 +134,6 @@ export function ConcursoForm({
         await salvarConcurso(formData);
         toast.success("Concurso criado!");
       }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast.error("Erro ao salvar o concurso.");
     } finally {
@@ -164,24 +154,28 @@ export function ConcursoForm({
       {/* LINHA 1 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="flex flex-col">
-          <label className="font-semibold mb-1 text-gray-800">Órgão *</label>
+          <label className="font-semibold mb-1 text-gray-800 dark:text-neutral-200">
+            Órgão *
+          </label>
           <input
             name="orgao"
             type="text"
             required
             defaultValue={concursoEditando?.orgao || ""}
-            className="border p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="border border-gray-200 dark:border-neutral-800 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-neutral-900 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-neutral-600 transition-colors"
             placeholder="Ex: Polícia Civil do Ceará"
           />
         </div>
         <div className="flex flex-col">
-          <label className="font-semibold mb-1 text-gray-800">Cargo *</label>
+          <label className="font-semibold mb-1 text-gray-800 dark:text-neutral-200">
+            Cargo *
+          </label>
           <input
             name="cargo"
             type="text"
             required
             defaultValue={concursoEditando?.cargo || ""}
-            className="border p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="border border-gray-200 dark:border-neutral-800 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-neutral-900 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-neutral-600 transition-colors"
             placeholder="Ex: Inspetor e Escrivão"
           />
         </div>
@@ -190,62 +184,94 @@ export function ConcursoForm({
       {/* LINHA 2 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="flex flex-col">
-          <label className="font-semibold mb-1 text-gray-800">Banca *</label>
+          <label className="font-semibold mb-1 text-gray-800 dark:text-neutral-200">
+            Banca *
+          </label>
           <input
             name="banca"
             type="text"
             required
             defaultValue={concursoEditando?.banca || ""}
-            className="border p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="border border-gray-200 dark:border-neutral-800 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-neutral-900 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-neutral-600 transition-colors"
             placeholder="Ex: IDECAN"
           />
         </div>
         <div className="flex flex-col">
-          <label className="font-semibold mb-1 text-gray-800">Vagas</label>
+          <label className="font-semibold mb-1 text-gray-800 dark:text-neutral-200">
+            Vagas
+          </label>
           <input
             name="vagas"
             type="text"
             defaultValue={concursoEditando?.vagas || ""}
-            className="border p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="border border-gray-200 dark:border-neutral-800 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-neutral-900 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-neutral-600 transition-colors"
             placeholder="Ex: 1.000 + CR"
           />
         </div>
       </div>
 
       {/* LINHA 3 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
         <div className="flex flex-col">
-          <label className="font-semibold mb-1 text-gray-800">Salário</label>
+          <label className="font-semibold mb-1 text-gray-800 dark:text-neutral-200">
+            Salário
+          </label>
           <input
             name="salario"
             type="text"
             defaultValue={concursoEditando?.salario || ""}
-            className="border p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="border border-gray-200 dark:border-neutral-800 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-neutral-900 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-neutral-600 transition-colors"
             placeholder="Ex: R$ 5.800,00"
           />
         </div>
-        <div className="flex flex-col">
-          <label className="font-semibold mb-1 text-gray-800">
-            Escolaridade
-          </label>
-          <select
-            name="escolaridade"
-            defaultValue={concursoEditando?.escolaridade || ""}
-            className="border p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
-          >
-            <option value="">Selecione o nível...</option>
-            <option value="Nível Fundamental">Nível Fundamental</option>
-            <option value="Nível Médio">Nível Médio</option>
-            <option value="Nível Superior">Nível Superior</option>
-          </select>
+
+        {/* COMBO ESCOLARIDADE + CURSO TÉCNICO */}
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col">
+            <label className="font-semibold mb-1 text-gray-800 dark:text-neutral-200">
+              Escolaridade
+            </label>
+            <select
+              name="escolaridade"
+              value={escolaridade}
+              onChange={(e) => setEscolaridade(e.target.value)}
+              className="border border-gray-200 dark:border-neutral-800 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-neutral-900 text-gray-900 dark:text-white transition-colors"
+            >
+              <option value="">Selecione o nível...</option>
+              <option value="Nível Fundamental">Nível Fundamental</option>
+              <option value="Nível Médio">Nível Médio</option>
+              <option value="Técnico">Técnico</option>
+              <option value="Nível Superior">Nível Superior</option>
+            </select>
+          </div>
+
+          {/* SÓ APARECE SE A ESCOLARIDADE FOR "TÉCNICO" */}
+          {escolaridade === "Técnico" && (
+            <div className="flex flex-col animate-in fade-in slide-in-from-top-2 duration-300">
+              <label className="font-semibold mb-1 text-gray-800 dark:text-neutral-200 text-sm text-emerald-600 dark:text-emerald-400">
+                Qual o curso técnico? *
+              </label>
+              <input
+                name="cursoTecnico"
+                type="text"
+                required
+                defaultValue={concursoEditando?.cursoTecnico || ""}
+                className="border border-emerald-200 dark:border-emerald-900/50 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-emerald-50/30 dark:bg-emerald-900/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-neutral-600 transition-colors"
+                placeholder="Ex: Técnico em Enfermagem"
+              />
+            </div>
+          )}
         </div>
+
         <div className="flex flex-col">
-          <label className="font-semibold mb-1 text-gray-800">Status *</label>
+          <label className="font-semibold mb-1 text-gray-800 dark:text-neutral-200">
+            Status *
+          </label>
           <select
             name="status"
             required
             defaultValue={concursoEditando?.status || ""}
-            className="border p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+            className="border border-gray-200 dark:border-neutral-800 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-neutral-900 text-gray-900 dark:text-white transition-colors"
           >
             <option value="">Selecione o status...</option>
             <option value="Concurso Autorizado">Concurso Autorizado</option>
@@ -263,9 +289,9 @@ export function ConcursoForm({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* PERÍODO DE INSCRIÇÃO (DATE RANGE) */}
         <div className="flex flex-col">
-          <label className="font-semibold mb-1 text-gray-800">
+          <label className="font-semibold mb-1 text-gray-800 dark:text-neutral-200">
             Período de Inscrição{" "}
-            <span className="text-gray-400 font-normal text-sm">
+            <span className="text-gray-400 dark:text-neutral-500 font-normal text-sm">
               (Opcional)
             </span>
           </label>
@@ -275,8 +301,9 @@ export function ConcursoForm({
                 type="button"
                 variant={"outline"}
                 className={cn(
-                  "w-full justify-start text-left font-normal border p-3 rounded-md h-auto focus:ring-2 focus:ring-green-500 bg-white hover:bg-gray-50",
-                  !dateInscricao && "text-muted-foreground",
+                  "w-full justify-start text-left font-normal border border-gray-200 dark:border-neutral-800 p-3 rounded-md h-auto focus:ring-2 focus:ring-green-500 bg-white dark:bg-neutral-900 hover:bg-gray-50 dark:hover:bg-neutral-800 text-gray-900 dark:text-white transition-colors",
+                  !dateInscricao &&
+                    "text-muted-foreground dark:text-neutral-500",
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
@@ -295,7 +322,7 @@ export function ConcursoForm({
               </Button>
             </PopoverTrigger>
             <PopoverContent
-              className="w-auto p-0 bg-white shadow-xl border border-gray-200 z-50 rounded-xl"
+              className="w-auto p-0 bg-white dark:bg-neutral-900 shadow-xl border border-gray-200 dark:border-neutral-800 z-50 rounded-xl"
               align="start"
             >
               <Calendar
@@ -306,13 +333,13 @@ export function ConcursoForm({
                 onSelect={setDateInscricao}
                 numberOfMonths={2}
                 locale={ptBR}
-                className="bg-white rounded-t-xl"
+                className="bg-white dark:bg-neutral-900 text-gray-900 dark:text-white rounded-t-xl"
               />
-              <div className="p-2 border-t border-gray-100 bg-gray-50 rounded-b-xl flex justify-center">
+              <div className="p-2 border-t border-gray-100 dark:border-neutral-800 bg-gray-50 dark:bg-neutral-900 rounded-b-xl flex justify-center">
                 <button
                   type="button"
                   onClick={() => setDateInscricao(undefined)}
-                  className="text-xs font-bold text-gray-500 hover:text-red-500 transition-colors w-full py-1"
+                  className="text-xs font-bold text-gray-500 dark:text-neutral-400 hover:text-red-500 dark:hover:text-red-400 transition-colors w-full py-1"
                 >
                   Limpar Data
                 </button>
@@ -320,7 +347,7 @@ export function ConcursoForm({
             </PopoverContent>
           </Popover>
           {concursoEditando?.periodoInscricao && !dateInscricao && (
-            <span className="text-xs text-gray-400 mt-1">
+            <span className="text-xs text-gray-400 dark:text-neutral-500 mt-1">
               Atual: {concursoEditando.periodoInscricao}
             </span>
           )}
@@ -328,9 +355,9 @@ export function ConcursoForm({
 
         {/* PERÍODO DE ISENÇÃO (DATE RANGE) */}
         <div className="flex flex-col">
-          <label className="font-semibold mb-1 text-gray-800">
+          <label className="font-semibold mb-1 text-gray-800 dark:text-neutral-200">
             Período de Isenção{" "}
-            <span className="text-gray-400 font-normal text-sm">
+            <span className="text-gray-400 dark:text-neutral-500 font-normal text-sm">
               (Opcional)
             </span>
           </label>
@@ -340,8 +367,8 @@ export function ConcursoForm({
                 type="button"
                 variant={"outline"}
                 className={cn(
-                  "w-full justify-start text-left font-normal border p-3 rounded-md h-auto focus:ring-2 focus:ring-green-500 bg-white hover:bg-gray-50",
-                  !dateIsencao && "text-muted-foreground",
+                  "w-full justify-start text-left font-normal border border-gray-200 dark:border-neutral-800 p-3 rounded-md h-auto focus:ring-2 focus:ring-green-500 bg-white dark:bg-neutral-900 hover:bg-gray-50 dark:hover:bg-neutral-800 text-gray-900 dark:text-white transition-colors",
+                  !dateIsencao && "text-muted-foreground dark:text-neutral-500",
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
@@ -360,7 +387,7 @@ export function ConcursoForm({
               </Button>
             </PopoverTrigger>
             <PopoverContent
-              className="w-auto p-0 bg-white shadow-xl border border-gray-200 z-50 rounded-xl"
+              className="w-auto p-0 bg-white dark:bg-neutral-900 shadow-xl border border-gray-200 dark:border-neutral-800 z-50 rounded-xl"
               align="start"
             >
               <Calendar
@@ -371,13 +398,13 @@ export function ConcursoForm({
                 onSelect={setDateIsencao}
                 numberOfMonths={2}
                 locale={ptBR}
-                className="bg-white rounded-t-xl"
+                className="bg-white dark:bg-neutral-900 text-gray-900 dark:text-white rounded-t-xl"
               />
-              <div className="p-2 border-t border-gray-100 bg-gray-50 rounded-b-xl flex justify-center">
+              <div className="p-2 border-t border-gray-100 dark:border-neutral-800 bg-gray-50 dark:bg-neutral-900 rounded-b-xl flex justify-center">
                 <button
                   type="button"
                   onClick={() => setDateIsencao(undefined)}
-                  className="text-xs font-bold text-gray-500 hover:text-red-500 transition-colors w-full py-1"
+                  className="text-xs font-bold text-gray-500 dark:text-neutral-400 hover:text-red-500 dark:hover:text-red-400 transition-colors w-full py-1"
                 >
                   Limpar Data
                 </button>
@@ -385,7 +412,7 @@ export function ConcursoForm({
             </PopoverContent>
           </Popover>
           {concursoEditando?.periodoIsencao && !dateIsencao && (
-            <span className="text-xs text-gray-400 mt-1">
+            <span className="text-xs text-gray-400 dark:text-neutral-500 mt-1">
               Atual: {concursoEditando.periodoIsencao}
             </span>
           )}
@@ -393,9 +420,9 @@ export function ConcursoForm({
 
         {/* DATA DA PROVA (SINGLE DATE) */}
         <div className="flex flex-col">
-          <label className="font-semibold mb-1 text-gray-800">
+          <label className="font-semibold mb-1 text-gray-800 dark:text-neutral-200">
             Data da Prova{" "}
-            <span className="text-gray-400 font-normal text-sm">
+            <span className="text-gray-400 dark:text-neutral-500 font-normal text-sm">
               (Opcional)
             </span>
           </label>
@@ -405,8 +432,8 @@ export function ConcursoForm({
                 type="button"
                 variant={"outline"}
                 className={cn(
-                  "w-full justify-start text-left font-normal border p-3 rounded-md h-auto focus:ring-2 focus:ring-green-500 bg-white hover:bg-gray-50",
-                  !dateProva && "text-muted-foreground",
+                  "w-full justify-start text-left font-normal border border-gray-200 dark:border-neutral-800 p-3 rounded-md h-auto focus:ring-2 focus:ring-green-500 bg-white dark:bg-neutral-900 hover:bg-gray-50 dark:hover:bg-neutral-800 text-gray-900 dark:text-white transition-colors",
+                  !dateProva && "text-muted-foreground dark:text-neutral-500",
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
@@ -418,7 +445,7 @@ export function ConcursoForm({
               </Button>
             </PopoverTrigger>
             <PopoverContent
-              className="w-auto p-0 bg-white shadow-xl border border-gray-200 z-50 rounded-xl"
+              className="w-auto p-0 bg-white dark:bg-neutral-900 shadow-xl border border-gray-200 dark:border-neutral-800 z-50 rounded-xl"
               align="start"
             >
               <Calendar
@@ -427,13 +454,13 @@ export function ConcursoForm({
                 onSelect={setDateProva}
                 initialFocus
                 locale={ptBR}
-                className="bg-white rounded-t-xl"
+                className="bg-white dark:bg-neutral-900 text-gray-900 dark:text-white rounded-t-xl"
               />
-              <div className="p-2 border-t border-gray-100 bg-gray-50 rounded-b-xl flex justify-center">
+              <div className="p-2 border-t border-gray-100 dark:border-neutral-800 bg-gray-50 dark:bg-neutral-900 rounded-b-xl flex justify-center">
                 <button
                   type="button"
                   onClick={() => setDateProva(undefined)}
-                  className="text-xs font-bold text-gray-500 hover:text-red-500 transition-colors w-full py-1"
+                  className="text-xs font-bold text-gray-500 dark:text-neutral-400 hover:text-red-500 dark:hover:text-red-400 transition-colors w-full py-1"
                 >
                   Limpar Data
                 </button>
@@ -441,7 +468,7 @@ export function ConcursoForm({
             </PopoverContent>
           </Popover>
           {concursoEditando?.dataProva && !dateProva && (
-            <span className="text-xs text-gray-400 mt-1">
+            <span className="text-xs text-gray-400 dark:text-neutral-500 mt-1">
               Atual: {concursoEditando.dataProva}
             </span>
           )}
@@ -451,9 +478,9 @@ export function ConcursoForm({
       {/* LINHA 5 - LINKS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="flex flex-col">
-          <label className="font-semibold mb-1 text-gray-800">
+          <label className="font-semibold mb-1 text-gray-800 dark:text-neutral-200">
             Link do Edital{" "}
-            <span className="text-gray-400 font-normal text-sm">
+            <span className="text-gray-400 dark:text-neutral-500 font-normal text-sm">
               (Opcional)
             </span>
           </label>
@@ -461,14 +488,14 @@ export function ConcursoForm({
             name="linkEdital"
             type="url"
             defaultValue={concursoEditando?.linkEdital || ""}
-            className="border p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="border border-gray-200 dark:border-neutral-800 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-neutral-900 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-neutral-600 transition-colors"
             placeholder="https://..."
           />
         </div>
         <div className="flex flex-col">
-          <label className="font-semibold mb-1 text-gray-800">
+          <label className="font-semibold mb-1 text-gray-800 dark:text-neutral-200">
             Link da Inscrição{" "}
-            <span className="text-gray-400 font-normal text-sm">
+            <span className="text-gray-400 dark:text-neutral-500 font-normal text-sm">
               (Opcional)
             </span>
           </label>
@@ -476,14 +503,14 @@ export function ConcursoForm({
             name="linkInscricao"
             type="url"
             defaultValue={concursoEditando?.linkInscricao || ""}
-            className="border p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="border border-gray-200 dark:border-neutral-800 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-neutral-900 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-neutral-600 transition-colors"
             placeholder="https://..."
           />
         </div>
         <div className="flex flex-col">
-          <label className="font-semibold mb-1 text-gray-800">
+          <label className="font-semibold mb-1 text-gray-800 dark:text-neutral-200">
             Link do Cronograma{" "}
-            <span className="text-gray-400 font-normal text-sm">
+            <span className="text-gray-400 dark:text-neutral-500 font-normal text-sm">
               (Opcional)
             </span>
           </label>
@@ -491,7 +518,7 @@ export function ConcursoForm({
             name="linkCronograma"
             type="url"
             defaultValue={concursoEditando?.linkCronograma || ""}
-            className="border p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="border border-gray-200 dark:border-neutral-800 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-neutral-900 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-neutral-600 transition-colors"
             placeholder="https://..."
           />
         </div>
@@ -499,26 +526,26 @@ export function ConcursoForm({
 
       {/* LINHA 6 - DESCRIÇÃO */}
       <div className="flex flex-col">
-        <label className="font-semibold mb-1 text-gray-800">
+        <label className="font-semibold mb-1 text-gray-800 dark:text-neutral-200">
           Breve Descrição
         </label>
         <textarea
           name="descricao"
           rows={3}
           defaultValue={concursoEditando?.descricao || ""}
-          className="border p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+          className="border border-gray-200 dark:border-neutral-800 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-neutral-900 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-neutral-600 resize-none transition-colors"
           placeholder="Resumo sobre o concurso..."
         />
       </div>
 
       {/* UPLOAD DE THUMBNAIL */}
-      <div className="flex flex-col gap-2 border-t border-gray-100 pt-6">
-        <label className="text-sm font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+      <div className="flex flex-col gap-2 border-t border-gray-100 dark:border-neutral-800 pt-6 transition-colors">
+        <label className="text-sm font-bold text-gray-500 dark:text-neutral-400 uppercase tracking-wider flex items-center gap-2">
           <ImageIcon className="w-4 h-4" /> Imagem do Concurso (Thumb)
         </label>
 
         {thumbnailUrl ? (
-          <div className="relative w-full h-48 rounded-2xl overflow-hidden border flex items-center justify-center border-gray-200 group">
+          <div className="relative w-full h-48 rounded-2xl overflow-hidden border border-gray-200 dark:border-neutral-800 flex items-center justify-center group transition-colors">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={thumbnailUrl}
@@ -544,24 +571,24 @@ export function ConcursoForm({
           </div>
         ) : (
           <label
-            className={`flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-2xl p-8 bg-gray-50 hover:bg-gray-100 transition-colors ${isUploadingImage ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
+            className={`flex flex-col items-center justify-center border-2 border-dashed border-gray-300 dark:border-neutral-700 rounded-2xl p-8 bg-gray-50 dark:bg-neutral-800/50 hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors ${isUploadingImage ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
           >
             {isUploadingImage ? (
               <>
                 <Loader2 className="w-8 h-8 animate-spin text-emerald-500 mb-3" />
-                <span className="text-sm font-bold text-emerald-600">
+                <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
                   Preparando...
                 </span>
               </>
             ) : (
               <>
-                <div className="w-12 h-12 bg-white border border-gray-200 rounded-full flex items-center justify-center mb-3 shadow-sm">
-                  <ImageIcon className="w-5 h-5 text-gray-400" />
+                <div className="w-12 h-12 bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-full flex items-center justify-center mb-3 shadow-sm transition-colors">
+                  <ImageIcon className="w-5 h-5 text-gray-400 dark:text-neutral-500" />
                 </div>
-                <span className="text-sm font-bold text-gray-700">
+                <span className="text-sm font-bold text-gray-700 dark:text-neutral-300 transition-colors">
                   Clique para escolher uma imagem
                 </span>
-                <span className="text-xs text-gray-400 mt-1">
+                <span className="text-xs text-gray-400 dark:text-neutral-500 mt-1 transition-colors">
                   PNG, JPG ou WEBP (Max 4MB)
                 </span>
               </>
@@ -577,7 +604,7 @@ export function ConcursoForm({
         )}
       </div>
 
-      <div className="flex gap-2 pt-4 border-t border-gray-100">
+      <div className="flex gap-2 pt-4 border-t border-gray-100 dark:border-neutral-800 transition-colors">
         <button
           type="submit"
           disabled={isUploadingImage || isSubmitting}
@@ -589,7 +616,7 @@ export function ConcursoForm({
         {concursoEditando && (
           <Link
             href="/admin/concursos"
-            className="px-6 py-3 bg-gray-100  text-gray-700 font-bold rounded-md hover:bg-gray-200 duration-200 cursor-pointer active:scale-95"
+            className="px-6 py-3 bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-neutral-300 font-bold rounded-md hover:bg-gray-200 dark:hover:bg-neutral-700 duration-200 cursor-pointer active:scale-95 transition-colors"
           >
             Cancelar
           </Link>

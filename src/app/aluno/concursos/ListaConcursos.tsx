@@ -153,6 +153,15 @@ function ConcursoCard({
     setIsLoadingLembrete(false);
   };
 
+  // NOVA LÓGICA: Exibir a escolaridade corretamente se for Técnico
+  const exibirEscolaridade = () => {
+    if (!concurso.escolaridade) return "Não informado";
+    if (concurso.escolaridade === "Técnico" && concurso.cursoTecnico) {
+      return `${concurso.cursoTecnico}`;
+    }
+    return concurso.escolaridade;
+  };
+
   return (
     <div className="bg-neutral-900 rounded-2xl border border-neutral-800 overflow-hidden flex flex-col hover:border-neutral-700 hover:bg-neutral-900/80 transition-all duration-300 group h-full relative">
       {concurso.thumbnailUrl && (
@@ -164,8 +173,8 @@ function ConcursoCard({
             sizes="(max-width: 768px) 100vw, 350px"
             className="object-cover object-center"
           />
-          <div className="absolute inset-0 bg-linear-to-t from-transparent via-neutral-900/40 to-neutral-900" />
-          <div className="absolute inset-0 bg-linear-to-r from-neutral-900 via-neutral-900/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-transparent via-neutral-900/40 to-neutral-900" />
+          <div className="absolute inset-0 bg-gradient-to-r from-neutral-900 via-neutral-900/40 to-transparent" />
         </div>
       )}
 
@@ -255,7 +264,7 @@ function ConcursoCard({
           <div className="flex items-center gap-2 text-neutral-300 col-span-2">
             <GraduationCap className="w-4 h-4 text-neutral-500 shrink-0" />
             <span className="text-xs font-medium truncate">
-              {concurso.escolaridade || "Não informado"}
+              {exibirEscolaridade()}
             </span>
           </div>
         </div>
@@ -523,9 +532,21 @@ export function ListaConcursos({
   const opcoesCargos = Array.from(
     new Set(concursosIniciais.map((c) => c.cargo).filter(Boolean)),
   );
+
+  // NOVA LÓGICA PARA O FILTRO: Incluir Técnicos e Nível Médio/Superior de forma limpa
   const opcoesEscolaridade = Array.from(
-    new Set(concursosIniciais.map((c) => c.escolaridade).filter(Boolean)),
+    new Set(
+      concursosIniciais
+        .map((c) => {
+          if (c.escolaridade === "Técnico" && c.cursoTecnico) {
+            return `${c.cursoTecnico}`;
+          }
+          return c.escolaridade;
+        })
+        .filter(Boolean),
+    ),
   );
+
   const opcoesStatus = Array.from(
     new Set(concursosIniciais.map((c) => c.status).filter(Boolean)),
   );
@@ -548,8 +569,17 @@ export function ListaConcursos({
 
       const matchBanca = !filtroBanca || c.banca === filtroBanca;
       const matchCargo = !filtroCargo || c.cargo === filtroCargo;
-      const matchEscolaridade =
-        !filtroEscolaridade || c.escolaridade === filtroEscolaridade;
+
+      // NOVA LÓGICA DO FILTRO: Lidar com a junção de Técnico + Curso
+      let matchEscolaridade = true;
+      if (filtroEscolaridade) {
+        if (c.escolaridade === "Técnico" && c.cursoTecnico) {
+          matchEscolaridade = `${c.cursoTecnico}` === filtroEscolaridade;
+        } else {
+          matchEscolaridade = c.escolaridade === filtroEscolaridade;
+        }
+      }
+
       const matchStatus = !filtroStatus || c.status === filtroStatus;
 
       let matchSalario = true;

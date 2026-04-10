@@ -1,7 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { Mail, LayoutDashboard, PlayCircle, BarChart3 } from "lucide-react";
+import {
+  LayoutDashboard,
+  PlayCircle,
+  BarChart3,
+  ChevronsUp,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
 import Navbar from "@/components/Navbar";
@@ -80,7 +85,7 @@ export default function Home() {
               className="flex items-center justify-center overflow-visible"
             >
               <motion.div
-                className="flex items-center mr-4 cursor-pointer"
+                className="flex items-center mr-4"
                 initial="rest"
                 whileHover="hover"
               >
@@ -153,25 +158,26 @@ export default function Home() {
           aceleram sua aprovação.
         </motion.p>
 
-        {/* Input de E-mail */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto mb-16 relative z-20">
-          <div className="relative w-full">
-            <Mail
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-neutral-500 transition-colors duration-300"
-              size={18}
-            />
-            <input
-              type="email"
-              placeholder="Qual o seu melhor e-mail?"
-              className="w-full pl-12 pr-4 py-4 rounded-full border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#009966]/20 transition-all duration-300 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
-            />
-          </div>
-          <button className="w-full sm:w-auto bg-[#009966] text-white px-8 py-4 rounded-full font-bold hover:bg-[#059669] transition-all whitespace-nowrap">
-            Quero minha Aprovação
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-8 mx-auto mb-16 relative z-20">
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              document
+                .getElementById("reviews")
+                ?.scrollIntoView({ behavior: "smooth" });
+            }}
+            className="text-md font-semibold flex text-gray-800 dark:text-neutral-200 group gap-2 items-center cursor-pointer"
+          >
+            Saiba mais
+            <ChevronsUp className="h-5 w-5 group-hover:rotate-180 duration-400" />
           </button>
+          <Link href="/aluno">
+            <button className="bg-[#009966] dark:bg-[#009966] hover:-translate-y-0.5 cursor-pointer shadow-sm shadow-neutral-400 dark:shadow-neutral-950 text-white dark:border-neutral-800 px-8 py-3 rounded-full text-md font-bold hover:shadow-md duration-300">
+              Começar Agora
+            </button>
+          </Link>
         </div>
 
-        {/* Mockup Central de Imagem */}
         <div className="relative w-full max-w-4xl mx-auto mt-10 z-20">
           <div className="bg-white dark:bg-neutral-900 rounded-3xl shadow-2xl overflow-hidden border border-gray-100 dark:border-neutral-800 aspect-video flex items-center justify-center relative transition-colors duration-300">
             <div className="absolute inset-0 bg-linear-to-tr from-gray-100 dark:from-neutral-800/50 to-transparent opacity-50" />
@@ -199,7 +205,10 @@ export default function Home() {
       </main>
 
       {/* --- 4. SEÇÃO DE FEEDBACKS --- */}
-      <section className="bg-white dark:bg-[#0f0f0f] py-20 px-6 relative z-20 transition-colors duration-300">
+      <section
+        id="reviews"
+        className="bg-white dark:bg-[#0f0f0f] py-20 px-6 relative z-20 transition-colors duration-300"
+      >
         <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-6">
           <div className="bg-[#009966] text-white p-8 rounded-[40px] flex flex-col justify-between min-h-75">
             <div>

@@ -28,10 +28,10 @@ export default async function AdminLayout({
       {/* Renderiza a barra lateral que criamos */}
       <AppSidebar />
 
-      {/* Conteúdo Principal */}
-      <main className="flex-1 bg-gray-50 min-h-screen">
-        <div className="mb-6 flex items-center">
-          <SidebarTrigger className="text-gray-500 hover:text-gray-800" />
+      {/* Conteúdo Principal adaptado para o Dark Mode */}
+      <main className="flex-1 bg-gray-50 dark:bg-[#0a0a0a] min-h-screen transition-colors duration-300">
+        <div className="mb-6 flex items-center p-4 md:p-6 pb-0">
+          <SidebarTrigger className="text-gray-500 dark:text-neutral-400 hover:text-gray-800 dark:hover:text-neutral-200 transition-colors duration-300" />
         </div>
         {children}
       </main>

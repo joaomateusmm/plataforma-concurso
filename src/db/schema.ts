@@ -42,6 +42,7 @@ export const concursos = pgTable("concursos", {
   vagas: varchar("vagas", { length: 100 }),
   salario: varchar("salario", { length: 100 }),
   escolaridade: varchar("escolaridade", { length: 100 }),
+  cursoTecnico: varchar("curso_tecnico", { length: 255 }),
   status: varchar("status", { length: 50 }).notNull(),
   linkEdital: text("link_edital"),
   linkInscricao: text("link_inscricao"),
@@ -50,8 +51,8 @@ export const concursos = pgTable("concursos", {
   periodoIsencao: varchar("periodo_isencao", { length: 255 }),
   dataProva: varchar("data_prova", { length: 255 }),
   thumbnailUrl: text("thumbnail_url"),
-  fimInscricao: timestamp("fim_inscricao"), // Guarda o ÚLTIMO dia para se inscrever
-  dataProvaReal: timestamp("data_prova_real"), // Guarda o dia exato da prova
+  fimInscricao: timestamp("fim_inscricao"),
+  dataProvaReal: timestamp("data_prova_real"),
 });
 
 export const questoes = pgTable("questoes", {
