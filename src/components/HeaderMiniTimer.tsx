@@ -43,29 +43,35 @@ export function HeaderMiniTimer() {
 
   let currentTime = 0;
   let isRunning = false;
-  let timerColor = "text-neutral-400 hover:text-neutral-300";
+  let timerColor =
+    "text-gray-500 hover:text-gray-700 dark:text-neutral-400 dark:hover:text-neutral-300";
   let playBtnColor =
-    "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30";
-  let alertBadgeColor = "text-neutral-400";
+    "bg-[#009966]/10 text-[#009966] hover:bg-[#009966]/20 dark:bg-emerald-500/20 dark:text-emerald-400 dark:hover:bg-emerald-500/30";
+  let alertBadgeColor = "text-gray-500 dark:text-neutral-400";
 
   if (activeTimerMode === "temporizador") {
     currentTime = temporizadorTime;
     isRunning = isTemporizadorRunning;
-    timerColor = "text-neutral-400 hover:text-neutral-300";
-    playBtnColor = "bg-white/10 text-white hover:bg-neutral-500";
+    timerColor =
+      "text-gray-500 hover:text-gray-700 dark:text-neutral-400 dark:hover:text-neutral-300";
+    playBtnColor =
+      "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-white/10 dark:text-white dark:hover:bg-neutral-500";
   } else if (activeTimerMode === "pomodoro") {
     currentTime = pomodoroTime;
     isRunning = isPomodoroRunning;
 
     if (pomodoroPhase === "break") {
-      timerColor = "text-emerald-500 hover:text-emerald-400";
+      timerColor =
+        "text-[#009966] hover:text-[#009966]/80 dark:text-emerald-500 dark:hover:text-emerald-400";
       playBtnColor =
-        "bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/30";
-      alertBadgeColor = "text-emerald-400";
+        "bg-[#009966]/10 text-[#009966] hover:bg-[#009966]/20 dark:bg-emerald-500/20 dark:text-emerald-500 dark:hover:bg-emerald-500/30";
+      alertBadgeColor = "text-[#009966] dark:text-emerald-400";
     } else {
-      timerColor = "text-neutral-400 hover:text-neutral-300";
-      playBtnColor = "bg-white/10 text-white hover:bg-neutral-500";
-      alertBadgeColor = "text-neutral-300";
+      timerColor =
+        "text-gray-500 hover:text-gray-700 dark:text-neutral-400 dark:hover:text-neutral-300";
+      playBtnColor =
+        "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-white/10 dark:text-white dark:hover:bg-neutral-500";
+      alertBadgeColor = "text-gray-400 dark:text-neutral-300";
     }
   } else {
     currentTime = stopwatchTime;
@@ -92,7 +98,7 @@ export function HeaderMiniTimer() {
 
   return (
     <div
-      className={`flex items-center shadow-sm group transition-all duration-500 ease-out ${
+      className={`flex items-center group transition-all duration-500 ease-out ${
         isActive
           ? "opacity-100 scale-100 visible translate-y-0"
           : "opacity-0 scale-95 invisible -translate-y-2 pointer-events-none"
@@ -100,10 +106,10 @@ export function HeaderMiniTimer() {
     >
       <button
         onClick={() => setIsVisible(!isVisible)}
-        className={`w-6 h-6 rounded-full flex items-center cursor-pointer justify-center opacity-0 group-hover:opacity-100 duration-300 ${
+        className={`w-6 h-6 rounded-full flex items-center cursor-pointer justify-center opacity-0 group-hover:opacity-100 duration-300 transition-colors ${
           isVisible
-            ? "bg-white/10 text-white hover:bg-white/20"
-            : "bg-white/20 text-white hover:bg-white/30"
+            ? "bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-white/10 dark:text-white dark:hover:bg-white/20"
+            : "bg-gray-200 text-gray-600 hover:bg-gray-300 dark:bg-white/20 dark:text-white dark:hover:bg-white/30"
         }`}
       >
         {isVisible ? (
@@ -139,8 +145,10 @@ export function HeaderMiniTimer() {
 
       <button
         onClick={handleToggle}
-        className={`w-6 h-6 rounded-full flex items-center cursor-pointer justify-center opacity-0 group-hover:opacity-100 duration-300 ${
-          isRunning ? "bg-white/10 text-white hover:bg-white/20" : playBtnColor
+        className={`w-6 h-6 rounded-full flex items-center cursor-pointer justify-center opacity-0 group-hover:opacity-100 duration-300 transition-colors ${
+          isRunning
+            ? "bg-gray-100 text-gray-600 duration-500  hover:bg-gray-200 dark:bg-white/10 dark:text-white dark:hover:bg-white/20"
+            : playBtnColor
         }`}
       >
         {isRunning ? (

@@ -134,6 +134,7 @@ export function ConcursoForm({
         await salvarConcurso(formData);
         toast.success("Concurso criado!");
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast.error("Erro ao salvar o concurso.");
     } finally {
@@ -248,7 +249,7 @@ export function ConcursoForm({
           {/* SÓ APARECE SE A ESCOLARIDADE FOR "TÉCNICO" */}
           {escolaridade === "Técnico" && (
             <div className="flex flex-col animate-in fade-in slide-in-from-top-2 duration-300">
-              <label className="font-semibold mb-1 text-gray-800 dark:text-neutral-200 text-sm text-emerald-600 dark:text-emerald-400">
+              <label className="font-semibold mb-1 text-gray-800 dark:text-neutral-200 text-sm">
                 Qual o curso técnico? *
               </label>
               <input

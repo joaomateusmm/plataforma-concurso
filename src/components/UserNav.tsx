@@ -42,7 +42,7 @@ export default function UserNav() {
 
   if (isPending)
     return (
-      <div className="h-7 w-7 animate-pulse rounded-full bg-neutral-900" />
+      <div className="h-7 w-7 animate-pulse rounded-full bg-gray-200 dark:bg-neutral-900 transition-colors duration-300" />
     );
 
   return (
@@ -53,14 +53,14 @@ export default function UserNav() {
     >
       <div
         onClick={toggleMenu}
-        className={`flex cursor-pointer items-center gap-2 rounded-full border bg-neutral-900 p-1 pr-3 duration-300 ${
+        className={`flex cursor-pointer items-center gap-2 rounded-full border bg-gray-100 shadow-sm dark:bg-neutral-900 p-1 pr-3 transition-all duration-300 ${
           isOpen
-            ? "border-neutral-700 ring-0.5 ring-neutral-700"
-            : "border-transparent hover:border-neutral-700"
+            ? "border-gray-300 dark:border-neutral-700 ring-1 ring-gray-300 dark:ring-neutral-700"
+            : "border-transparent hover:border-gray-300 dark:hover:border-neutral-700"
         }`}
       >
         {session ? (
-          <div className="relative flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-800 text-[10px] font-bold text-white">
+          <div className="relative flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-100 dark:bg-neutral-800 text-[10px] font-bold text-gray-900 dark:text-white transition-colors duration-300">
             {session.user.image ? (
               <Image
                 src={session.user.image}
@@ -74,40 +74,44 @@ export default function UserNav() {
             )}
           </div>
         ) : (
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-neutral-800 text-neutral-400 ring-0.5 ring-neutral-700">
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 dark:bg-neutral-800 text-gray-500 dark:text-neutral-400 ring-0.5 ring-gray-300 dark:ring-neutral-700 transition-colors duration-300">
             <UserRound size={12} />
           </div>
         )}
 
         <ChevronDown
-          className={`h-3.5 w-3.5 text-neutral-500 transition-transform duration-300 ${
-            isOpen ? "rotate-180 text-white" : ""
+          className={`h-3.5 w-3.5 transition-all duration-300 ${
+            isOpen
+              ? "rotate-180 text-gray-900 dark:text-white"
+              : "text-gray-500 dark:text-neutral-500"
           }`}
         />
       </div>
 
       {/* --- DROPDOWN MENU --- */}
       {isOpen && (
-        <div className="animate-in fade-in slide-in-from-top-2 bg-neutral-950 absolute top-full right-0 w-60 pt-2 duration-200">
+        <div className="animate-in fade-in slide-in-from-top-2 dark:bg-neutral-950 absolute top-full right-0 w-60 pt-2 duration-200">
           {/* Espaço invisível para não perder o hover ao mover o rato */}
           <div className="absolute -top-2 right-0 left-0 h-2" />
 
-          <div className="overflow-hidden rounded-xl border border-neutral-800 bg-neutral-950/90 p-1.5 shadow-2xl shadow-black/50 backdrop-blur-xl">
+          <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-neutral-800 bg-gray-100 dark:bg-neutral-950 p-1.5 shadow-2xl shadow-black/10 dark:shadow-black/50 backdrop-blur-xl transition-colors duration-300">
             {/* Informações da Conta */}
-            <div className="mb-1 border-b border-neutral-800/50 px-3 py-2.5">
+            <div className="mb-1 border-b border-gray-200 dark:border-neutral-800/50 px-3 py-2.5 transition-colors duration-300">
               {session ? (
                 <>
-                  <p className="truncate text-xs font-bold text-white">
+                  <p className="truncate text-xs font-bold text-gray-900 dark:text-white transition-colors duration-300">
                     {session.user.name}
                   </p>
-                  <p className="mt-0.5 truncate text-[10px] text-neutral-500">
+                  <p className="mt-0.5 truncate text-[10px] text-gray-500 dark:text-neutral-500 transition-colors duration-300">
                     {session.user.email}
                   </p>
                 </>
               ) : (
                 <>
-                  <p className="text-xs font-bold text-white">Visitante</p>
-                  <p className="mt-0.5 text-[10px] text-neutral-500 leading-tight">
+                  <p className="text-xs font-bold text-gray-900 dark:text-white transition-colors duration-300">
+                    Visitante
+                  </p>
+                  <p className="mt-0.5 text-[10px] text-gray-500 dark:text-neutral-500 leading-tight transition-colors duration-300">
                     Faça login para acessar os simulados.
                   </p>
                 </>
@@ -130,7 +134,7 @@ export default function UserNav() {
                     onClick={() => setIsOpen(false)}
                   />
                 </div>
-                <div className="border-b w-full border-neutral-800 pt-1"></div>
+                <div className="border-b w-full border-gray-200 dark:border-neutral-800 pt-1 transition-colors duration-300"></div>
               </>
             )}
 
@@ -179,14 +183,14 @@ export default function UserNav() {
             </div>
 
             {/* Ações (Sair / Entrar) */}
-            <div className="mt-1.5 border-t border-neutral-800/50 pt-1">
+            <div className="mt-1.5 border-t border-gray-200 dark:border-neutral-800/50 pt-1 transition-colors duration-300">
               {session ? (
                 <button
                   onClick={() => {
                     handleSignOut();
                     setIsOpen(false);
                   }}
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-red-400 transition-colors hover:bg-red-500/10 hover:text-red-300"
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 cursor-pointer text-left text-xs bg-gray-600/10 font-medium text-gray-800 dark:text-red-500 dark:bg-red-900/10 transition-colors hover:bg-gray-900/20 dark:hover:bg-red-500/10 hover:text-gray-900 dark:hover:text-red-400"
                 >
                   <LogOut size={14} />
                   Sair da conta
@@ -196,7 +200,7 @@ export default function UserNav() {
                   <Link
                     href="/login"
                     onClick={() => setIsOpen(false)}
-                    className="flex items-center justify-center gap-2 rounded-lg bg-neutral-800 py-2 text-[11px] font-bold text-white duration-300 hover:bg-neutral-700"
+                    className="flex items-center justify-center gap-2 rounded-lg bg-gray-100 dark:bg-neutral-800 py-2 text-[11px] font-bold text-gray-900 dark:text-white duration-300 hover:bg-gray-200 dark:hover:bg-neutral-700 transition-colors"
                   >
                     <LogIn size={12} />
                     Entrar
@@ -204,7 +208,7 @@ export default function UserNav() {
                   <Link
                     href="/login"
                     onClick={() => setIsOpen(false)}
-                    className="flex items-center justify-center gap-2 rounded-lg bg-emerald-600 py-2 text-[11px] font-bold text-white duration-300 hover:bg-emerald-500"
+                    className="flex items-center justify-center gap-2 rounded-lg bg-[#009966] dark:bg-emerald-600 py-2 text-[11px] font-bold text-white duration-300 hover:bg-[#008055] dark:hover:bg-emerald-500 transition-colors"
                   >
                     <UserPlus size={12} />
                     Criar
@@ -235,9 +239,9 @@ function MenuLink({
     <Link
       href={href}
       onClick={onClick}
-      className="group flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-neutral-400 transition-all hover:bg-neutral-800/80 hover:text-white"
+      className="group flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-gray-600 dark:text-neutral-400 transition-all duration-300 hover:bg-gray-200 dark:hover:bg-neutral-800/80 hover:text-gray-900 dark:hover:text-white"
     >
-      <span className="text-neutral-500 transition-colors group-hover:text-emerald-500">
+      <span className="text-gray-400 dark:text-neutral-500 transition-colors duration-300 group-hover:text-[#009966] dark:group-hover:text-emerald-500">
         {icon}
       </span>
       {label}

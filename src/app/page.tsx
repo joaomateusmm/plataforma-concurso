@@ -1,12 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import {
-  LayoutDashboard,
-  PlayCircle,
-  BarChart3,
-  ChevronsUp,
-} from "lucide-react";
+import { LayoutDashboard, BarChart3, ChevronsUp } from "lucide-react";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
 import Navbar from "@/components/Navbar";
@@ -178,23 +174,33 @@ export default function Home() {
           </Link>
         </div>
 
+        {/* BANNER DA HOME PAGE */}
         <div className="relative w-full max-w-4xl mx-auto mt-10 z-20">
-          <div className="bg-white dark:bg-neutral-900 rounded-3xl shadow-2xl overflow-hidden border border-gray-100 dark:border-neutral-800 aspect-video flex items-center justify-center relative transition-colors duration-300">
-            <div className="absolute inset-0 bg-linear-to-tr from-gray-100 dark:from-neutral-800/50 to-transparent opacity-50" />
-            <PlayCircle size={80} className="text-[#009966] opacity-80 z-10" />
-            <div className="absolute bottom-6 left-6 text-left z-10">
-              <p className="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-neutral-500 transition-colors duration-300">
-                Resolução de Questões
+          <div className="bg-white dark:bg-neutral-900 rounded-3xl shadow-2xl overflow-hidden dark:border-neutral-800 aspect-video flex items-center justify-center relative transition-colors duration-300 group">
+            <Image
+              src="/banner.png"
+              alt="Preview da Plataforma"
+              fill
+              sizes=" 100vw, 1024px"
+              priority
+              className="object-cover  z-0 transition-transform duration-700 scale-[1.1] group-hover:scale-[1.12]"
+            />
+            <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/0 to-transparent z-10 opacity-80" />
+
+            <div className="absolute bottom-6 left-6 text-left z-20">
+              <p className="text-xs font-bold uppercase tracking-widest text-emerald-400 drop-shadow-md">
+                Planejamento + Organização
               </p>
-              <p className="text-lg font-semibold text-gray-700 dark:text-neutral-200 transition-colors duration-300">
-                Gabaritando Direito Constitucional
+              <p className="text-lg md:text-xl font-semibold text-white drop-shadow-lg mt-1">
+                Tenha seus estudos planejados até a sua aprovação!
               </p>
             </div>
           </div>
 
-          <div className="absolute -right-4 -top-4 hidden lg:block w-48 bg-white dark:bg-neutral-900 p-4 rounded-2xl shadow-lg border border-gray-50 dark:border-neutral-800 transform rotate-3 transition-colors duration-300">
+          {/* Card Flutuante de Desempenho */}
+          <div className="absolute -right-4 -top-4 hidden lg:block w-48 bg-white dark:bg-neutral-900 p-4 rounded-2xl shadow-lg border border-gray-50 dark:border-neutral-800 transform rotate-3 transition-colors duration-300 z-30">
             <BarChart3 className="text-blue-500 mb-2" />
-            <p className="text-xs font-bold dark:text-neutral-200">
+            <p className="text-xs font-bold text-gray-900 dark:text-neutral-200">
               Seu Desempenho
             </p>
             <div className="h-2 w-full bg-gray-100 dark:bg-neutral-800 rounded-full mt-2 transition-colors duration-300">

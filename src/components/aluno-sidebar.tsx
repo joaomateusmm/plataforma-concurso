@@ -99,7 +99,7 @@ const RenderBadge = ({ status }: { status?: string }) => {
     return (
       <Badge
         variant="default"
-        className="ml-auto bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 text-[9px] px-1.5 py-0 h-4 font-bold uppercase tracking-wider shrink-0"
+        className="ml-auto bg-emerald-500/10 text-[#009966] dark:text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 text-[9px] px-1.5 py-0 h-4 font-bold uppercase tracking-wider shrink-0 transition-colors duration-300"
       >
         Novo
       </Badge>
@@ -110,7 +110,7 @@ const RenderBadge = ({ status }: { status?: string }) => {
     return (
       <Badge
         variant="secondary"
-        className="ml-auto bg-neutral-800/50 text-neutral-400 hover:bg-neutral-800/70 border border-neutral-700/50 text-[9px] px-1.5 py-0 h-4 font-bold uppercase tracking-wider shrink-0"
+        className="ml-auto bg-gray-100 dark:bg-neutral-800/50 text-gray-500 dark:text-neutral-400 hover:bg-gray-200 dark:hover:bg-neutral-800/70 border border-gray-200 dark:border-neutral-700/50 text-[9px] px-1.5 py-0 h-4 font-bold uppercase tracking-wider shrink-0 transition-colors duration-300"
       >
         Em breve
       </Badge>
@@ -168,7 +168,7 @@ export function AlunoSidebar() {
 
       <Sidebar
         data-lenis-prevent="true"
-        className="border-r z-50 border-neutral-800 bg-neutral-950 text-neutral-300 h-full flex flex-col"
+        className="border-r z-50 border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 text-gray-600 dark:text-neutral-300 h-full flex flex-col transition-colors duration-300"
       >
         <SidebarContent
           data-force-scroll="true"
@@ -178,11 +178,11 @@ export function AlunoSidebar() {
           <SmoothScroll root={false}>
             <div className="px-4 pt-25">
               <SidebarGroup className="mb-8 p-0">
-                <SidebarGroupLabel className="mb-3 px-0 text-xs font-bold tracking-widest text-neutral-500 uppercase bg-transparent hover:bg-transparent">
+                <SidebarGroupLabel className="mb-3 px-0 text-xs font-bold tracking-widest text-gray-500 dark:text-neutral-500 uppercase bg-transparent hover:bg-transparent transition-colors duration-300">
                   Menu Principal
                 </SidebarGroupLabel>
                 <SidebarGroupContent>
-                  <ul className="ml-2 flex flex-col gap-1 border-l border-white/10 text-sm">
+                  <ul className="ml-2 flex flex-col gap-1 border-l border-gray-200 dark:border-white/10 text-sm transition-colors duration-300">
                     {navItems.map((item) => {
                       const active = isActive(item.url);
                       const isEmBreve = item.status === "em_breve";
@@ -190,12 +190,12 @@ export function AlunoSidebar() {
                       // Extraímos o conteúdo do <li> para reutilizar
                       const liContent = (
                         <li
-                          className={`group relative -ml-px flex items-center gap-3 py-2 pr-2 pl-4 transition-all duration-200 before:absolute before:top-1/2 before:left-0 before:h-4 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:transition-colors ${
+                          className={`group relative -ml-px flex items-center gap-3 py-2 pr-2 pl-4 transition-all duration-300 before:absolute before:top-1/2 before:left-0 before:h-4 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:transition-colors ${
                             isEmBreve
-                              ? "cursor-not-allowed opacity-70 text-neutral-500" // Estilo bloqueado
+                              ? "cursor-not-allowed opacity-70 text-gray-400 dark:text-neutral-500" // Estilo bloqueado
                               : active
-                                ? "cursor-pointer font-medium text-emerald-400 before:bg-white hover:text-white"
-                                : "cursor-pointer text-neutral-400 before:bg-transparent hover:before:bg-neutral-500 hover:text-white"
+                                ? "cursor-pointer font-medium text-[#009966] dark:text-emerald-400 before:bg-[#009966] dark:before:bg-white hover:text-[#009966] dark:hover:text-white"
+                                : "cursor-pointer text-gray-500 dark:text-neutral-400 before:bg-transparent hover:before:bg-gray-300 dark:hover:before:bg-neutral-500 hover:text-gray-900 dark:hover:text-white"
                           }`}
                         >
                           <item.icon className="w-4 h-4 shrink-0" />
@@ -221,11 +221,11 @@ export function AlunoSidebar() {
 
               {/* FERRAMENTAS */}
               <SidebarGroup className="p-0 pb-10">
-                <SidebarGroupLabel className="mb-3 px-0 text-xs font-bold tracking-widest text-neutral-500 uppercase bg-transparent hover:bg-transparent">
+                <SidebarGroupLabel className="mb-3 px-0 text-xs font-bold tracking-widest text-gray-500 dark:text-neutral-500 uppercase bg-transparent hover:bg-transparent transition-colors duration-300">
                   Ferramentas
                 </SidebarGroupLabel>
                 <SidebarGroupContent>
-                  <ul className="ml-2 flex flex-col gap-1 border-l border-white/10 text-sm">
+                  <ul className="ml-2 flex flex-col gap-1 border-l border-gray-200 dark:border-white/10 text-sm transition-colors duration-300">
                     {navItems2.map((item) => {
                       const active = isActive(item.url);
                       const isEmBreve = item.status === "em_breve";
@@ -233,12 +233,12 @@ export function AlunoSidebar() {
                       // Mesma lógica de separação
                       const liContent = (
                         <li
-                          className={`group relative -ml-px flex items-center gap-3 py-2 pr-2 pl-4 transition-all duration-200 before:absolute before:top-1/2 before:left-0 before:h-4 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:transition-colors ${
+                          className={`group relative -ml-px flex items-center gap-3 py-2 pr-2 pl-4 transition-all duration-300 before:absolute before:top-1/2 before:left-0 before:h-4 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:transition-colors ${
                             isEmBreve
-                              ? "cursor-not-allowed opacity-70 text-neutral-500"
+                              ? "cursor-not-allowed opacity-70 text-gray-400 dark:text-neutral-500"
                               : active
-                                ? "cursor-pointer font-medium text-emerald-400 before:bg-white hover:text-white"
-                                : "cursor-pointer text-neutral-400 before:bg-transparent hover:before:bg-neutral-500 hover:text-white"
+                                ? "cursor-pointer font-medium text-[#009966] dark:text-emerald-400 before:bg-[#009966] dark:before:bg-white hover:text-[#009966] dark:hover:text-white"
+                                : "cursor-pointer text-gray-500 dark:text-neutral-400 before:bg-transparent hover:before:bg-gray-300 dark:hover:before:bg-neutral-500 hover:text-gray-900 dark:hover:text-white"
                           }`}
                         >
                           <item.icon className="w-4 h-4 shrink-0" />
@@ -266,38 +266,38 @@ export function AlunoSidebar() {
           <FloatingScrollbar />
         </SidebarContent>
 
-        <SidebarFooter className=" border-t border-neutral-900 bg-neutral-950 shrink-0">
+        <SidebarFooter className=" border-t border-gray-200 dark:border-neutral-900 bg-[#F8F9FA] dark:bg-neutral-950 shrink-0 transition-colors duration-300">
           {isPending ? (
             <div className="flex items-center gap-3 animate-pulse">
-              <div className="w-10 h-10 rounded-full bg-neutral-800" />
+              <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-neutral-800 transition-colors duration-300" />
               <div className="flex-1 space-y-2">
-                <span className="text-[10px] font-medium truncate pr-2">
+                <span className="text-[10px] font-medium truncate pr-2 text-gray-400 dark:text-neutral-500 transition-colors duration-300">
                   © 2026 +Aprovado. <br></br>Todos os direitos reservados.
                 </span>
               </div>
             </div>
           ) : user ? (
-            <div className="flex items-center p-1 justify-between text-neutral-400">
+            <div className="flex items-center p-1 justify-between text-gray-500 dark:text-neutral-400 transition-colors duration-300">
               <span className="text-[10px] font-medium truncate pr-2">
                 © 2026 +Aprovado. <br></br>Todos os direitos reservados.
               </span>
             </div>
           ) : (
             isLoginCardVisible && (
-              <div className="flex flex-col gap-3 p-4 bg-neutral-900/50 rounded-xl border border-neutral-800 animate-in fade-in zoom-in-95 duration-300">
+              <div className="flex flex-col gap-3 p-4 bg-gray-50 dark:bg-neutral-900/50 rounded-xl border border-gray-200 dark:border-neutral-800 animate-in fade-in zoom-in-95 transition-colors duration-300">
                 <div className="flex flex-col">
                   <div className="flex justify-between items-center">
-                    <span className="text-[13px] font-bold text-neutral-200">
+                    <span className="text-[13px] font-bold text-gray-900 dark:text-neutral-200 transition-colors duration-300">
                       Acesse sua conta
                     </span>
                     <button
                       onClick={handleDismissLoginCard}
-                      className="hover:bg-neutral-800 p-1 rounded-md transition-colors"
+                      className="hover:bg-gray-200 dark:hover:bg-neutral-800 p-1 rounded-md transition-colors duration-300"
                     >
-                      <X className="w-4 h-4 font-bold text-neutral-400 hover:text-white" />
+                      <X className="w-4 h-4 font-bold text-gray-400 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-300" />
                     </button>
                   </div>
-                  <span className="text-[11px] text-neutral-500 mt-1 leading-tight">
+                  <span className="text-[11px] text-gray-500 dark:text-neutral-500 mt-1 leading-tight transition-colors duration-300">
                     Faça login para salvar simulados e ver progresso.
                   </span>
                 </div>
@@ -305,15 +305,15 @@ export function AlunoSidebar() {
                 <div className="flex flex-col gap-2 mt-2">
                   <Link
                     href="/aluno"
-                    className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg transition-colors text-center shadow-sm"
+                    className="w-full py-2 bg-[#009966] hover:bg-emerald-500 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white text-xs font-bold rounded-lg transition-colors duration-300 text-center shadow-sm"
                   >
                     Entrar agora
                   </Link>
-                  <p className="text-[10px] text-center text-neutral-500 mt-1">
+                  <p className="text-[10px] text-center text-gray-500 dark:text-neutral-500 mt-1 transition-colors duration-300">
                     Não tem conta?{" "}
                     <Link
                       href="/aluno"
-                      className="text-emerald-500 hover:text-emerald-400 font-bold hover:underline"
+                      className="text-[#009966] dark:text-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 font-bold hover:underline transition-colors duration-300"
                     >
                       Cadastre-se
                     </Link>

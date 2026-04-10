@@ -8,12 +8,13 @@ import UpdatesNotification from "./UpdatesNotification";
 import UserNav from "./UserNav";
 import Grainient from "@/components/Grainient";
 import { HeaderMiniTimer } from "./HeaderMiniTimer";
+import { ThemeToggle } from "./ThemeToggle";
 
 export default function TopNavbar() {
   return (
     <div className="fixed top-0 left-0 right-0 z-90 flex flex-col">
       {/* --- BANNER (NOTICE) --- */}
-      <div className="relative flex h-9 items-center justify-center overflow-hidden bg-neutral-950 px-4">
+      <div className="relative flex h-9 items-center justify-center overflow-hidden bg-neutral-900 dark:bg-neutral-950 px-4 transition-colors duration-300">
         {/* BACKGROUND: Grainient */}
         <div className="absolute inset-0 z-0 opacity-30">
           <div style={{ width: "100%", height: "100%", position: "relative" }}>
@@ -57,7 +58,7 @@ export default function TopNavbar() {
       </div>
 
       {/* ADICIONADO "relative" AQUI NO HEADER */}
-      <header className="relative flex h-14 px-4 w-full justify-between items-center border-b border-neutral-800 bg-neutral-950/60 backdrop-blur-md transition-all duration-300">
+      <header className="relative flex h-14 px-4 w-full justify-between items-center border-b border-gray-200 dark:border-neutral-800 bg-white/60 dark:bg-neutral-950/60 backdrop-blur-md transition-all duration-300">
         {/* LADO ESQUERDO: Logo */}
         <div className="flex gap-12 ml-4">
           <Link
@@ -71,29 +72,23 @@ export default function TopNavbar() {
               height={35}
               alt="Logo +Aprovado"
             />
-            <span className="text-xl font-bold text-white tracking-tight leading-tight">
+            <span className="text-xl font-bold text-gray-900 dark:text-white tracking-tight leading-tight transition-colors duration-300">
               +Aprovado
             </span>
           </Link>
         </div>
 
-        {/* CENTRO: MiniTimer com Posição Absoluta */}
-        {/* Isto impede que ele empurre os itens da esquerda e da direita */}
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
           <HeaderMiniTimer />
         </div>
 
-        {/* LADO DIREITO: Ações */}
         <div className="flex justify-end gap-4 items-center">
+          <ThemeToggle />
           <UpdatesNotification />
-
           <UserNav />
-
           <SearchBar />
-
-          <div className="h-6 border-r border-neutral-800"></div>
-
-          <button className="inline-flex items-center justify-center gap-2 bg-neutral-100 hover:ring-2 active:scale-95 ring-neutral-300 duration-300 text-xs text-neutral-800 px-4 cursor-pointer py-2 rounded-xl font-bold transition-all">
+          <div className="h-6 border-r border-gray-200 dark:border-neutral-800 transition-colors duration-300"></div>
+          <button className="inline-flex items-center justify-center gap-2 bg-gray-900 dark:bg-neutral-100 hover:ring-2 active:scale-95 ring-gray-300 dark:ring-neutral-300 duration-300 text-xs text-white dark:text-neutral-800 px-4 cursor-pointer py-2 rounded-xl font-bold transition-all">
             Apoiar Projeto
           </button>
         </div>

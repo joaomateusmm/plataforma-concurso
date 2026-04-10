@@ -47,12 +47,12 @@ export default function UpdatesNotification() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={handleToggle}
-        className="relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-neutral-900 text-neutral-400 ring-neutral-700 duration-300 hover:text-white hover:ring-2 focus:outline-none active:scale-95"
+        className="relative flex h-8 w-8 shadow-sm cursor-pointer items-center justify-center rounded-full bg-gray-100 dark:bg-neutral-900 text-gray-500 dark:text-neutral-400 ring-gray-200 dark:ring-neutral-700 duration-300 hover:text-gray-900 dark:hover:text-white hover:ring-2 focus:outline-none active:scale-95 transition-all"
       >
         <Bell className="h-3.5 w-3.5" />
 
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-neutral-100 text-[10px] font-bold text-black shadow-[0_0_10px_rgba(99,102,241,0.5)]">
+          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#009966] dark:bg-neutral-100 text-[10px] font-bold text-white dark:text-black shadow-[0_0_10px_rgba(0,153,102,0.5)] dark:shadow-[0_0_10px_rgba(255,255,255,0.3)] transition-colors duration-300">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
@@ -61,18 +61,22 @@ export default function UpdatesNotification() {
       {/* DROPDOWN MENU */}
       {isOpen && (
         <div
-          className="animate-in fade-in slide-in-from-top-2 absolute right-0 z-100 mt-2 w-80 origin-top-right rounded-xl border border-neutral-800 bg-neutral-950 p-2 shadow-2xl"
+          className="animate-in fade-in slide-in-from-top-2 absolute right-0 z-100 mt-2 w-80 origin-top-right rounded-xl border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 p-2 shadow-2xl transition-colors duration-300"
           data-lenis-prevent="true"
         >
-          <div className="mb-2 flex items-center justify-between border-b border-neutral-800 px-3 py-2">
-            <h3 className="font-semibold text-white">Changelog</h3>
-            <span className="text-xs text-neutral-500">Last Updates</span>
+          <div className="mb-2 flex items-center justify-between border-b border-gray-200 dark:border-neutral-800 px-3 py-2 transition-colors duration-300">
+            <h3 className="font-semibold text-gray-900 dark:text-white transition-colors duration-300">
+              Changelog
+            </h3>
+            <span className="text-xs text-gray-500 dark:text-neutral-500 transition-colors duration-300">
+              Last Updates
+            </span>
           </div>
 
           {/* ÁREA COM SCROLL ATIVO */}
-          <div className="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-neutral-800 max-h-87.5 overflow-y-auto overscroll-contain pr-1">
+          <div className="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-200 dark:scrollbar-thumb-neutral-800 max-h-87.5 overflow-y-auto overscroll-contain pr-1 transition-colors duration-300">
             {updates.length === 0 ? (
-              <div className="p-4 text-center text-sm text-neutral-500">
+              <div className="p-4 text-center text-sm text-gray-500 dark:text-neutral-500 transition-colors duration-300">
                 Nenhuma atualização recente.
               </div>
             ) : (
@@ -81,13 +85,13 @@ export default function UpdatesNotification() {
                 {updates.map((update) => (
                   <div
                     key={update.id}
-                    className="flex flex-col rounded-lg p-3 transition-colors hover:bg-neutral-900/50"
+                    className="flex flex-col rounded-lg p-3 transition-colors duration-300 hover:bg-gray-50 dark:hover:bg-neutral-900/50"
                   >
                     <div className="mb-3 flex items-center justify-between">
-                      <span className="rounded bg-indigo-400/10 px-2 py-0.5 text-xs font-bold text-indigo-400">
+                      <span className="rounded bg-indigo-50 dark:bg-indigo-400/10 px-2 py-0.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 transition-colors duration-300">
                         {update.version}
                       </span>
-                      <span className="text-[10px] text-neutral-500">
+                      <span className="text-[10px] text-gray-500 dark:text-neutral-500 transition-colors duration-300">
                         {new Date(update.createdAt).toLocaleDateString(
                           "pt-BR",
                           {
@@ -98,10 +102,10 @@ export default function UpdatesNotification() {
                         )}
                       </span>
                     </div>
-                    <h4 className="mb-2 text-sm font-medium text-neutral-200">
+                    <h4 className="mb-2 text-sm font-medium text-gray-900 dark:text-neutral-200 transition-colors duration-300">
                       {update.title}
                     </h4>
-                    <p className="text-xs leading-relaxed text-neutral-400">
+                    <p className="text-xs leading-relaxed text-gray-600 dark:text-neutral-400 transition-colors duration-300">
                       {update.description}
                     </p>
                   </div>

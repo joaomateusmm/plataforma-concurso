@@ -103,7 +103,7 @@ export default function BackgroundDoodles() {
       </motion.svg>
 
       <motion.svg
-        className="absolute top-[5%] md:top-[30%] right-[5%] md:right-[-15%] w-16 h-16 md:w-24 md:h-24 text-[#009966] -rotate-200"
+        className="absolute top-[5%] md:top-[38%] right-[5%] md:right-[-15%] w-16 h-16 md:w-24 md:h-24 text-[#009966] -rotate-200"
         viewBox="0 0 100 100"
         fill="none"
         stroke="currentColor"

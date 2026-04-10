@@ -173,8 +173,8 @@ function ConcursoCard({
             sizes="(max-width: 768px) 100vw, 350px"
             className="object-cover object-center"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-transparent via-neutral-900/40 to-neutral-900" />
-          <div className="absolute inset-0 bg-gradient-to-r from-neutral-900 via-neutral-900/40 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-t from-transparent via-neutral-900/40 to-neutral-900" />
+          <div className="absolute inset-0 bg-linear-to-r from-neutral-900 via-neutral-900/40 to-transparent" />
         </div>
       )}
 

@@ -13,14 +13,14 @@ export default function AlunoLayout({
   return (
     <TimerProvider>
       <SidebarProvider>
-        <div className="flex min-h-screen w-full bg-[#070707]">
+        <div className="flex min-h-screen w-full bg-[#F8F9FA] dark:bg-[#070707] transition-colors duration-300">
           <TopNavbar />
 
           <AlunoSidebar />
           <div className="flex-1 flex flex-col overflow-hidden">
-            <header className="h-14 border-b border-neutral-800 bg-neutral-950 flex items-center px-4 lg:hidden mt-23">
-              <SidebarTrigger className="text-neutral-400 hover:text-emerald-500" />
-              <span className="ml-4 font-bold text-neutral-200">
+            <header className="h-14 border-b border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 flex items-center px-4 lg:hidden mt-23 transition-colors duration-300">
+              <SidebarTrigger className="text-gray-500 dark:text-neutral-400 hover:text-[#009966] dark:hover:text-[#009966] transition-colors duration-300" />
+              <span className="ml-4 font-bold text-gray-900 dark:text-neutral-200 transition-colors duration-300">
                 Área do Aluno
               </span>
             </header>
