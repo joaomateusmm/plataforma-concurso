@@ -171,9 +171,9 @@ export default function ProvaClient({ simulado, questoes }: ProvaClientProps) {
   return (
     <div
       data-lenis-prevent={isFocusMode ? "true" : undefined}
-      className={`text-neutral-300 font-sans pb-24 transition-all duration-300 ${
+      className={`text-gray-900 dark:text-neutral-300 font-sans pb-24 transition-all duration-300 ${
         isFocusMode
-          ? "fixed inset-0 z-100 bg-[#070707] overflow-y-auto h-dvh w-full"
+          ? "fixed inset-0 z-[100] bg-white dark:bg-[#070707] overflow-y-auto h-dvh w-full"
           : "min-h-screen"
       }`}
     >
@@ -275,7 +275,7 @@ function ProvaHeader({
   toggleMap,
 }: any) {
   return (
-    <header className="sticky top-0 z-40 border-b border-neutral-800 rounded-t-2xl bg-neutral-950/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 border-b border-gray-200 dark:border-neutral-800 rounded-t-2xl bg-white/80 dark:bg-neutral-950/80 backdrop-blur-xl transition-colors duration-300">
       {isFocusMode && (
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
           <HeaderMiniTimer />
@@ -287,12 +287,12 @@ function ProvaHeader({
           <div className="flex items-center gap-3">
             <button
               onClick={onBack}
-              className="p-2 hover:bg-neutral-800 rounded-lg transition-colors text-neutral-400 hover:text-white"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-lg transition-colors duration-300 text-gray-500 hover:text-gray-900 dark:text-neutral-400 dark:hover:text-white"
               title={isFocusMode ? "Sair do Modo Foco" : "Voltar"}
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <h1 className="text-lg font-bold text-white tracking-tight hidden sm:block">
+            <h1 className="text-lg font-bold text-gray-900 dark:text-white tracking-tight hidden sm:block transition-colors duration-300">
               {titulo}
             </h1>
           </div>
@@ -302,10 +302,10 @@ function ProvaHeader({
             <button
               onClick={toggleMap}
               title={isMapVisible ? "Ocultar Mapa" : "Mostrar Mapa"}
-              className={`inline-flex items-center gap-1.5 rounded-md cursor-pointer border px-2.5 py-1.5 text-xs font-bold transition-colors ${
+              className={`inline-flex items-center gap-1.5 rounded-md cursor-pointer border px-2.5 py-1.5 text-xs font-bold transition-colors duration-300 ${
                 !isMapVisible
-                  ? "bg-white border-neutral-300 text-neutral-950"
-                  : "bg-neutral-900 border-neutral-700 text-neutral-300 hover:bg-neutral-500/20"
+                  ? "bg-gray-900 border-gray-900 text-white dark:bg-white dark:border-neutral-300 dark:text-neutral-950 hover:bg-gray-800 dark:hover:bg-gray-100"
+                  : "bg-gray-100 border-gray-200 text-gray-700 hover:bg-gray-200 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-500/20"
               }`}
             >
               <BarChart3 className="h-3.5 w-3.5" />
@@ -316,10 +316,10 @@ function ProvaHeader({
             <button
               onClick={toggleFocusMode}
               title={isFocusMode ? "Sair do Modo Foco" : "Ativar Modo Foco"}
-              className={`inline-flex items-center gap-1.5 rounded-md cursor-pointer border px-2.5 py-1.5 text-xs font-bold transition-colors ${
+              className={`inline-flex items-center gap-1.5 rounded-md cursor-pointer border px-2.5 py-1.5 text-xs font-bold transition-colors duration-300 ${
                 isFocusMode
-                  ? "bg-white border-neutral-300 text-neutral-950"
-                  : "bg-neutral-900 border-neutral-700 text-neutral-300 hover:bg-neutral-500/20"
+                  ? "bg-gray-900 border-gray-900 text-white dark:bg-white dark:border-neutral-300 dark:text-neutral-950 hover:bg-gray-800 dark:hover:bg-gray-100"
+                  : "bg-gray-100 border-gray-200 text-gray-700 hover:bg-gray-200 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-500/20"
               }`}
             >
               <ScanEye className="h-3.5 w-3.5" />
@@ -332,15 +332,21 @@ function ProvaHeader({
               <button
                 onClick={onAutoTest}
                 title="Auto Completar para Testes"
-                className="inline-flex items-center gap-1.5 rounded-md cursor-pointer bg-neutral-900 border border-neutral-700 px-2.5 py-1.5 text-xs font-bold text-neutral-300 hover:bg-neutral-500/20 transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-md cursor-pointer bg-gray-100 dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 px-2.5 py-1.5 text-xs font-bold text-gray-700 dark:text-neutral-300 hover:bg-gray-200 dark:hover:bg-neutral-500/20 transition-colors duration-300"
               >
                 <TriangleAlert className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Marcar Tudo</span>
               </button>
             )}
-            <span className="text-neutral-500">|</span>
+            <span className="text-gray-300 dark:text-neutral-500 transition-colors duration-300">
+              |
+            </span>
             <span
-              className={` py-1.5 rounded-lg text-xs font-bold  ${isConcluido ? " text-emerald-400 " : " text-neutral-300 "}`}
+              className={`py-1.5 rounded-lg text-xs font-bold transition-colors duration-300 ${
+                isConcluido
+                  ? "text-[#009966] dark:text-emerald-400"
+                  : "text-gray-700 dark:text-neutral-300"
+              }`}
             >
               {isConcluido ? "Gabarito" : "Prova"}
             </span>
@@ -349,13 +355,13 @@ function ProvaHeader({
 
         {/* Progress Bar */}
         <div className="flex items-center gap-3">
-          <div className="h-1.5 flex-1 bg-neutral-800 rounded-full overflow-hidden">
+          <div className="h-1.5 flex-1 bg-gray-200 dark:bg-neutral-800 rounded-full overflow-hidden transition-colors duration-300">
             <div
-              className="h-full bg-emerald-500 transition-all duration-500 ease-out"
+              className="h-full bg-[#009966] dark:bg-emerald-500 transition-all duration-500 ease-out"
               style={{ width: `${progressPercentage}%` }}
             />
           </div>
-          <span className="text-xs font-bold text-neutral-500 min-w-12.5 text-right">
+          <span className="text-xs font-bold text-gray-500 dark:text-neutral-500 min-w-12.5 text-right transition-colors duration-300">
             {answeredCount} / {totalCount}
           </span>
         </div>
@@ -368,38 +374,44 @@ function ResultDashboard({ acertos, totalCount }: any) {
   const taxa = Math.round((acertos / totalCount) * 100);
   const erros = totalCount - acertos;
   return (
-    <div className="mb-8 p-8 border border-neutral-800 rounded-3xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden">
-      <div className="absolute inset-0 bg-linear-to-br from-emerald-500/5 to-transparent pointer-events-none" />
+    <div className="mb-8 p-8 border border-gray-200 dark:border-neutral-800 rounded-3xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden bg-white dark:bg-transparent transition-colors duration-300">
+      <div className="absolute inset-0 bg-gradient-to-br from-[#009966]/5 dark:from-emerald-500/5 to-transparent pointer-events-none transition-colors duration-300" />
       <div className="relative z-10 text-center md:text-left">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 font-bold text-sm border border-emerald-500/20 mb-4">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#009966]/10 dark:bg-emerald-500/10 text-[#009966] dark:text-emerald-400 font-bold text-sm border border-[#009966]/20 dark:border-emerald-500/20 mb-4 transition-colors duration-300">
           <Award className="w-4 h-4" /> Simulado Finalizado
         </div>
-        <h2 className="text-3xl font-extrabold text-white mb-2">
+        <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white mb-2 transition-colors duration-300">
           Seu Desempenho
         </h2>
-        <p className="text-neutral-400">
+        <p className="text-gray-500 dark:text-neutral-400 transition-colors duration-300">
           Revise as suas respostas abaixo e veja onde precisa melhorar.
         </p>
       </div>
       <div className="relative z-10 flex gap-4 w-full md:w-auto">
-        <div className="flex-1 md:w-32 bg-neutral-950 border border-neutral-800 rounded-2xl p-4 text-center">
-          <CheckCircle2 className="w-6 h-6 text-emerald-500 mx-auto mb-2" />
-          <p className="text-2xl font-black text-white">{acertos}</p>
-          <p className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
+        <div className="flex-1 md:w-32 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-2xl p-4 text-center transition-colors duration-300">
+          <CheckCircle2 className="w-6 h-6 text-[#009966] dark:text-emerald-500 mx-auto mb-2 transition-colors duration-300" />
+          <p className="text-2xl font-black text-gray-900 dark:text-white transition-colors duration-300">
+            {acertos}
+          </p>
+          <p className="text-xs font-bold text-gray-500 dark:text-neutral-500 uppercase tracking-wider transition-colors duration-300">
             Acertos
           </p>
         </div>
-        <div className="flex-1 md:w-32 bg-neutral-950 border border-neutral-800 rounded-2xl p-4 text-center">
-          <XCircle className="w-6 h-6 text-red-500 mx-auto mb-2" />
-          <p className="text-2xl font-black text-white">{erros}</p>
-          <p className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
+        <div className="flex-1 md:w-32 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-2xl p-4 text-center transition-colors duration-300">
+          <XCircle className="w-6 h-6 text-red-600 dark:text-red-500 mx-auto mb-2 transition-colors duration-300" />
+          <p className="text-2xl font-black text-gray-900 dark:text-white transition-colors duration-300">
+            {erros}
+          </p>
+          <p className="text-xs font-bold text-gray-500 dark:text-neutral-500 uppercase tracking-wider transition-colors duration-300">
             Erros
           </p>
         </div>
-        <div className="flex-1 md:w-32 bg-neutral-950 border border-neutral-800 rounded-2xl p-4 text-center">
-          <Target className="w-6 h-6 text-blue-500 mx-auto mb-2" />
-          <p className="text-2xl font-black text-white">{taxa}%</p>
-          <p className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
+        <div className="flex-1 md:w-32 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-2xl p-4 text-center transition-colors duration-300">
+          <Target className="w-6 h-6 text-blue-600 dark:text-blue-500 mx-auto mb-2 transition-colors duration-300" />
+          <p className="text-2xl font-black text-gray-900 dark:text-white transition-colors duration-300">
+            {taxa}%
+          </p>
+          <p className="text-xs font-bold text-gray-500 dark:text-neutral-500 uppercase tracking-wider transition-colors duration-300">
             Taxa
           </p>
         </div>
@@ -423,36 +435,38 @@ function QuestionCard({
   setMarked, // Recebemos a prop
 }: any) {
   return (
-    <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-sm">
-      <div className="flex flex-wrap items-center gap-2 mb-8 pb-6 border-b border-neutral-800">
-        <div className="text-[10px] font-bold uppercase bg-neutral-950 border border-neutral-800 text-neutral-400 px-2.5 py-1.5 rounded-full">
+    <div className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-sm transition-colors duration-300">
+      <div className="flex flex-wrap items-center gap-2 mb-8 pb-6 border-b border-gray-200 dark:border-neutral-800 transition-colors duration-300">
+        <div className="text-[10px] font-bold uppercase bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 text-gray-500 dark:text-neutral-400 px-2.5 py-1.5 rounded-full transition-colors duration-300">
           {currentIndex + 1}
         </div>
-        <span className="text-neutral-800">|</span>
+        <span className="text-gray-300 dark:text-neutral-800 transition-colors duration-300">
+          |
+        </span>
         {questaoAtual.bancaNome && (
-          <span className="text-[10px] font-bold uppercase bg-neutral-950 border border-neutral-800 text-neutral-400 px-2.5 py-1.5 rounded-lg">
+          <span className="text-[10px] font-bold uppercase bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 text-gray-500 dark:text-neutral-400 px-2.5 py-1.5 rounded-lg transition-colors duration-300">
             {questaoAtual.bancaNome}
           </span>
         )}
         {questaoAtual.materiaNome && (
-          <span className="text-[10px] font-bold uppercase bg-neutral-950 border border-neutral-800 text-neutral-400 px-2.5 py-1.5 rounded-lg">
+          <span className="text-[10px] font-bold uppercase bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 text-gray-500 dark:text-neutral-400 px-2.5 py-1.5 rounded-lg transition-colors duration-300">
             {questaoAtual.materiaNome}
           </span>
         )}
-        <span className="text-[10px] font-bold uppercase bg-neutral-950 border border-neutral-800 text-neutral-400 px-2.5 py-1.5 rounded-lg">
+        <span className="text-[10px] font-bold uppercase bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 text-gray-500 dark:text-neutral-400 px-2.5 py-1.5 rounded-lg transition-colors duration-300">
           {questaoAtual.tipo}
         </span>
       </div>
 
       {questaoAtual.textoApoio && (
-        <div className="mb-8 p-5 bg-neutral-950 border-l-4 border-emerald-500/50 rounded-r-xl">
-          <p className="text-sm text-neutral-400 leading-relaxed whitespace-pre-wrap italic">
+        <div className="mb-8 p-5 bg-gray-50 dark:bg-neutral-950 border-l-4 border-[#009966]/50 dark:border-emerald-500/50 rounded-r-xl transition-colors duration-300">
+          <p className="text-sm text-gray-600 dark:text-neutral-400 leading-relaxed whitespace-pre-wrap italic transition-colors duration-300">
             {questaoAtual.textoApoio}
           </p>
         </div>
       )}
 
-      <p className="text-lg sm:text-lg font-medium text-white leading-relaxed mb-8">
+      <p className="text-lg sm:text-lg font-medium text-gray-900 dark:text-white leading-relaxed mb-8 transition-colors duration-300">
         {questaoAtual.enunciado}
       </p>
 
@@ -471,28 +485,28 @@ function QuestionCard({
           const isMarked = currentMarked.includes(opcao);
 
           let cardClass =
-            "border border-neutral-800 bg-neutral-950 text-neutral-300 border-l-[6px] border-l-transparent hover:border-l-neutral-700 hover:bg-neutral-900";
+            "border border-gray-200 dark:border-neutral-800 bg-gray-50 dark:bg-neutral-950 text-gray-700 dark:text-neutral-300 border-l-[6px] border-l-transparent hover:border-l-gray-300 dark:hover:border-l-neutral-700 hover:bg-gray-100 dark:hover:bg-neutral-900";
 
           if (isConcluido) {
             if (isGabaritoCorreto)
               cardClass =
-                "border border-emerald-500/20 bg-emerald-500/5 text-emerald-300 border-l-[6px] border-l-emerald-500";
+                "border border-[#009966]/20 dark:border-emerald-500/20 bg-[#009966]/5 dark:bg-emerald-500/5 text-[#009966] dark:text-emerald-300 border-l-[6px] border-l-[#009966] dark:border-l-emerald-500";
             else if (isGabaritoErrado)
               cardClass =
-                "border border-red-500/20 bg-red-500/5 text-red-300 border-l-[6px] border-l-red-500";
+                "border border-red-500/20 bg-red-500/5 text-red-600 dark:text-red-300 border-l-[6px] border-l-red-600 dark:border-l-red-500";
             else
               cardClass =
-                "border border-neutral-800 bg-neutral-950/30 opacity-40 text-neutral-600 border-l-[6px] border-l-transparent";
+                "border border-gray-200 dark:border-neutral-800 bg-gray-100 dark:bg-neutral-950/30 opacity-60 dark:opacity-40 text-gray-500 dark:text-neutral-600 border-l-[6px] border-l-transparent";
           } else {
             if (isSelected)
               cardClass =
-                "border border-white/80 bg-neutral-950 text-white border-l-[6px] border-l-white/80";
+                "border border-gray-400 dark:border-white/80 bg-white dark:bg-neutral-950 text-gray-900 dark:text-white border-l-[6px] border-l-gray-500 dark:border-l-white/80 shadow-sm";
             else if (isEliminated)
               cardClass =
-                "border border-neutral-800 bg-neutral-950/50 opacity-40 hover:opacity-60 text-neutral-500 border-l-[6px] border-l-red-900/50";
+                "border border-gray-200 dark:border-neutral-800 bg-gray-100 dark:bg-neutral-950/50 opacity-50 dark:opacity-40 hover:opacity-70 dark:hover:opacity-60 text-gray-400 dark:text-neutral-500 border-l-[6px] border-l-red-200 dark:border-l-red-900/50";
             else if (isMarked)
               cardClass =
-                "border border-blue-900/50 bg-neutral-950 text-neutral-200 border-l-[6px] border-l-blue-500";
+                "border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-neutral-950 text-blue-800 dark:text-neutral-200 border-l-[6px] border-l-blue-400 dark:border-l-blue-500";
           }
 
           return (
@@ -532,16 +546,16 @@ function QuestionCard({
                   }
                 }
               }}
-              className={`group relative flex items-center justify-between gap-4 py-3 px-5 sm:px-6 rounded-xl transition-all w-full cursor-pointer ${cardClass} ${isConcluido ? "cursor-default" : ""}`}
+              className={`group relative flex items-center justify-between gap-4 py-3 px-5 sm:px-6 rounded-xl transition-all duration-300 w-full cursor-pointer ${cardClass} ${isConcluido ? "cursor-default" : ""}`}
             >
               <span
-                className={`text-[14.5px] leading-relaxed flex-1 py-1 ${isEliminated && !isSelected ? "line-through opacity-70 text-neutral-400" : ""}`}
+                className={`text-[14.5px] leading-relaxed flex-1 py-1 transition-colors duration-300 ${isEliminated && !isSelected ? "line-through opacity-70 text-gray-400 dark:text-neutral-400" : ""}`}
               >
                 {opcao}
               </span>
               <div className="flex items-center gap-1 shrink-0 ml-2">
                 {!isConcluido && (
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity sm:border-l sm:border-neutral-800 sm:pl-2">
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 sm:border-l sm:border-gray-200 dark:sm:border-neutral-800 sm:pl-2">
                     {/* BOTÃO DÚVIDA (AZUL) */}
                     <button
                       type="button"
@@ -561,7 +575,7 @@ function QuestionCard({
 
                         onToggleMarked(questaoAtual.sqId, opcao);
                       }}
-                      className={`rounded-lg p-2 transition-all ${isMarked ? "bg-blue-500/20 text-blue-500 hover:bg-blue-500/30" : "text-neutral-500 hover:bg-neutral-800 hover:text-blue-400"}`}
+                      className={`rounded-lg p-2 transition-all duration-300 ${isMarked ? "bg-blue-100 text-blue-600 hover:bg-blue-200 dark:bg-blue-500/20 dark:text-blue-500 dark:hover:bg-blue-500/30" : "text-gray-400 hover:bg-gray-200 hover:text-blue-600 dark:text-neutral-500 dark:hover:bg-neutral-800 dark:hover:text-blue-400"}`}
                       title="Marcar como possível resposta"
                     >
                       <AlertCircle size={16} strokeWidth={isMarked ? 2.5 : 2} />
@@ -586,7 +600,7 @@ function QuestionCard({
 
                         onToggleEliminated(questaoAtual.sqId, opcao);
                       }}
-                      className={`rounded-lg p-2 transition-all ${isEliminated ? "bg-red-500/20 text-red-500 hover:bg-red-500/30" : "text-neutral-500 hover:bg-neutral-800 hover:text-red-400"}`}
+                      className={`rounded-lg p-2 transition-all duration-300 ${isEliminated ? "bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-500/20 dark:text-red-500 dark:hover:bg-red-500/30" : "text-gray-400 hover:bg-gray-200 hover:text-red-600 dark:text-neutral-500 dark:hover:bg-neutral-800 dark:hover:text-red-400"}`}
                       title="Eliminar esta alternativa"
                     >
                       <XCircle size={16} strokeWidth={isEliminated ? 2.5 : 2} />
@@ -594,13 +608,13 @@ function QuestionCard({
                   </div>
                 )}
                 {isConcluido && isGabaritoCorreto && (
-                  <div className="p-1 rounded-full bg-emerald-500/20 ml-2">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                  <div className="p-1 rounded-full bg-[#009966]/20 dark:bg-emerald-500/20 ml-2 transition-colors duration-300">
+                    <CheckCircle2 className="w-5 h-5 text-[#009966] dark:text-emerald-500 transition-colors duration-300" />
                   </div>
                 )}
                 {isConcluido && isGabaritoErrado && (
-                  <div className="p-1 rounded-full bg-red-500/20 ml-2">
-                    <XCircle className="w-5 h-5 text-red-500" />
+                  <div className="p-1 rounded-full bg-red-100 dark:bg-red-500/20 ml-2 transition-colors duration-300">
+                    <XCircle className="w-5 h-5 text-red-600 dark:text-red-500 transition-colors duration-300" />
                   </div>
                 )}
               </div>
@@ -616,24 +630,24 @@ function QuestionCard({
               value={respostas[questaoAtual.sqId] || ""}
               onChange={(e) => onSelectOption(e.target.value)}
               placeholder="Digite a sua resposta discursiva..."
-              className="w-full p-5 bg-neutral-950 border border-neutral-800 rounded-2xl text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 resize-none h-48 placeholder:text-neutral-600"
+              className="w-full p-5 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-2xl text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#009966] dark:focus:ring-emerald-500 resize-none h-48 placeholder:text-gray-400 dark:placeholder:text-neutral-600 transition-colors duration-300"
             />
           ) : (
             <div className="space-y-4">
-              <div className="p-5 bg-neutral-950 border border-neutral-800 rounded-2xl opacity-70">
-                <p className="text-xs text-neutral-500 mb-2 font-bold uppercase tracking-wider">
+              <div className="p-5 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-2xl opacity-80 dark:opacity-70 transition-colors duration-300">
+                <p className="text-xs text-gray-500 dark:text-neutral-500 mb-2 font-bold uppercase tracking-wider transition-colors duration-300">
                   Sua Resposta
                 </p>
-                <p className="text-sm text-neutral-300">
+                <p className="text-sm text-gray-700 dark:text-neutral-300 transition-colors duration-300">
                   {respostas[questaoAtual.sqId] || "Deixada em branco."}
                 </p>
               </div>
-              <div className="p-5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl">
-                <p className="text-xs text-emerald-500 mb-2 font-bold uppercase tracking-wider flex items-center gap-2">
+              <div className="p-5 bg-[#009966]/5 dark:bg-emerald-500/10 border border-[#009966]/20 dark:border-emerald-500/20 rounded-2xl transition-colors duration-300">
+                <p className="text-xs text-[#009966] dark:text-emerald-500 mb-2 font-bold uppercase tracking-wider flex items-center gap-2 transition-colors duration-300">
                   <CheckCircle2 className="w-4 h-4" /> Padrão Esperado
                   (Gabarito)
                 </p>
-                <p className="text-sm text-emerald-100">
+                <p className="text-sm text-gray-800 dark:text-emerald-100 transition-colors duration-300">
                   {questaoAtual.itemCorreto}
                 </p>
               </div>
@@ -659,7 +673,7 @@ function NavigationButtons({
       <button
         onClick={onPrev}
         disabled={currentIndex === 0}
-        className="inline-flex items-center gap-2 rounded-xl border border-neutral-800 bg-neutral-900 px-5 py-3.5 text-sm font-bold text-white transition-all hover:bg-neutral-800 active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none"
+        className="inline-flex items-center gap-2 rounded-xl border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 px-5 py-3.5 text-sm font-bold text-gray-700 dark:text-white transition-all duration-300 hover:bg-gray-50 dark:hover:bg-neutral-800 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none shadow-sm dark:shadow-none"
       >
         <ChevronLeft className="h-4 w-4" /> Anterior
       </button>
@@ -667,7 +681,7 @@ function NavigationButtons({
         <button
           onClick={onSkip}
           disabled={isUltimaQuestao}
-          className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-neutral-800 bg-neutral-900 px-5 py-3.5 text-sm font-bold text-neutral-400 transition-all hover:text-white hover:bg-neutral-800 active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none"
+          className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 px-5 py-3.5 text-sm font-bold text-gray-500 dark:text-neutral-400 transition-all duration-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-neutral-800 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none shadow-sm dark:shadow-none"
         >
           <SkipForward className="h-4 w-4" /> Pular
         </button>
@@ -675,7 +689,7 @@ function NavigationButtons({
       <button
         onClick={onNext}
         disabled={isUltimaQuestao}
-        className="inline-flex items-center gap-2 rounded-xl border border-neutral-800 bg-neutral-900 px-5 py-3.5 text-sm font-bold text-white transition-all hover:bg-neutral-800 active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none"
+        className="inline-flex items-center gap-2 rounded-xl border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 px-5 py-3.5 text-sm font-bold text-gray-700 dark:text-white transition-all duration-300 hover:bg-gray-50 dark:hover:bg-neutral-800 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none shadow-sm dark:shadow-none"
       >
         Próxima <ChevronRight className="h-4 w-4" />
       </button>
@@ -692,62 +706,68 @@ function QuestionMap({
   onClose, // <-- PROP RECEBIDA AQUI PARA FECHAR O MAPA
 }: any) {
   return (
-    <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-sm">
-      <div className="flex items-center justify-between gap-2 mb-6 pb-4 border-b border-neutral-800">
+    <div className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-3xl p-6 shadow-sm transition-colors duration-300">
+      <div className="flex items-center justify-between gap-2 mb-6 pb-4 border-b border-gray-200 dark:border-neutral-800 transition-colors duration-300">
         <div className="flex items-center gap-1">
-          <BarChart3 className="w-4 h-4 text-neutral-400" />
-          <h3 className="font-bold text-white">Mapa da Prova</h3>
+          <BarChart3 className="w-4 h-4 text-gray-500 dark:text-neutral-400 transition-colors duration-300" />
+          <h3 className="font-bold text-gray-900 dark:text-white transition-colors duration-300">
+            Mapa da Prova
+          </h3>
         </div>
         {/* BOTÃO X AGORA COM A FUNÇÃO ONCLOSE */}
         <Button
           onClick={onClose}
-          className="w-8 h-8 rounded-full bg-neutral-950 cursor-pointer border-neutral-800 border hover:bg-neutral-800"
+          className="w-8 h-8 rounded-full bg-gray-50 dark:bg-neutral-950 cursor-pointer border-gray-200 dark:border-neutral-800 border hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors duration-300"
         >
-          <X className="w-4 h-4 text-neutral-400" />
+          <X className="w-4 h-4 text-gray-500 dark:text-neutral-400 transition-colors duration-300" />
         </Button>
       </div>
       <div className="grid grid-cols-5 sm:grid-cols-8 lg:grid-cols-6 gap-1">
         {questoes.map((q: any, idx: number) => {
           const estaRespondida = !!respostas[q.sqId];
           let btnClass =
-            "bg-neutral-950 text-neutral-500 border-neutral-800 hover:border-neutral-600";
+            "bg-gray-50 dark:bg-neutral-950 text-gray-500 dark:text-neutral-500 border-gray-200 dark:border-neutral-800 hover:border-gray-300 dark:hover:border-neutral-600";
           if (isConcluido)
             btnClass = q.isCorreta
-              ? "bg-emerald-500/20 text-emerald-500 border-emerald-500/30"
-              : "bg-red-500/20 text-red-500 border-red-500/30";
-          else if (estaRespondida) btnClass = "bg-white/50 text-black";
-          if (currentIndex === idx) btnClass += " ring-1 ring-neutral-400";
+              ? "bg-[#009966]/10 dark:bg-emerald-500/20 text-[#009966] dark:text-emerald-500 border-[#009966]/20 dark:border-emerald-500/30"
+              : "bg-red-50 dark:bg-red-500/20 text-red-600 dark:text-red-500 border-red-200 dark:border-red-500/30";
+          else if (estaRespondida)
+            btnClass =
+              "bg-gray-800 dark:bg-white/50 text-white dark:text-black border-gray-800 dark:border-white/50";
+          if (currentIndex === idx)
+            btnClass +=
+              " ring-2 ring-gray-400 dark:ring-neutral-400 ring-offset-1 dark:ring-offset-neutral-900";
           return (
             <button
               key={q.sqId}
               onClick={() => onSelectQuestion(idx)}
-              className={`aspect-square rounded-sm text-xs font-black border flex items-center justify-center transition-all ${btnClass}`}
+              className={`aspect-square rounded-sm text-xs font-black border flex items-center justify-center transition-all duration-300 ${btnClass}`}
             >
               {idx + 1}
             </button>
           );
         })}
       </div>
-      <div className="mt-8 flex flex-col gap-3 text-xs font-bold text-neutral-500">
+      <div className="mt-8 flex flex-col gap-3 text-xs font-bold text-gray-500 dark:text-neutral-500 transition-colors duration-300">
         {isConcluido ? (
           <>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded bg-emerald-500/20 border border-emerald-500/30" />{" "}
+              <div className="w-3 h-3 rounded bg-[#009966]/10 dark:bg-emerald-500/20 border border-[#009966]/20 dark:border-emerald-500/30 transition-colors duration-300" />{" "}
               Acertos
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded bg-red-500/20 border border-red-500/30" />{" "}
+              <div className="w-3 h-3 rounded bg-red-50 dark:bg-red-500/20 border border-red-200 dark:border-red-500/30 transition-colors duration-300" />{" "}
               Erros
             </div>
           </>
         ) : (
           <>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded bg-white/70 border border-white" />{" "}
+              <div className="w-3 h-3 rounded bg-gray-800 dark:bg-white/70 border border-gray-800 dark:border-white transition-colors duration-300" />{" "}
               Respondidas
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded bg-neutral-950 border border-neutral-800" />{" "}
+              <div className="w-3 h-3 rounded bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 transition-colors duration-300" />{" "}
               Pendentes
             </div>
           </>
@@ -768,7 +788,7 @@ function FinalizeButton({
       <button
         onClick={onFinalizar}
         disabled={isSubmitting || !allAnswered}
-        className={`w-full rounded-2xl p-3 mb-1 text-sm md:text-base font-extrabold transition-all duration-200 flex items-center justify-center gap-3 shadow-lg ${allAnswered ? "bg-emerald-600 text-white hover:bg-emerald-500 shadow-emerald-900/30 hover:shadow-emerald-900/50 active:scale-[0.99]" : "bg-neutral-900 text-neutral-500 border border-neutral-800 cursor-not-allowed shadow-none"}`}
+        className={`w-full rounded-2xl p-3 mb-1 text-sm md:text-base font-extrabold transition-all duration-300 flex items-center justify-center gap-3 shadow-sm ${allAnswered ? "bg-[#009966] dark:bg-emerald-600 text-white hover:bg-[#007a52] dark:hover:bg-emerald-500 shadow-[#009966]/20 dark:shadow-emerald-900/30 hover:shadow-[#009966]/30 dark:hover:shadow-emerald-900/50 active:scale-[0.99]" : "bg-gray-100 dark:bg-neutral-900 text-gray-400 dark:text-neutral-500 border border-gray-200 dark:border-neutral-800 cursor-not-allowed shadow-none"}`}
       >
         {isSubmitting ? (
           <Loader2 className="w-4 h-4 animate-spin" />
@@ -777,7 +797,7 @@ function FinalizeButton({
         )}
         {isSubmitting ? "Corrigindo prova..." : "Finalizar Prova"}
       </button>
-      <p className="text-center text-xs text-neutral-500 mt-2">
+      <p className="text-center text-xs text-gray-500 dark:text-neutral-500 mt-2 transition-colors duration-300">
         ({remainingCount} questões restante{remainingCount !== 1 ? "s" : ""})
       </p>
     </div>

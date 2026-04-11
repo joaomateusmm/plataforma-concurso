@@ -65,18 +65,18 @@ export default async function NovoSimuladoPage() {
     <div className="mx-auto space-y-8 animate-in fade-in duration-500 mt-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-3xl font-bold text-white flex items-center gap-3 mb-2">
-            <CopyPlus className="w-8 h-8 text-emerald-500" />
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3 mb-2 transition-colors duration-300">
+            <CopyPlus className="w-8 h-8 text-[#009966] dark:text-emerald-500 transition-colors duration-300" />
             Criar Simulado
           </h1>
-          <p className="text-neutral-400">
+          <p className="text-gray-500 dark:text-neutral-400 transition-colors duration-300">
             Crie o seu próprio simulado. Escolha sua Banca, Matérias e Questões,
             se prepare de forma consciente para sua prova.
           </p>
         </div>
       </div>
 
-      <div className="border-t mt-7 mb-9 border-neutral-800"></div>
+      <div className="border-t mt-7 mb-9 border-gray-200 dark:border-neutral-800 transition-colors duration-300"></div>
 
       <NovoSimuladoForm
         bancas={listaBancas}

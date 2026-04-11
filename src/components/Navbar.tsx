@@ -6,6 +6,8 @@ import { SplitHoverText } from "@/components/ui/SplitHoverText";
 import { ThemeToggle } from "./ThemeToggle";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
+// IMPORTA O MOTION AQUI
+import { motion } from "framer-motion";
 
 export default function Navbar() {
   const { resolvedTheme } = useTheme();
@@ -20,19 +22,31 @@ export default function Navbar() {
   }, []);
 
   const isDark = mounted && resolvedTheme === "dark";
-  const titleColor = isDark ? "#ffffff" : "#101828"; // Branco no escuro, Preto no claro
-  const linkColor = isDark ? "#a3a3a3" : "#6a7282"; // Cinza neutro em ambos, mas ajustado
-  const hoverColor = "#009966"; // O Verde Esmeralda mantém-se igual!
+  const titleColor = isDark ? "#ffffff" : "#101828";
+  const linkColor = isDark ? "#a3a3a3" : "#6a7282";
+  const hoverColor = "#009966";
 
   return (
-    <nav className="flex items-center justify-between md:px-12 px-8 py-6 mx-auto bg-transparent transition-colors duration-300">
+    // TROCAMOS <nav> POR <motion.nav> E ADICIONAMOS A ANIMAÇÃO
+    <motion.nav
+      initial={{ y: -100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{
+        type: "spring",
+        stiffness: 260,
+        damping: 20,
+        duration: 0.8,
+        delay: 0.5,
+      }}
+      className="flex items-center justify-between md:px-12 px-8 py-6 mx-auto bg-transparent transition-colors duration-300 w-full z-50 relative"
+    >
       <div>
         <Link
           className="flex items-center group justify-center w-full"
           href="/"
         >
           <Image
-            className="mr-2"
+            className="mr-2 dark:brightness-200"
             src="/logo.svg"
             width={45}
             height={45}
@@ -58,7 +72,7 @@ export default function Navbar() {
       <div className="hidden md:flex gap-6 mt-1 text-sm font-semibold text-gray-500 dark:text-neutral-400">
         <Link
           href="/aluno/editais"
-          className="hover:text-black dark:hover:text-white"
+          className="hover:text-black dark:hover:text-white transition-colors"
         >
           {mounted ? (
             <SplitHoverText
@@ -75,7 +89,7 @@ export default function Navbar() {
         </Link>
         <Link
           href="/aluno/concursos"
-          className="hover:text-black dark:hover:text-white"
+          className="hover:text-black dark:hover:text-white transition-colors"
         >
           {mounted ? (
             <SplitHoverText
@@ -92,7 +106,7 @@ export default function Navbar() {
         </Link>
         <Link
           href="/aluno/noticias"
-          className="hover:text-black dark:hover:text-white"
+          className="hover:text-black dark:hover:text-white transition-colors"
         >
           {mounted ? (
             <SplitHoverText
@@ -109,7 +123,7 @@ export default function Navbar() {
         </Link>
         <Link
           href="/aluno/planos"
-          className="hover:text-black dark:hover:text-white"
+          className="hover:text-black dark:hover:text-white transition-colors"
         >
           {mounted ? (
             <SplitHoverText
@@ -145,11 +159,11 @@ export default function Navbar() {
           )}
         </Link>
         <Link href="/login">
-          <button className="bg-white dark:bg-neutral-900 border cursor-pointer shadow-sm text-[#009966] border-gray-200 dark:border-neutral-800 px-6 py-2 rounded-full text-sm font-bold hover:shadow-md dark:hover:shadow-neutral-900/50 duration-300">
+          <button className="bg-white dark:bg-neutral-900 border cursor-pointer shadow-sm text-[#009966] border-gray-200 dark:border-neutral-800 px-6 py-2 rounded-full text-sm font-bold hover:shadow-md dark:hover:shadow-neutral-900/50 duration-300 transition-all">
             Criar Conta
           </button>
         </Link>
       </div>
-    </nav>
+    </motion.nav>
   );
 }

@@ -14,18 +14,18 @@ export default async function NoticiasAlunoPage() {
       {/* CABEÇALHO HERO */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-3xl font-bold text-white flex items-center gap-3 mb-2">
-            <Megaphone className="w-8 h-8 text-emerald-500" />
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white transition-colors duration-300 flex items-center gap-3 mb-2">
+            <Megaphone className="w-8 h-8 text-[#009966] dark:text-emerald-500 transition-colors duration-300" />
             Últimas Notícias
           </h1>
-          <p className="text-neutral-400 max-w-2xl">
+          <p className="text-gray-500 dark:text-neutral-400 transition-colors duration-300 max-w-2xl">
             Fique atualizado com as últimas novidades sobre editais, bancas,
             autorizações e dicas exclusivas para turbinar a sua preparação.
           </p>
         </div>
       </div>
 
-      <div className="border-t mt-7 mb-9 border-neutral-800"></div>
+      <div className="border-t mt-7 mb-9 border-gray-200 dark:border-neutral-800 transition-colors duration-300"></div>
 
       {/* COMPONENTE CLIENTE DE LISTAGEM E FILTROS */}
       <ListaNoticias noticiasIniciais={listaNoticias} />

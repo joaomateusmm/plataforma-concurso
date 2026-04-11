@@ -24,8 +24,8 @@ export function ClockSeparator({
     <div
       className={`${hiddenOnMobile ? "hidden sm:flex" : "flex"} flex-col gap-10 mx-1 md:mx-3`}
     >
-      <div className="w-5 h-5 bg-[#2D2D2D] rounded-full"></div>
-      <div className="w-5 h-5 bg-[#2D2D2D] rounded-full"></div>
+      <div className="w-5 h-5 dark:bg-[#2D2D2D] bg-neutral-400 rounded-full"></div>
+      <div className="w-5 h-5 dark:bg-[#2D2D2D] bg-neutral-400 rounded-full"></div>
     </div>
   );
 }

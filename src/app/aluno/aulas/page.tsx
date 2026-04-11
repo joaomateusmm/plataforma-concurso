@@ -41,18 +41,18 @@ export default async function MateriaisPage(props: {
     <div className="max-w-7xl mx-auto animate-in mt-6 fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-3xl font-bold text-white flex items-center gap-3 mb-2">
-            <Video className="w-8 h-8 text-emerald-500" />
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white transition-colors duration-300 flex items-center gap-3 mb-2">
+            <Video className="w-8 h-8 text-[#009966]" />
             Aulas
           </h1>
-          <p className="text-neutral-400">
+          <p className="text-gray-500 dark:text-neutral-400 transition-colors duration-300">
             Escolha uma matéria abaixo para ter acesso a todas as videoaulas
             cuidadosamente organizadas.
           </p>
         </div>
       </div>
 
-      <div className="border-t mt-7 mb-9 border-neutral-800"></div>
+      <div className="border-t mt-7 mb-9 border-gray-200 dark:border-neutral-800 transition-colors duration-300"></div>
 
       {/* 2. PASSAMOS O ID SELECIONADO PARA O ACORDEÃO */}
       <AulasAccordion

@@ -58,33 +58,33 @@ export default async function LeituraNoticiaPage({
     <main className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500 mt-6 mb-20 px-4">
       <Link
         href="/aluno/noticias"
-        className="inline-flex items-center gap-2 text-sm font-bold text-neutral-400 hover:text-emerald-500 transition-colors"
+        className="inline-flex items-center gap-2 text-sm font-bold text-gray-500 dark:text-neutral-400 hover:text-[#009966] dark:hover:text-emerald-500 transition-colors duration-300"
       >
         <ArrowLeft className="w-4 h-4" /> Voltar para Notícias
       </Link>
 
       <div className="space-y-6">
         <div className="flex flex-wrap items-center gap-3">
-          <span className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold uppercase shadow-md shadow-neutral-950/80 tracking-wider rounded-md bg-neutral-900 text-neutral-500">
+          <span className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold uppercase shadow-sm dark:shadow-md dark:shadow-neutral-950/80 tracking-wider rounded-md bg-gray-100 dark:bg-neutral-900 text-gray-600 dark:text-neutral-500 transition-colors duration-300">
             {noticia.tipoConcurso}
           </span>
           {localizacao && (
-            <span className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold uppercase shadow-md shadow-neutral-950/80 tracking-wider rounded-md bg-neutral-900 text-neutral-500">
+            <span className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold uppercase shadow-sm dark:shadow-md dark:shadow-neutral-950/80 tracking-wider rounded-md bg-gray-100 dark:bg-neutral-900 text-gray-600 dark:text-neutral-500 transition-colors duration-300">
               {localizacao}
             </span>
           )}
         </div>
 
-        <h1 className="text-4xl font-extrabold text-white leading-tight">
+        <h1 className="text-4xl font-extrabold text-gray-900 dark:text-white leading-tight transition-colors duration-300">
           {noticia.titulo}
         </h1>
 
-        <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-neutral-500 border-b border-neutral-800 pb-4">
-          <div className="flex items-center gap-2 ">
+        <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-gray-500 dark:text-neutral-500 border-b border-gray-200 dark:border-neutral-800 pb-4 transition-colors duration-300">
+          <div className="flex items-center gap-2">
             Autor: {noticia.publicadoPor}
           </div>
-          <span className="hidden sm:block ">•</span>
-          <div className="flex items-center gap-2 ">
+          <span className="hidden sm:block">•</span>
+          <div className="flex items-center gap-2">
             Publicado em {dataFormatada}
           </div>
         </div>
@@ -104,8 +104,8 @@ export default async function LeituraNoticiaPage({
       )}
 
       {/* CONTEÚDO DA NOTÍCIA */}
-      <article className="prose prose-invert max-w-none prose-emerald">
-        <div className="text-neutral-300 leading-relaxed text-md whitespace-pre-wrap">
+      <article className="prose dark:prose-invert max-w-none prose-emerald transition-colors duration-300">
+        <div className="text-gray-700 dark:text-neutral-300 leading-relaxed text-md whitespace-pre-wrap transition-colors duration-300">
           {noticia.conteudo}
         </div>
         {/* Links dos Editais Verticais */}
@@ -116,8 +116,8 @@ export default async function LeituraNoticiaPage({
             className="flex flex-wrap items-center justify-between pt-4"
           >
             <div className="flex items-center gap-2 group">
-              <ExternalLink className="w-5 h-5 group-hover:text-neutral-200 text-neutral-400 duration-300" />
-              <p className="text-lg font-bold text-neutral-400 group-hover:text-neutral-200 hover:underline duration-300">
+              <ExternalLink className="w-5 h-5 text-gray-400 dark:text-neutral-400 group-hover:text-gray-900 dark:group-hover:text-neutral-200 duration-300 transition-colors" />
+              <p className="text-lg font-bold text-gray-600 dark:text-neutral-400 group-hover:text-gray-900 dark:group-hover:text-neutral-200 hover:underline duration-300 transition-colors">
                 {e.titulo}
               </p>
             </div>
@@ -132,18 +132,18 @@ export default async function LeituraNoticiaPage({
               {concursosRelacionados.map((c) => (
                 <div
                   key={c.id}
-                  className="flex flex-wrap items-center justify-between gap-4 p-4 bg-neutral-950 rounded-xl border border-neutral-800"
+                  className="flex flex-wrap items-center justify-between gap-4 p-4 bg-gray-50 dark:bg-neutral-950 rounded-xl border border-gray-200 dark:border-neutral-800 transition-colors duration-300"
                 >
                   <div>
-                    <p className="text-sm font-bold text-neutral-200">
+                    <p className="text-sm font-bold text-gray-900 dark:text-neutral-200 transition-colors duration-300">
                       {c.orgao}
                     </p>
-                    <p className="text-xs font-medium text-emerald-500">
+                    <p className="text-xs font-medium text-[#009966] dark:text-emerald-500 transition-colors duration-300">
                       {c.cargo}
                     </p>
                   </div>
                   <div className="flex items-center gap-2 jus">
-                    <p className="text-neutral-500 text-sm font-medium">
+                    <p className="text-gray-500 dark:text-neutral-500 text-sm font-medium transition-colors duration-300">
                       Situação do Concurso:
                     </p>
                     {c.linkInscricao ? (
@@ -151,12 +151,12 @@ export default async function LeituraNoticiaPage({
                         href={c.linkInscricao}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg transition-colors"
+                        className="flex items-center gap-1.5 px-4 py-2 bg-[#009966] hover:bg-[#007a52] dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white text-xs font-bold rounded-lg transition-colors duration-300"
                       >
                         Inscrever-se <ExternalLink className="w-3.5 h-3.5" />
                       </a>
                     ) : (
-                      <span className="px-3 py-1 bg-neutral-800 text-neutral-500 text-xs font-bold rounded-lg">
+                      <span className="px-3 py-1 bg-gray-200 dark:bg-neutral-800 text-gray-500 dark:text-neutral-500 text-xs font-bold rounded-lg transition-colors duration-300">
                         Em Breve
                       </span>
                     )}
@@ -169,17 +169,17 @@ export default async function LeituraNoticiaPage({
       </article>
 
       {/* RODAPÉ E VINCULAÇÕES */}
-      <div className="pt-8 mt-6 border-t border-neutral-800 flex flex-col gap-6">
+      <div className="pt-8 mt-6 border-t border-gray-200 dark:border-neutral-800 flex flex-col gap-6 transition-colors duration-300">
         {/* Mostra as Tags da Notícia */}
         <div className="flex flex-wrap items-center gap-3">
-          <span className="text-sm font-medium text-neutral-500">
+          <span className="text-sm font-medium text-gray-500 dark:text-neutral-500 transition-colors duration-300">
             Assuntos relacionados:
           </span>
-          <span className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold uppercase shadow-md shadow-neutral-950/80 tracking-wider rounded-md bg-neutral-900 text-neutral-500">
+          <span className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold uppercase shadow-sm dark:shadow-md dark:shadow-neutral-950/80 tracking-wider rounded-md bg-gray-100 dark:bg-neutral-900 text-gray-600 dark:text-neutral-500 transition-colors duration-300">
             {noticia.tipoConcurso}
           </span>
           {noticia.estado && (
-            <span className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold uppercase shadow-md shadow-neutral-950/80 tracking-wider rounded-md bg-neutral-900 text-neutral-500">
+            <span className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold uppercase shadow-sm dark:shadow-md dark:shadow-neutral-950/80 tracking-wider rounded-md bg-gray-100 dark:bg-neutral-900 text-gray-600 dark:text-neutral-500 transition-colors duration-300">
               {noticia.estado}
             </span>
           )}

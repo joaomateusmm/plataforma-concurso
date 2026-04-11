@@ -38,20 +38,18 @@ function Slider({
     >
       <SliderPrimitive.Track
         data-slot="slider-track"
-        className="relative grow overflow-hidden rounded-full bg-neutral-800 data-horizontal:h-1 data-horizontal:w-full data-vertical:h-full data-vertical:w-1"
+        className="relative grow overflow-hidden rounded-full bg-gray-200 dark:bg-neutral-800 data-horizontal:h-1 data-horizontal:w-full data-vertical:h-full data-vertical:w-1 transition-colors duration-300"
       >
         <SliderPrimitive.Range
           data-slot="slider-range"
-          // AQUI ESTÁ A CORREÇÃO: Trocamos 'bg-primary' por 'bg-emerald-500'
-          className="absolute bg-emerald-500 select-none data-horizontal:h-full data-vertical:w-full"
+          className="absolute bg-[#009966] dark:bg-emerald-500 select-none data-horizontal:h-full data-vertical:w-full transition-colors duration-300"
         />
       </SliderPrimitive.Track>
       {Array.from({ length: _values.length }, (_, index) => (
         <SliderPrimitive.Thumb
           data-slot="slider-thumb"
           key={index}
-          // AQUI: Deixei a bolinha branca, mas tirei a borda padrão do Radix UI para ficar mais bonito
-          className="relative block size-4 shrink-0 rounded-full bg-white cursor-pointer transition-transform hover:scale-110 select-none focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
+          className="relative block size-4 shrink-0 rounded-full bg-white dark:bg-neutral-900 border-2 border-[#009966] dark:border-emerald-500 shadow-sm cursor-pointer transition-all duration-300 hover:scale-110 select-none focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
         />
       ))}
     </SliderPrimitive.Root>

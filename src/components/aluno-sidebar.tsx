@@ -15,6 +15,7 @@ import {
   X,
   LayersPlus,
   Layers,
+  GitFork,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -54,6 +55,12 @@ const navItems: NavItem[] = [
     title: "Notícias",
     url: "/aluno/noticias",
     icon: Megaphone,
+  },
+  {
+    title: "Planejamento",
+    url: "/aluno/cadernos",
+    icon: GitFork,
+    status: "em_breve",
   },
   {
     title: "Meus Cadernos",

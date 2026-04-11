@@ -3,13 +3,7 @@
 import { useState, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  Search,
-  ArrowRight,
-  Filter,
-  MapPin,
-  Map,
-} from "lucide-react";
+import { Search, ArrowRight, Filter, MapPin, Map } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -34,7 +28,6 @@ export function ListaNoticias({
   const [filtroEstado, setFiltroEstado] = useState<string | null>(null);
   const [filtroMunicipio, setFiltroMunicipio] = useState("");
 
-  // Extrai as categorias e estados únicos que vieram do banco para os filtros
   const opcoesTipos = useMemo(() => {
     return Array.from(
       new Set(noticiasIniciais.map((n) => n.tipoConcurso).filter(Boolean)),
@@ -44,7 +37,7 @@ export function ListaNoticias({
   const opcoesEstados = useMemo(() => {
     return Array.from(
       new Set(noticiasIniciais.map((n) => n.estado).filter(Boolean)),
-    ).sort(); // Ordena alfabeticamente
+    ).sort();
   }, [noticiasIniciais]);
 
   const noticiasFiltradas = useMemo(() => {
@@ -70,52 +63,48 @@ export function ListaNoticias({
 
   return (
     <>
-      {/* BARRA DE PESQUISA E FILTROS */}
       <div className="mb-9 flex flex-col md:flex-row items-start md:items-center justify-start gap-4">
-        {/* BUSCA EM TEXTO GERAL */}
-        <div className="group relative flex h-10 w-full max-w-md cursor-text items-center justify-between rounded-full bg-neutral-900 px-4 duration-300 hover:ring-1 hover:ring-neutral-800">
+        <div className="group relative flex h-10 w-full max-w-md cursor-text items-center justify-between rounded-full bg-white dark:bg-neutral-900 border border-gray-200 dark:border-transparent px-4 duration-300 hover:ring-1 hover:ring-gray-300 dark:hover:ring-neutral-800 transition-colors">
           <div className="flex w-full items-center">
-            <Search className="mr-3 h-4 w-4 text-neutral-500 shrink-0" />
+            <Search className="mr-3 h-4 w-4 text-gray-400 dark:text-neutral-500 shrink-0 transition-colors duration-300" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Pesquisar notícias..."
-              className="w-full bg-transparent text-sm font-medium text-neutral-200 transition-colors placeholder:text-neutral-500 focus:outline-none"
+              className="w-full bg-transparent text-sm font-medium text-gray-900 dark:text-neutral-200 transition-colors duration-300 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none"
             />
           </div>
         </div>
 
-        <div className="w-1 border-r h-10 border-neutral-800 hidden md:block"></div>
+        <div className="w-1 border-r h-10 border-gray-200 dark:border-neutral-800 hidden md:block transition-colors duration-300"></div>
 
-        {/* GRUPO DE FILTROS */}
         <div className="flex flex-wrap items-center gap-3">
-          <span className="text-neutral-700 font-medium text-sm hidden sm:block">
+          <span className="text-gray-700 dark:text-neutral-300 font-medium text-sm hidden sm:block transition-colors duration-300">
             Filtros:
           </span>
 
-          {/* FILTRO: ÁREA/TIPO */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
-                className={`bg-neutral-900 cursor-pointer duration-300 hover:ring-[0.6px] ring-neutral-700 py-5 rounded-full pl-3 pr-4 border-none shadow-none ${
+                className={`bg-white dark:bg-neutral-900 cursor-pointer duration-300 hover:ring-[0.6px] ring-gray-300 dark:ring-neutral-700 py-5 rounded-full pl-3 pr-4 border border-gray-200 dark:border-none shadow-sm dark:shadow-none transition-colors ${
                   filtroTipo
-                    ? " text-neutral-300 hover:bg-neutral-900"
-                    : " text-neutral-500"
+                    ? "text-gray-900 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-900"
+                    : "text-gray-500 dark:text-neutral-500 hover:bg-gray-50 dark:hover:bg-neutral-900"
                 }`}
               >
                 <Filter className="mr-0.5 h-4 w-4 shrink-0" />
                 <span>{filtroTipo || "Área do Concurso"}</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-neutral-900 border border-neutral-800 text-neutral-300">
+            <DropdownMenuContent className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 text-gray-700 dark:text-neutral-300 transition-colors duration-300">
               <DropdownMenuGroup>
-                <DropdownMenuLabel className="text-neutral-500">
+                <DropdownMenuLabel className="text-gray-500 dark:text-neutral-500 transition-colors duration-300">
                   Selecione a Área
                 </DropdownMenuLabel>
                 <DropdownMenuItem
                   onClick={() => setFiltroTipo(null)}
-                  className="cursor-pointer focus:bg-neutral-800 border-t rounded-none border-neutral-700/70 focus:text-white py-3 duration-200"
+                  className="cursor-pointer focus:bg-gray-100 dark:focus:bg-neutral-800 border-t rounded-none border-gray-100 dark:border-neutral-700/70 focus:text-gray-900 dark:focus:text-white py-3 duration-200 transition-colors"
                 >
                   Todas as Áreas
                 </DropdownMenuItem>
@@ -123,7 +112,7 @@ export function ListaNoticias({
                   <DropdownMenuItem
                     key={tipo as string}
                     onClick={() => setFiltroTipo(tipo as string)}
-                    className="cursor-pointer focus:bg-neutral-800 border-t rounded-none border-neutral-700/70 focus:text-white py-3 duration-200"
+                    className="cursor-pointer focus:bg-gray-100 dark:focus:bg-neutral-800 border-t rounded-none border-gray-100 dark:border-neutral-700/70 focus:text-gray-900 dark:focus:text-white py-3 duration-200 transition-colors"
                   >
                     {tipo as string}
                   </DropdownMenuItem>
@@ -132,28 +121,27 @@ export function ListaNoticias({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* FILTRO: ESTADO */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
-                className={`bg-neutral-900 cursor-pointer duration-300 hover:ring-[0.6px] ring-neutral-700 py-5 rounded-full pl-3 pr-4 border-none shadow-none ${
+                className={`bg-white dark:bg-neutral-900 cursor-pointer duration-300 hover:ring-[0.6px] ring-gray-300 dark:ring-neutral-700 py-5 rounded-full pl-3 pr-4 border border-gray-200 dark:border-none shadow-sm dark:shadow-none transition-colors ${
                   filtroEstado
-                    ? " text-neutral-300 hover:bg-neutral-900"
-                    : " text-neutral-500"
+                    ? "text-gray-900 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-900"
+                    : "text-gray-500 dark:text-neutral-500 hover:bg-gray-50 dark:hover:bg-neutral-900"
                 }`}
               >
                 <MapPin className="mr-0.5 h-4 w-4 shrink-0" />
                 <span>{filtroEstado || "Estado"}</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-neutral-900 border border-neutral-800 text-neutral-300 max-h-64 overflow-y-auto">
+            <DropdownMenuContent className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 text-gray-700 dark:text-neutral-300 max-h-64 overflow-y-auto transition-colors duration-300">
               <DropdownMenuGroup>
-                <DropdownMenuLabel className="text-neutral-500">
+                <DropdownMenuLabel className="text-gray-500 dark:text-neutral-500 transition-colors duration-300">
                   Filtrar por Estado
                 </DropdownMenuLabel>
                 <DropdownMenuItem
                   onClick={() => setFiltroEstado(null)}
-                  className="cursor-pointer focus:bg-neutral-800 border-t rounded-none border-neutral-700/70 focus:text-white py-3 duration-200"
+                  className="cursor-pointer focus:bg-gray-100 dark:focus:bg-neutral-800 border-t rounded-none border-gray-100 dark:border-neutral-700/70 focus:text-gray-900 dark:focus:text-white py-3 duration-200 transition-colors"
                 >
                   Brasil Inteiro
                 </DropdownMenuItem>
@@ -161,7 +149,7 @@ export function ListaNoticias({
                   <DropdownMenuItem
                     key={uf as string}
                     onClick={() => setFiltroEstado(uf as string)}
-                    className="cursor-pointer focus:bg-neutral-800 border-t rounded-none border-neutral-700/70 focus:text-white py-3 duration-200"
+                    className="cursor-pointer focus:bg-gray-100 dark:focus:bg-neutral-800 border-t rounded-none border-gray-100 dark:border-neutral-700/70 focus:text-gray-900 dark:focus:text-white py-3 duration-200 transition-colors"
                   >
                     {uf as string}
                   </DropdownMenuItem>
@@ -170,26 +158,25 @@ export function ListaNoticias({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* FILTRO: MUNICÍPIO */}
-          <div className="group relative flex h-10 w-35 cursor-text items-center justify-between rounded-full bg-neutral-900 px-4 gap-2.5 duration-300 hover:ring-1 hover:ring-neutral-800">
-            <Map className=" h-4 w-4 shrink-0 text-neutral-500" />
+          <div className="group relative flex h-10 w-35 cursor-text items-center justify-between rounded-full bg-white dark:bg-neutral-900 border border-gray-200 dark:border-transparent px-4 gap-2.5 duration-300 hover:ring-1 hover:ring-gray-300 dark:hover:ring-neutral-800 transition-colors">
+            <Map className="h-4 w-4 shrink-0 text-gray-400 dark:text-neutral-500 transition-colors duration-300" />
             <input
               type="text"
               value={filtroMunicipio}
               onChange={(e) => setFiltroMunicipio(e.target.value)}
               placeholder="Município..."
-              className="w-full bg-transparent text-sm font-medium  text-neutral-200 transition-colors placeholder:text-neutral-500 focus:outline-none"
+              className="w-full bg-transparent text-sm font-medium text-gray-900 dark:text-neutral-200 transition-colors duration-300 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none"
             />
           </div>
         </div>
       </div>
 
       {noticiasFiltradas.length === 0 ? (
-        <div className=" p-32 text-center flex flex-col items-center justify-center shadow-sm">
-          <h3 className="text-xl font-bold text-white mb-2">
+        <div className="p-32 text-center flex flex-col items-center justify-center shadow-sm transition-colors duration-300">
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 transition-colors duration-300">
             Nenhuma notícia encontrada
           </h3>
-          <p className="text-neutral-400 max-w-md">
+          <p className="text-gray-600 dark:text-neutral-400 max-w-md transition-colors duration-300">
             Tente pesquisar por outro termo ou limpar os filtros para ver o feed
             completo.
           </p>
@@ -202,7 +189,7 @@ export function ListaNoticias({
                 setFiltroMunicipio("");
               }}
               variant="outline"
-              className="mt-6 border-neutral-700 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-xl"
+              className="mt-6 border-gray-200 dark:border-neutral-700 text-gray-600 dark:text-neutral-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-neutral-800 rounded-xl transition-colors duration-300"
             >
               Limpar Filtros
             </Button>
@@ -220,71 +207,65 @@ export function ListaNoticias({
               .filter(Boolean)
               .join(" - ");
 
-            // CORREÇÃO: ufLink é gerado dinamicamente para CADA notícia aqui dentro do map
             const ufLink = noticia.estado ? noticia.estado.toLowerCase() : "br";
 
             return (
               <Link
                 href={`/aluno/noticias/${ufLink}/${noticia.slug}`}
                 key={noticia.id}
-                className="bg-neutral-900 border border-neutral-800 rounded-2xl flex flex-col md:flex-row overflow-hidden hover:ring-1 ring-neutral-700 duration-300 group relative"
+                className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-2xl flex flex-col md:flex-row overflow-hidden hover:ring-1 hover:ring-gray-300 dark:hover:ring-neutral-700 duration-300 group relative shadow-sm dark:shadow-none transition-colors"
               >
                 {noticia.thumbnailUrl && (
-                  <div className="relative w-full md:w-1/4 xl:w-1/5 h-48 md:h-auto overflow-hidden z-0 bg-neutral-950 shrink-0">
+                  <div className="relative w-full md:w-1/4 xl:w-1/5 h-48 md:h-auto overflow-hidden z-0 bg-gray-100 dark:bg-neutral-950 shrink-0 transition-colors duration-300">
                     <Image
                       src={noticia.thumbnailUrl}
                       alt={noticia.titulo}
                       fill
                       unoptimized
-                      className="object-cover opacity-80 group-hover:scale-105 transition-transform duration-700"
+                      className="object-cover opacity-90 dark:opacity-80 group-hover:scale-105 transition-transform duration-700"
                     />
-                    <div className="hidden md:block absolute inset-0 bg-linear-to-l from-neutral-900 via-transparent to-transparent" />
-                    <div className="md:hidden absolute inset-0 bg-linear-to-t from-neutral-900 via-transparent to-transparent" />
+                    <div className="hidden md:block absolute inset-0 bg-linear-to-l from-white dark:from-neutral-900 via-transparent to-transparent transition-colors duration-300" />
+                    <div className="md:hidden absolute inset-0 bg-linear-to-t from-white dark:from-neutral-900 via-transparent to-transparent transition-colors duration-300" />
                   </div>
                 )}
 
-                <div className="relative z-10 p-5 md:p-6 flex-1 flex flex-col bg-neutral-900 justify-center">
+                <div className="relative z-10 p-5 md:p-6 flex-1 flex flex-col bg-white dark:bg-neutral-900 justify-center transition-colors duration-300">
                   <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-                    {/* Agrupamento de Badges (Área e Localização) */}
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold uppercase shadow-md shadow-neutral-950/80 tracking-wider rounded-md bg-neutral-950/60  text-neutral-500">
+                      <span className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold uppercase shadow-sm dark:shadow-md dark:shadow-neutral-950/80 tracking-wider rounded-md bg-gray-100 dark:bg-neutral-950/60 text-gray-600 dark:text-neutral-500 transition-colors duration-300">
                         {noticia.tipoConcurso}
                       </span>
 
-                      {/* Badge Minimalista de Localização */}
                       {localizacaoTexto && (
-                        <span className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold uppercase shadow-md shadow-neutral-950/80 tracking-wider rounded-md bg-neutral-950/60  text-neutral-500">
+                        <span className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold uppercase shadow-sm dark:shadow-md dark:shadow-neutral-950/80 tracking-wider rounded-md bg-gray-100 dark:bg-neutral-950/60 text-gray-600 dark:text-neutral-500 transition-colors duration-300">
                           {localizacaoTexto}
                         </span>
                       )}
                     </div>
 
-                    {/* Meta (Data exata e Autor) */}
-                    <div className="flex flex-wrap flex-col items-end text-[11px] font-medium text-neutral-500">
+                    <div className="flex flex-wrap flex-col items-end text-[11px] font-medium text-gray-500 dark:text-neutral-500 transition-colors duration-300">
                       <span className="flex items-center gap-1">
                         {dataFormatada}
                       </span>
-                      <span className="text-neutral-500">
+                      <span className="text-gray-500 dark:text-neutral-500 transition-colors duration-300">
                         Por: {noticia.publicadoPor}
                       </span>
                     </div>
                   </div>
 
-                  {/* Título e Resumo */}
-                  <h3 className="text-lg md:text-xl font-bold text-white mb-2 leading-tight group-hover:text-emerald-400 duration-300">
+                  <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white mb-2 leading-tight group-hover:text-[#009966] dark:group-hover:text-emerald-400 duration-300 transition-colors">
                     {noticia.titulo}
                   </h3>
 
-                  <p className="text-sm text-neutral-400 line-clamp-2 leading-relaxed mb-4">
+                  <p className="text-sm text-gray-600 dark:text-neutral-400 line-clamp-2 leading-relaxed mb-4 transition-colors duration-300">
                     {noticia.conteudo}
                   </p>
 
-                  {/* Botão Inferior Falso (Apenas Visual) */}
                   <div className="mt-auto flex items-center justify-start gap-2.5">
-                    <span className="text-sm font-bold text-neutral-400 group-hover:text-neutral-300 duration-300">
+                    <span className="text-sm font-bold text-gray-600 dark:text-neutral-400 group-hover:text-gray-900 dark:group-hover:text-neutral-300 duration-300 transition-colors">
                       Ler Artigo
                     </span>
-                    <div className="w-7 h-7 rounded-full bg-neutral-800 flex items-center justify-center group-hover:text-neutral-400 text-neutral-500 transition-all duration-300 group-hover:translate-x-1">
+                    <div className="w-7 h-7 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center text-gray-500 dark:text-neutral-500 group-hover:text-gray-900 dark:group-hover:text-neutral-400 transition-all duration-300 group-hover:translate-x-1">
                       <ArrowRight className="w-3.5 h-3.5" />
                     </div>
                   </div>

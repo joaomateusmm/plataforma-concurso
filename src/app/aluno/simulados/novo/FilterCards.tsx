@@ -47,21 +47,21 @@ export function FilterCardBancas({
 
   return (
     <div className="flex flex-col">
-      <label className="text-sm font-semibold text-neutral-300 mb-3 flex justify-between items-center">
+      <label className="text-sm font-semibold text-gray-700 dark:text-neutral-300 mb-3 flex justify-between items-center transition-colors duration-300">
         {title}
-        <span className="text-[10px] bg-neutral-800 px-2 py-0.5 rounded-full text-emerald-400">
+        <span className="text-[10px] bg-gray-100 dark:bg-neutral-800 px-2 py-0.5 rounded-full text-[#009966] dark:text-emerald-400 transition-colors duration-300">
           {selectedIds.length} marcadas
         </span>
       </label>
-      <div className="flex flex-col h-200 bg-neutral-950 border border-neutral-800 rounded-xl overflow-hidden shadow-inner">
-        <div className="flex items-center px-4 h-12 shrink-0 border-b border-neutral-800/60 bg-neutral-950">
-          <Search className="w-4 h-4 text-neutral-500 mr-2" />
+      <div className="flex flex-col h-200 bg-white dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-xl overflow-hidden shadow-sm dark:shadow-inner transition-colors duration-300">
+        <div className="flex items-center px-4 h-12 shrink-0 border-b border-gray-200 dark:border-neutral-800/60 bg-white dark:bg-neutral-950 transition-colors duration-300">
+          <Search className="w-4 h-4 text-gray-400 dark:text-neutral-500 mr-2 transition-colors duration-300" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder={placeholder}
-            className="flex-1 bg-transparent border-none text-white text-sm focus:outline-none focus:ring-0 placeholder:text-neutral-600"
+            className="flex-1 bg-transparent border-none text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-0 placeholder:text-gray-400 dark:placeholder:text-neutral-600 transition-colors duration-300"
           />
         </div>
 
@@ -74,17 +74,17 @@ export function FilterCardBancas({
             <button
               type="button"
               onClick={handleSelectAll}
-              className={`flex items-center gap-3 w-full text-left px-4 py-3 transition-colors ${
+              className={`flex items-center gap-3 w-full text-left px-4 py-3 transition-colors duration-300 ${
                 isAllSelected
-                  ? "bg-neutral-950 text-white hover:bg-neutral-900"
-                  : "text-neutral-400 hover:bg-neutral-900"
+                  ? "bg-gray-50 dark:bg-neutral-950 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-neutral-900"
+                  : "text-gray-600 dark:text-neutral-400 hover:bg-gray-50 dark:hover:bg-neutral-900"
               }`}
             >
               <div
-                className={`w-5 h-5 rounded border shrink-0 flex items-center justify-center ${isAllSelected ? "bg-emerald-500 border-emerald-500" : "border-neutral-700 bg-neutral-950"}`}
+                className={`w-5 h-5 rounded border shrink-0 flex items-center justify-center transition-colors duration-300 ${isAllSelected ? "bg-[#009966] dark:bg-emerald-500 border-[#009966] dark:border-emerald-500" : "border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-950"}`}
               >
                 {isAllSelected && (
-                  <Check className="w-3.5 h-3.5 text-neutral-950 stroke-3" />
+                  <Check className="w-3.5 h-3.5 text-white dark:text-neutral-950 stroke-3 transition-colors duration-300" />
                 )}
               </div>
               <span className="truncate text-sm flex-1 font-medium">
@@ -100,17 +100,17 @@ export function FilterCardBancas({
                 key={item.id}
                 type="button"
                 onClick={() => onToggle(item.id)}
-                className={`flex items-center gap-3 w-full text-left px-4 py-3 transition-colors ${
+                className={`flex items-center gap-3 w-full text-left px-4 py-3 transition-colors duration-300 ${
                   isSelected
-                    ? "bg-neutral-950 text-white hover:bg-neutral-900"
-                    : "text-neutral-400 hover:bg-neutral-900"
+                    ? "bg-gray-50 dark:bg-neutral-950 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-neutral-900"
+                    : "text-gray-600 dark:text-neutral-400 hover:bg-gray-50 dark:hover:bg-neutral-900"
                 }`}
               >
                 <div
-                  className={`w-5 h-5 rounded border shrink-0 flex items-center justify-center ${isSelected ? "bg-emerald-500 border-emerald-500" : "border-neutral-700 bg-neutral-950"}`}
+                  className={`w-5 h-5 rounded border shrink-0 flex items-center justify-center transition-colors duration-300 ${isSelected ? "bg-[#009966] dark:bg-emerald-500 border-[#009966] dark:border-emerald-500" : "border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-950"}`}
                 >
                   {isSelected && (
-                    <Check className="w-3.5 h-3.5 text-neutral-950 stroke-3" />
+                    <Check className="w-3.5 h-3.5 text-white dark:text-neutral-950 stroke-3 transition-colors duration-300" />
                   )}
                 </div>
                 <span className="truncate text-sm flex-1">{item.nome}</span>
@@ -161,21 +161,21 @@ export function FilterCardMaterias({
 
   return (
     <div className="flex flex-col">
-      <label className="text-sm font-semibold text-neutral-300 mb-3 flex justify-between items-center">
+      <label className="text-sm font-semibold text-gray-700 dark:text-neutral-300 mb-3 flex justify-between items-center transition-colors duration-300">
         {title}
-        <span className="text-[10px] bg-neutral-800 px-2 py-0.5 rounded-full text-emerald-400">
+        <span className="text-[10px] bg-gray-100 dark:bg-neutral-800 px-2 py-0.5 rounded-full text-[#009966] dark:text-emerald-400 transition-colors duration-300">
           {selectedCount} marcadas
         </span>
       </label>
-      <div className="flex flex-col h-200 bg-neutral-950 border border-neutral-800 rounded-xl overflow-hidden shadow-inner">
-        <div className="flex items-center px-4 h-12 shrink-0 border-b border-neutral-800/60 bg-neutral-950">
-          <Search className="w-4 h-4 text-neutral-500 mr-2" />
+      <div className="flex flex-col h-200 bg-white dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-xl overflow-hidden shadow-sm dark:shadow-inner transition-colors duration-300">
+        <div className="flex items-center px-4 h-12 shrink-0 border-b border-gray-200 dark:border-neutral-800/60 bg-white dark:bg-neutral-950 transition-colors duration-300">
+          <Search className="w-4 h-4 text-gray-400 dark:text-neutral-500 mr-2 transition-colors duration-300" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder={placeholder}
-            className="flex-1 bg-transparent border-none text-white text-sm focus:outline-none focus:ring-0 placeholder:text-neutral-600"
+            className="flex-1 bg-transparent border-none text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-0 placeholder:text-gray-400 dark:placeholder:text-neutral-600 transition-colors duration-300"
           />
         </div>
 
@@ -188,17 +188,17 @@ export function FilterCardMaterias({
             <button
               type="button"
               onClick={handleSelectAll}
-              className={`flex items-center gap-3 w-full text-left px-4 py-3 transition-colors  ${
+              className={`flex items-center gap-3 w-full text-left px-4 py-3 transition-colors duration-300  ${
                 isAllSelected
-                  ? "bg-neutral-950 text-white hover:bg-neutral-900"
-                  : "text-neutral-400 hover:bg-neutral-900"
+                  ? "bg-gray-50 dark:bg-neutral-950 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-neutral-900"
+                  : "text-gray-600 dark:text-neutral-400 hover:bg-gray-50 dark:hover:bg-neutral-900"
               }`}
             >
               <div
-                className={`w-5 h-5 rounded border shrink-0 flex items-center justify-center ${isAllSelected ? "bg-emerald-500 border-emerald-500" : "border-neutral-700 bg-neutral-950"}`}
+                className={`w-5 h-5 rounded border shrink-0 flex items-center justify-center transition-colors duration-300 ${isAllSelected ? "bg-[#009966] dark:bg-emerald-500 border-[#009966] dark:border-emerald-500" : "border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-950"}`}
               >
                 {isAllSelected && (
-                  <Check className="w-3.5 h-3.5 text-neutral-950 stroke-3" />
+                  <Check className="w-3.5 h-3.5 text-white dark:text-neutral-950 stroke-3 transition-colors duration-300" />
                 )}
               </div>
               <span className="truncate text-sm flex-1 font-medium">
@@ -214,17 +214,17 @@ export function FilterCardMaterias({
                 key={item.id}
                 type="button"
                 onClick={() => onToggle(item.id)}
-                className={`flex items-center gap-3 w-full text-left px-4 py-3 transition-colors ${
+                className={`flex items-center gap-3 w-full text-left px-4 py-3 transition-colors duration-300 ${
                   isSelected
-                    ? "bg-neutral-950 text-white hover:bg-neutral-900"
-                    : "text-neutral-400 hover:bg-neutral-900"
+                    ? "bg-gray-50 dark:bg-neutral-950 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-neutral-900"
+                    : "text-gray-600 dark:text-neutral-400 hover:bg-gray-50 dark:hover:bg-neutral-900"
                 }`}
               >
                 <div
-                  className={`w-5 h-5 rounded border shrink-0 flex items-center justify-center ${isSelected ? "bg-emerald-500 border-emerald-500" : "border-neutral-700 bg-neutral-950"}`}
+                  className={`w-5 h-5 rounded border shrink-0 flex items-center justify-center transition-colors duration-300 ${isSelected ? "bg-[#009966] dark:bg-emerald-500 border-[#009966] dark:border-emerald-500" : "border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-950"}`}
                 >
                   {isSelected && (
-                    <Check className="w-3.5 h-3.5 text-neutral-950 stroke-3" />
+                    <Check className="w-3.5 h-3.5 text-white dark:text-neutral-950 stroke-3 transition-colors duration-300" />
                   )}
                 </div>
                 <span className="truncate text-sm flex-1">{item.nome}</span>
@@ -300,21 +300,21 @@ export function FilterCardAssuntosAvancado({
 
   return (
     <div className="flex flex-col">
-      <label className="text-sm font-semibold text-neutral-300 mb-3 flex justify-between items-center">
+      <label className="text-sm font-semibold text-gray-700 dark:text-neutral-300 mb-3 flex justify-between items-center transition-colors duration-300">
         Assuntos
-        <span className="text-[10px] bg-neutral-800 px-2 py-0.5 rounded-full text-emerald-400">
+        <span className="text-[10px] bg-gray-100 dark:bg-neutral-800 px-2 py-0.5 rounded-full text-[#009966] dark:text-emerald-400 transition-colors duration-300">
           {totalAssuntosMarcados} personalizados
         </span>
       </label>
-      <div className="flex flex-col h-200 bg-neutral-950 border border-neutral-800 rounded-xl overflow-hidden shadow-inner">
-        <div className="flex items-center px-4 h-12 shrink-0 border-b border-neutral-800/60 bg-neutral-950">
-          <Search className="w-4 h-4 text-neutral-500 mr-2" />
+      <div className="flex flex-col h-200 bg-white dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-xl overflow-hidden shadow-sm dark:shadow-inner transition-colors duration-300">
+        <div className="flex items-center px-4 h-12 shrink-0 border-b border-gray-200 dark:border-neutral-800/60 bg-white dark:bg-neutral-950 transition-colors duration-300">
+          <Search className="w-4 h-4 text-gray-400 dark:text-neutral-500 mr-2 transition-colors duration-300" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Pesquisar assunto..."
-            className="flex-1 bg-transparent border-none text-white text-sm focus:outline-none focus:ring-0 placeholder:text-neutral-600"
+            className="flex-1 bg-transparent border-none text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-0 placeholder:text-gray-400 dark:placeholder:text-neutral-600 transition-colors duration-300"
           />
         </div>
 
@@ -327,17 +327,17 @@ export function FilterCardAssuntosAvancado({
             <button
               type="button"
               onClick={handleSelectAll}
-              className={`flex items-center gap-3 w-full text-left px-4 py-3 transition-colors border-b border-neutral-800/60 ${
+              className={`flex items-center gap-3 w-full text-left px-4 py-3 transition-colors duration-300 border-b border-gray-200 dark:border-neutral-800/60 ${
                 isAllSelected
-                  ? "bg-neutral-950 text-white hover:bg-neutral-900"
-                  : "text-neutral-400 hover:bg-neutral-900"
+                  ? "bg-gray-50 dark:bg-neutral-950 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-neutral-900"
+                  : "text-gray-600 dark:text-neutral-400 hover:bg-gray-50 dark:hover:bg-neutral-900"
               }`}
             >
               <div
-                className={`w-5 h-5 rounded border shrink-0 flex items-center justify-center ${isAllSelected ? "bg-emerald-500 border-emerald-500" : "border-neutral-700 bg-neutral-950"}`}
+                className={`w-5 h-5 rounded border shrink-0 flex items-center justify-center transition-colors duration-300 ${isAllSelected ? "bg-[#009966] dark:bg-emerald-500 border-[#009966] dark:border-emerald-500" : "border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-950"}`}
               >
                 {isAllSelected && (
-                  <Check className="w-3.5 h-3.5 text-neutral-950 stroke-3" />
+                  <Check className="w-3.5 h-3.5 text-white dark:text-neutral-950 stroke-3 transition-colors duration-300" />
                 )}
               </div>
               <span className="truncate text-sm flex-1 font-medium">
@@ -357,21 +357,21 @@ export function FilterCardAssuntosAvancado({
             return (
               <div
                 key={mId}
-                className="border-b border-neutral-800/50 last:border-0"
+                className="border-b border-gray-200 dark:border-neutral-800/50 last:border-0 transition-colors duration-300"
               >
-                <div className="flex items-center justify-between w-full px-4 py-3.5 hover:bg-neutral-950 transition-colors">
+                <div className="flex items-center justify-between w-full px-4 py-3.5 hover:bg-gray-50 dark:hover:bg-neutral-950 transition-colors duration-300">
                   <div className="flex items-center gap-3 flex-1">
                     <button
                       type="button"
                       onClick={() => onToggleMateria(mId)}
-                      className={`w-5 h-5 rounded border shrink-0 flex items-center justify-center transition-colors ${
+                      className={`w-5 h-5 rounded border shrink-0 flex items-center justify-center transition-colors duration-300 ${
                         isFolderSelected
-                          ? "bg-emerald-500 border-emerald-500"
-                          : "border-neutral-700 bg-neutral-950 hover:border-neutral-500"
+                          ? "bg-[#009966] dark:bg-emerald-500 border-[#009966] dark:border-emerald-500"
+                          : "border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 hover:border-gray-400 dark:hover:border-neutral-500"
                       }`}
                     >
                       {isFolderSelected && (
-                        <Check className="w-3.5 h-3.5 text-neutral-950 stroke-3" />
+                        <Check className="w-3.5 h-3.5 text-white dark:text-neutral-950 stroke-3 transition-colors duration-300" />
                       )}
                     </button>
 
@@ -387,22 +387,22 @@ export function FilterCardAssuntosAvancado({
                       className="flex flex-1 items-center gap-2 text-left"
                     >
                       {isExpanded ? (
-                        <FolderOpen className="w-4 h-4 text-emerald-500 shrink-0" />
+                        <FolderOpen className="w-4 h-4 text-[#009966] dark:text-emerald-500 shrink-0 transition-colors duration-300" />
                       ) : (
-                        <Folder className="w-4 h-4 text-neutral-400 shrink-0" />
+                        <Folder className="w-4 h-4 text-gray-400 dark:text-neutral-400 shrink-0 transition-colors duration-300" />
                       )}
-                      <span className="font-semibold text-sm text-neutral-300 truncate">
+                      <span className="font-semibold text-sm text-gray-700 dark:text-neutral-300 truncate transition-colors duration-300">
                         {mName}
                       </span>
                     </button>
                   </div>
                   <ChevronDown
-                    className={`w-4 h-4 text-neutral-500 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                    className={`w-4 h-4 text-gray-500 dark:text-neutral-500 transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`}
                   />
                 </div>
 
                 {isExpanded && (
-                  <div className="flex flex-col bg-neutral-950 pb-2">
+                  <div className="flex flex-col bg-gray-50 dark:bg-neutral-950 pb-2 transition-colors duration-300">
                     {data.assuntos.map((item: any) => {
                       const isSelected =
                         isFolderSelected || selections[item.id] !== undefined;
@@ -412,30 +412,30 @@ export function FilterCardAssuntosAvancado({
                           key={item.id}
                           type="button"
                           onClick={() => onToggleAssunto(item.id, mId)}
-                          className={`flex items-start gap-3 w-full text-left pr-4 py-2.5 transition-colors group ${
+                          className={`flex items-start gap-3 w-full text-left pr-4 py-2.5 transition-colors duration-300 group ${
                             isSelected
-                              ? "bg-neutral-950 text-white"
-                              : "hover:bg-neutral-950 text-neutral-400 hover:text-neutral-200"
+                              ? "bg-gray-100 dark:bg-neutral-900 text-gray-900 dark:text-white"
+                              : "hover:bg-gray-100 dark:hover:bg-neutral-900 text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-neutral-200"
                           }`}
                         >
-                          <div className="w-12 shrink-0 flex justify-end opacity-40 group-hover:opacity-100 transition-opacity">
+                          <div className="w-12 shrink-0 flex justify-end opacity-40 group-hover:opacity-100 transition-opacity duration-300">
                             <CornerDownRight
-                              className={`w-4 h-4 mt-0.5 ${isSelected ? "text-emerald-500" : "text-neutral-600"}`}
+                              className={`w-4 h-4 mt-0.5 transition-colors duration-300 ${isSelected ? "text-[#009966] dark:text-emerald-500" : "text-gray-400 dark:text-neutral-600"}`}
                             />
                           </div>
                           <div
-                            className={`w-4 h-4 mt-0.5 rounded border shrink-0 flex items-center justify-center transition-colors ${
+                            className={`w-4 h-4 mt-0.5 rounded border shrink-0 flex items-center justify-center transition-colors duration-300 ${
                               isSelected
-                                ? "bg-emerald-500 border-emerald-500"
-                                : "border-neutral-700 bg-neutral-950 group-hover:border-neutral-500"
+                                ? "bg-[#009966] dark:bg-emerald-500 border-[#009966] dark:border-emerald-500"
+                                : "border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 group-hover:border-gray-400 dark:group-hover:border-neutral-500"
                             }`}
                           >
                             {isSelected && (
-                              <Check className="w-3 h-3 text-neutral-950 stroke-3" />
+                              <Check className="w-3 h-3 text-white dark:text-neutral-950 stroke-3 transition-colors duration-300" />
                             )}
                           </div>
                           <span
-                            className={`flex-1 truncate text-[13px] leading-snug ${isSelected ? "text-neutral-200" : "text-neutral-500"}`}
+                            className={`flex-1 truncate text-[13px] leading-snug transition-colors duration-300 ${isSelected ? "text-gray-900 dark:text-neutral-200" : "text-gray-500 dark:text-neutral-500"}`}
                           >
                             {item.nome}
                           </span>

@@ -54,24 +54,24 @@ function extrairSalario(texto: string | null): number {
   return Math.max(...valores);
 }
 
-// ATUALIZADO: Suporte para os novos status
+// ATUALIZADO: Suporte para os novos status com light/dark themes
 const getStatusBadge = (status: string) => {
   switch (status) {
     case "Inscrições Abertas":
     case "Edital Lançado":
-      return "text-emerald-400 border-emerald-500/30 bg-emerald-500/10";
+      return "text-emerald-700 bg-emerald-50 border border-emerald-200 dark:text-emerald-400 dark:border-emerald-500/30 dark:bg-emerald-500/10 transition-colors duration-300";
     case "Concurso Autorizado":
     case "Banca Definida":
     case "Edital Iminente":
     case "Em Breve":
     case "Edital Em Breve":
-      return "text-neutral-300 border-neutral-500/30 bg-neutral-500/10";
+      return "text-gray-600 bg-gray-100 border border-gray-200 dark:text-neutral-300 dark:border-neutral-500/30 dark:bg-neutral-500/10 transition-colors duration-300";
     case "Inscrições Encerradas":
     case "Concurso Encerrado":
     case "Encerrado":
-      return "text-neutral-300 border-neutral-700 bg-neutral-800";
+      return "text-gray-500 bg-gray-100 border border-gray-200 dark:text-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 transition-colors duration-300";
     default:
-      return "text-neutral-300 border-none";
+      return "text-gray-600 border border-transparent dark:text-neutral-300 dark:border-none transition-colors duration-300";
   }
 };
 
@@ -153,7 +153,6 @@ function ConcursoCard({
     setIsLoadingLembrete(false);
   };
 
-  // NOVA LÓGICA: Exibir a escolaridade corretamente se for Técnico
   const exibirEscolaridade = () => {
     if (!concurso.escolaridade) return "Não informado";
     if (concurso.escolaridade === "Técnico" && concurso.cursoTecnico) {
@@ -163,30 +162,32 @@ function ConcursoCard({
   };
 
   return (
-    <div className="bg-neutral-900 rounded-2xl border border-neutral-800 overflow-hidden flex flex-col hover:border-neutral-700 hover:bg-neutral-900/80 transition-all duration-300 group h-full relative">
+    <div className="bg-white dark:bg-neutral-900 rounded-2xl border group border-gray-200 dark:border-neutral-800 overflow-hidden flex flex-col hover:border-gray-300 dark:hover:border-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-900/80 transition-colors duration-300 group h-full relative">
       {concurso.thumbnailUrl && (
-        <div className="absolute bottom-0 right-0 w-78 h-78 overflow-hidden z-0 pointer-events-none opacity-50  transition-opacity duration-500">
+        <div className="absolute bottom-0 right-0 w-78 h-78 overflow-hidden z-0 pointer-events-none opacity-65 transition-opacity duration-500">
           <Image
             src={concurso.thumbnailUrl}
             alt={concurso.orgao}
             fill
             sizes="(max-width: 768px) 100vw, 350px"
-            className="object-cover object-center"
+            className="object-cover object-center group-hover:opacity-40 duration-300"
           />
-          <div className="absolute inset-0 bg-linear-to-t from-transparent via-neutral-900/40 to-neutral-900" />
-          <div className="absolute inset-0 bg-linear-to-r from-neutral-900 via-neutral-900/40 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-t from-transparent via-white/0 to-white dark:via-neutral-900/40 dark:to-neutral-900 transition-colors duration-300" />
+          <div className="absolute inset-0 bg-linear-to-r from-white via-white/0 to-transparent dark:from-neutral-900 dark:via-neutral-900/40 dark:to-transparent transition-colors duration-300" />
         </div>
       )}
 
-      <div className="px-6 py-3 border-b border-neutral-800/50 flex items-center justify-between bg-neutral-950/30 relative z-10">
+      <div className="px-6 py-3 border-b border-gray-100 dark:border-neutral-800/50 flex items-center justify-between bg-gray-50 dark:bg-neutral-950/30 relative z-10 transition-colors duration-300">
         <span
-          className={`text-xs font-semibold text-neutral-300 bg-neutral-800 px-2.5 py-1 rounded-md ${getStatusBadge(concurso.status)}`}
+          className={`text-xs font-semibold px-2.5 py-1 rounded-md ${getStatusBadge(
+            concurso.status,
+          )}`}
         >
           {concurso.status}
         </span>
-        <div className="flex gap-1 items-center justify-center text-sm font-medium text-neutral-500">
+        <div className="flex gap-1 items-center justify-center text-sm font-medium text-gray-500 dark:text-neutral-500 transition-colors duration-300">
           Banca:
-          <span className="text-xs font-semibold text-neutral-300 bg-neutral-800 px-2.5 py-1 rounded-md">
+          <span className="text-xs font-semibold text-gray-700 bg-gray-200 dark:text-neutral-300 dark:bg-neutral-800 px-2.5 py-1 rounded-md transition-colors duration-300">
             {concurso.banca}
           </span>
         </div>
@@ -196,16 +197,16 @@ function ConcursoCard({
         <button
           onClick={handleToggleLembrete}
           disabled={isLoadingLembrete}
-          className={`flex gap-2 font-medium items-center py-1 px-2 text-xs rounded-md duration-300 shadow-sm cursor-pointer backdrop-blur-sm border ${
+          className={`flex gap-2 font-medium items-center py-1 px-2 text-xs rounded-md transition-colors duration-300 shadow-sm cursor-pointer backdrop-blur-sm border ${
             isLembreteAtivo
-              ? "bg-neutral-500/20 text-neutral-200 border-neutral-500 hover:bg-neutral-500"
-              : "bg-neutral-800/80 text-neutral-400 border-neutral-700/50 hover:text-white hover:bg-neutral-700"
+              ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 dark:bg-neutral-500/20 dark:text-neutral-200 dark:border-neutral-500 dark:hover:bg-neutral-500"
+              : "bg-white text-gray-500 border-gray-200 hover:text-gray-900 hover:bg-gray-50 dark:bg-neutral-800/80 dark:text-neutral-400 dark:border-neutral-700/50 dark:hover:text-white dark:hover:bg-neutral-700"
           }`}
         >
           {isLoadingLembrete ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
           ) : isLembreteAtivo ? (
-            <BellRing className="h-3.5 w-3.5 fill-white" />
+            <BellRing className="h-3.5 w-3.5 fill-emerald-600 dark:fill-white transition-colors duration-300" />
           ) : (
             <Bell className="h-3.5 w-3.5" />
           )}
@@ -215,10 +216,10 @@ function ConcursoCard({
 
       <div className="px-6 py-4 flex-1 flex flex-col gap-4 relative z-10">
         <div>
-          <h2 className="text-xl font-extrabold text-neutral-200 group-hover:text-emerald-400 transition-colors leading-tight">
+          <h2 className="text-xl font-extrabold text-gray-900 dark:text-neutral-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors duration-300 leading-tight">
             {concurso.orgao}
           </h2>
-          <p className="text-emerald-500 font-medium text-sm mt-1">
+          <p className="text-emerald-600 dark:text-emerald-500 font-medium text-sm mt-1 transition-colors duration-300">
             {concurso.cargo}
           </p>
         </div>
@@ -226,7 +227,7 @@ function ConcursoCard({
         {concurso.descricao && (
           <div className="flex flex-col">
             <p
-              className={`text-sm text-neutral-400 transition-all duration-300 ${
+              className={`text-sm text-gray-600 dark:text-neutral-400 transition-colors duration-300 ${
                 mostrarDescricaoCompleta ? "" : "line-clamp-2"
               }`}
             >
@@ -237,7 +238,7 @@ function ConcursoCard({
                 onClick={() =>
                   setMostrarDescricaoCompleta(!mostrarDescricaoCompleta)
                 }
-                className="text-neutral-500 font-medium text-xs mt-1 hover:underline cursor-pointer w-fit"
+                className="text-gray-500 dark:text-neutral-500 font-medium text-xs mt-1 hover:underline cursor-pointer w-fit transition-colors duration-300"
               >
                 {mostrarDescricaoCompleta ? "ver menos..." : "ver mais..."}
               </p>
@@ -246,8 +247,8 @@ function ConcursoCard({
         )}
 
         <div className="grid grid-cols-2 gap-y-3 gap-x-2 mt-2">
-          <div className="flex items-center gap-2 text-neutral-300">
-            <CircleDollarSign className="w-4 h-4 text-neutral-500 shrink-0" />
+          <div className="flex items-center gap-2 text-gray-700 dark:text-neutral-300 transition-colors duration-300">
+            <CircleDollarSign className="w-4 h-4 text-gray-400 dark:text-neutral-500 shrink-0 transition-colors duration-300" />
             <span
               className="text-xs font-medium truncate"
               title={concurso.salario || ""}
@@ -255,14 +256,14 @@ function ConcursoCard({
               {concurso.salario || "A definir"}
             </span>
           </div>
-          <div className="flex items-center gap-2 text-neutral-300">
-            <Users className="w-4 h-4 text-neutral-500 shrink-0" />
+          <div className="flex items-center gap-2 text-gray-700 dark:text-neutral-300 transition-colors duration-300">
+            <Users className="w-4 h-4 text-gray-400 dark:text-neutral-500 shrink-0 transition-colors duration-300" />
             <span className="text-xs font-medium truncate">
               {concurso.vagas || "Cadastro Reserva"}
             </span>
           </div>
-          <div className="flex items-center gap-2 text-neutral-300 col-span-2">
-            <GraduationCap className="w-4 h-4 text-neutral-500 shrink-0" />
+          <div className="flex items-center gap-2 text-gray-700 dark:text-neutral-300 col-span-2 transition-colors duration-300">
+            <GraduationCap className="w-4 h-4 text-gray-400 dark:text-neutral-500 shrink-0 transition-colors duration-300" />
             <span className="text-xs font-medium truncate">
               {exibirEscolaridade()}
             </span>
@@ -272,12 +273,12 @@ function ConcursoCard({
         {(concurso.periodoInscricao ||
           concurso.periodoIsencao ||
           concurso.dataProva) && (
-          <div className="border-t border-neutral-800/60 md:grid md:grid-cols-2 pt-4 mt-2 space-y-3">
+          <div className="border-t border-gray-200 dark:border-neutral-800/60 md:grid md:grid-cols-2 pt-4 mt-2 space-y-3 transition-colors duration-300">
             {concurso.periodoInscricao && (
               <div className="flex items-start gap-2">
-                <Clock className="w-3.5 h-3.5 text-neutral-500 mt-0.5 shrink-0" />
-                <p className="text-[11px] text-neutral-400 leading-tight">
-                  <span className="font-bold text-neutral-300 block">
+                <Clock className="w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mt-0.5 shrink-0 transition-colors duration-300" />
+                <p className="text-[11px] text-gray-600 dark:text-neutral-400 font-semibold leading-tight transition-colors duration-300">
+                  <span className="font-bold text-gray-800 dark:text-neutral-300 block transition-colors duration-300">
                     Período de Inscrição:
                   </span>
                   {concurso.periodoInscricao}
@@ -286,9 +287,9 @@ function ConcursoCard({
             )}
             {concurso.periodoIsencao && (
               <div className="flex items-start gap-2">
-                <Clock className="w-3.5 h-3.5 text-neutral-500 mt-0.5 shrink-0" />
-                <p className="text-[11px] text-neutral-400 leading-tight">
-                  <span className="font-bold text-neutral-300 block">
+                <Clock className="w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mt-0.5 shrink-0 transition-colors duration-300" />
+                <p className="text-[11px] text-gray-600 font-semibold dark:text-neutral-400 leading-tight transition-colors duration-300">
+                  <span className="font-bold text-gray-800 dark:text-neutral-300 block transition-colors duration-300">
                     Período de Isenção:
                   </span>
                   {concurso.periodoIsencao}
@@ -297,9 +298,9 @@ function ConcursoCard({
             )}
             {concurso.dataProva && (
               <div className="flex items-start gap-2">
-                <CalendarDays className="w-3.5 h-3.5 text-neutral-500 mt-0.5 shrink-0" />
-                <p className="text-[11px] text-neutral-400 leading-tight">
-                  <span className="font-bold text-neutral-300 block">
+                <CalendarDays className="w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mt-0.5 shrink-0 transition-colors duration-300" />
+                <p className="text-[11px] font-semibold text-gray-600 dark:text-neutral-400 leading-tight transition-colors duration-300">
+                  <span className="font-bold text-gray-800 dark:text-neutral-300 block transition-colors duration-300">
                     Data da Prova:
                   </span>
                   {concurso.dataProva}
@@ -310,26 +311,25 @@ function ConcursoCard({
         )}
       </div>
 
-      {/* AÇÕES (BOTÕES E LINKS INFERIORES) */}
       <div className="p-5 pt-0 mt-auto flex flex-col gap-3 relative z-10">
         {isEmBreve ? (
           <button
             disabled
-            className="w-full flex items-center justify-center gap-2 backdrop-blur-md py-3 rounded-xl font-bold text-sm transition-all duration-300 bg-neutral-800 text-white/40"
+            className="w-full flex items-center justify-center gap-2 backdrop-blur-md py-3 rounded-xl font-bold text-sm transition-colors duration-300 bg-gray-100 text-gray-400 dark:bg-neutral-800 dark:text-white/40"
           >
             Em Breve...
           </button>
         ) : isInscricoesEncerradas ? (
           <button
             disabled
-            className="w-full flex items-center justify-center gap-2 backdrop-blur-md py-3 rounded-xl font-bold text-sm transition-all duration-300 bg-neutral-800 text-white/40"
+            className="w-full flex items-center justify-center gap-2 backdrop-blur-md py-3 rounded-xl font-bold text-sm transition-colors duration-300 bg-gray-100 text-gray-400 dark:bg-neutral-800 dark:text-white/40"
           >
             Inscrições Encerradas <ExternalLink className="w-4 h-4" />
           </button>
         ) : isEncerradoTudo ? (
           <button
             disabled
-            className="w-full flex items-center justify-center gap-2 backdrop-blur-md py-3 rounded-xl font-bold text-sm transition-all duration-300 bg-neutral-800 text-white/40"
+            className="w-full flex items-center justify-center gap-2 backdrop-blur-md py-3 rounded-xl font-bold text-sm transition-colors duration-300 bg-gray-100 text-gray-400 dark:bg-neutral-800 dark:text-white/40"
           >
             Concurso Encerrado
           </button>
@@ -342,7 +342,7 @@ function ConcursoCard({
                 ? "noopener noreferrer"
                 : undefined
             }
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all duration-300 bg-emerald-600 text-white hover:bg-emerald-500 shadow-lg shadow-emerald-900/20"
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-colors duration-300 bg-[#009966] text-white hover:bg-[#008055] shadow-lg shadow-[#009966]/20 dark:bg-emerald-600 dark:hover:bg-emerald-500 dark:shadow-emerald-900/20"
           >
             Fazer Inscrição <ExternalLink className="w-4 h-4" />
           </Link>
@@ -353,7 +353,7 @@ function ConcursoCard({
             <>
               <Link
                 href="/aluno/noticias"
-                className="flex items-center gap-1.5 text-xs font-medium text-neutral-400 hover:text-emerald-400 transition-colors group/link"
+                className="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-neutral-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors duration-300 group/link"
               >
                 <Megaphone className="w-3.5 h-3.5" />
                 <span className="group-hover/link:underline underline-offset-2">
@@ -371,7 +371,7 @@ function ConcursoCard({
                       ? "noopener noreferrer"
                       : undefined
                   }
-                  className="flex items-center gap-1.5 text-xs font-medium text-neutral-400 hover:text-emerald-400 transition-colors  group/link"
+                  className="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-neutral-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors duration-300 group/link"
                 >
                   <FileText className="w-3.5 h-3.5" />
                   <span className="group-hover/link:underline underline-offset-2">
@@ -395,7 +395,7 @@ function ConcursoCard({
                       ? "noopener noreferrer"
                       : undefined
                   }
-                  className="flex items-center gap-1.5 text-xs font-medium text-neutral-400 hover:text-emerald-400 transition-colors group/link"
+                  className="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-neutral-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors duration-300 group/link"
                 >
                   <FileText className="w-3.5 h-3.5" />
                   <span className="group-hover/link:underline underline-offset-2">
@@ -414,7 +414,7 @@ function ConcursoCard({
                       ? "noopener noreferrer"
                       : undefined
                   }
-                  className="flex items-center gap-1.5 text-xs font-medium text-neutral-400 hover:text-emerald-400 transition-colors group/link"
+                  className="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-neutral-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors duration-300 group/link"
                 >
                   <CalendarDays className="w-3.5 h-3.5" />
                   <span className="group-hover/link:underline underline-offset-2">
@@ -434,7 +434,7 @@ function ConcursoCard({
                   ? "noopener noreferrer"
                   : undefined
               }
-              className="flex items-center gap-1.5 text-xs font-medium text-neutral-400 hover:text-emerald-400 transition-colors group/link"
+              className="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-neutral-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors duration-300 group/link"
             >
               <FileText className="w-3.5 h-3.5" />
               <span className="group-hover/link:underline underline-offset-2">
@@ -455,7 +455,7 @@ function ConcursoCard({
                     ? "noopener noreferrer"
                     : undefined
                 }
-                className="flex items-center gap-1.5 text-xs font-medium text-neutral-400 hover:text-emerald-400 transition-colors py-1 group/link"
+                className="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-neutral-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors duration-300 py-1 group/link"
               >
                 <FileText className="w-3.5 h-3.5" />
                 <span className="group-hover/link:underline underline-offset-2">
@@ -472,7 +472,7 @@ function ConcursoCard({
 function SecaoConcursos({
   titulo,
   concursos,
-  badgeColor = "bg-neutral-800 text-neutral-400",
+  badgeColor = "bg-gray-100 text-gray-600 dark:bg-neutral-800 dark:text-neutral-400 transition-colors duration-300",
   lembretesAtivosIniciais = [],
 }: {
   titulo: string;
@@ -484,8 +484,8 @@ function SecaoConcursos({
 
   return (
     <section className="space-y-6">
-      <div className="flex items-center pb-3 border-b border-neutral-800">
-        <h2 className="text-xl font-bold text-white tracking-tight">
+      <div className="flex items-center pb-3 border-b border-gray-200 dark:border-neutral-800 transition-colors duration-300">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight transition-colors duration-300">
           {titulo}
         </h2>
         <span
@@ -533,7 +533,6 @@ export function ListaConcursos({
     new Set(concursosIniciais.map((c) => c.cargo).filter(Boolean)),
   );
 
-  // NOVA LÓGICA PARA O FILTRO: Incluir Técnicos e Nível Médio/Superior de forma limpa
   const opcoesEscolaridade = Array.from(
     new Set(
       concursosIniciais
@@ -570,7 +569,6 @@ export function ListaConcursos({
       const matchBanca = !filtroBanca || c.banca === filtroBanca;
       const matchCargo = !filtroCargo || c.cargo === filtroCargo;
 
-      // NOVA LÓGICA DO FILTRO: Lidar com a junção de Técnico + Curso
       let matchEscolaridade = true;
       if (filtroEscolaridade) {
         if (c.escolaridade === "Técnico" && c.cursoTecnico) {
@@ -612,7 +610,6 @@ export function ListaConcursos({
     filtroSalario,
   ]);
 
-  // ATUALIZADO: Distribuição das secções
   const concursosAbertos = concursosFiltrados.filter(
     (c) => c.status === "Inscrições Abertas" || c.status === "Edital Lançado",
   );
@@ -642,35 +639,32 @@ export function ListaConcursos({
 
   return (
     <>
-      {/* BARRA DE PESQUISA E FILTROS */}
       <div className="mb-9 flex flex-col md:flex-row items-start md:items-center justify-start gap-4">
-        {/* BUSCA EM TEXTO */}
-        <div className="group relative flex h-10 w-full max-w-md cursor-text items-center justify-between rounded-full bg-neutral-900 px-4 duration-300 hover:ring-1 hover:ring-neutral-800">
+        <div className="group relative flex h-10 w-full max-w-md cursor-text items-center justify-between rounded-full bg-white dark:bg-neutral-900 border border-gray-200 dark:border-transparent px-4 transition-all duration-300 hover:ring-1 hover:ring-gray-300 dark:hover:ring-neutral-800">
           <div className="flex w-full items-center">
-            <Search className="mr-3 h-4 w-4 text-neutral-500 shrink-0" />
+            <Search className="mr-3 h-4 w-4 text-gray-400 dark:text-neutral-500 shrink-0 transition-colors duration-300" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Pesquisar por órgão ou cargo..."
-              className="w-full bg-transparent text-sm font-medium text-neutral-200 transition-colors placeholder:text-neutral-500 focus:outline-none"
+              className="w-full bg-transparent text-sm font-medium text-gray-900 dark:text-neutral-200 transition-colors placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none"
             />
           </div>
-          <div className="hidden sm:flex items-center gap-1 text-[10px] font-bold text-neutral-600 shrink-0 pl-2">
-            <kbd className="rounded bg-neutral-800 px-1.5 py-0.5 font-sans">
+          <div className="hidden sm:flex items-center gap-1 text-[10px] font-bold text-gray-500 dark:text-neutral-600 shrink-0 pl-2 transition-colors duration-300">
+            <kbd className="rounded bg-gray-100 dark:bg-neutral-800 px-1.5 py-0.5 font-sans transition-colors duration-300">
               ⌘
             </kbd>
-            <kbd className="rounded bg-neutral-800 px-1.5 py-0.5 font-sans">
+            <kbd className="rounded bg-gray-100 dark:bg-neutral-800 px-1.5 py-0.5 font-sans transition-colors duration-300">
               K
             </kbd>
           </div>
         </div>
 
-        <div className="w-1 border-r h-10 border-neutral-800 hidden md:block"></div>
+        <div className="w-1 border-r h-10 border-gray-200 dark:border-neutral-800 hidden md:block transition-colors duration-300"></div>
 
-        {/* DROPDOWNS DINÂMICOS */}
         <div className="flex flex-wrap items-center gap-3">
-          <span className="text-neutral-700 font-medium text-sm hidden sm:block">
+          <span className="text-gray-600 dark:text-neutral-700 font-medium text-sm hidden sm:block transition-colors duration-300">
             Filtros:
           </span>
 
@@ -678,10 +672,10 @@ export function ListaConcursos({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
-                className={`bg-neutral-900 cursor-pointer duration-300 hover:ring-[0.6px] ring-neutral-700 py-5 rounded-full px-4 border-none shadow-none ${
+                className={`bg-white dark:bg-neutral-900 cursor-pointer transition-all duration-300 hover:ring-[0.6px] ring-gray-300 dark:ring-neutral-700 py-5 rounded-full px-4 border border-gray-200 dark:border-none shadow-sm dark:shadow-none ${
                   filtroBanca
-                    ? " text-neutral-300 hover:bg-neutral-900"
-                    : " text-neutral-500"
+                    ? " text-gray-900 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-900"
+                    : " text-gray-500 dark:text-neutral-500"
                 }`}
               >
                 <GalleryVerticalEnd className="mr-1.5 h-4 w-4 shrink-0" />
@@ -690,14 +684,14 @@ export function ListaConcursos({
                 </span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-neutral-900 border border-neutral-800 text-neutral-300">
+            <DropdownMenuContent className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 text-gray-700 dark:text-neutral-300 transition-colors duration-300">
               <DropdownMenuGroup>
-                <DropdownMenuLabel className="text-neutral-500">
+                <DropdownMenuLabel className="text-gray-500 dark:text-neutral-500 transition-colors duration-300">
                   Filtrar por Banca
                 </DropdownMenuLabel>
                 <DropdownMenuItem
                   onClick={() => setFiltroBanca(null)}
-                  className="cursor-pointer focus:bg-neutral-800 border-t rounded-none border-neutral-700/70 focus:text-white py-3 duration-200"
+                  className="cursor-pointer focus:bg-gray-100 dark:focus:bg-neutral-800 border-t rounded-none border-gray-100 dark:border-neutral-700/70 focus:text-gray-900 dark:focus:text-white py-3 duration-200 transition-colors"
                 >
                   Todas as Bancas
                 </DropdownMenuItem>
@@ -705,7 +699,7 @@ export function ListaConcursos({
                   <DropdownMenuItem
                     key={banca as string}
                     onClick={() => setFiltroBanca(banca as string)}
-                    className="cursor-pointer focus:bg-neutral-800 border-t rounded-none border-neutral-700/70 focus:text-white py-3 duration-200"
+                    className="cursor-pointer focus:bg-gray-100 dark:focus:bg-neutral-800 border-t rounded-none border-gray-100 dark:border-neutral-700/70 focus:text-gray-900 dark:focus:text-white py-3 duration-200 transition-colors"
                   >
                     {banca as string}
                   </DropdownMenuItem>
@@ -718,10 +712,10 @@ export function ListaConcursos({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
-                className={`bg-neutral-900 cursor-pointer duration-300 hover:ring-[0.6px] ring-neutral-700 py-5 rounded-full px-4 border-none shadow-none ${
+                className={`bg-white dark:bg-neutral-900 cursor-pointer transition-all duration-300 hover:ring-[0.6px] ring-gray-300 dark:ring-neutral-700 py-5 rounded-full px-4 border border-gray-200 dark:border-none shadow-sm dark:shadow-none ${
                   filtroCargo
-                    ? " text-neutral-300 hover:bg-neutral-900"
-                    : " text-neutral-500"
+                    ? " text-gray-900 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-900"
+                    : " text-gray-500 dark:text-neutral-500"
                 }`}
               >
                 <Briefcase className="mr-1.5 h-4 w-4 shrink-0" />
@@ -730,14 +724,14 @@ export function ListaConcursos({
                 </span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-neutral-900 border border-neutral-800 text-neutral-300">
+            <DropdownMenuContent className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 text-gray-700 dark:text-neutral-300 transition-colors duration-300">
               <DropdownMenuGroup>
-                <DropdownMenuLabel className="text-neutral-500">
+                <DropdownMenuLabel className="text-gray-500 dark:text-neutral-500 transition-colors duration-300">
                   Filtrar por Cargo
                 </DropdownMenuLabel>
                 <DropdownMenuItem
                   onClick={() => setFiltroCargo(null)}
-                  className="cursor-pointer focus:bg-neutral-800 border-t rounded-none border-neutral-700/70 focus:text-white py-3 duration-200"
+                  className="cursor-pointer focus:bg-gray-100 dark:focus:bg-neutral-800 border-t rounded-none border-gray-100 dark:border-neutral-700/70 focus:text-gray-900 dark:focus:text-white py-3 duration-200 transition-colors"
                 >
                   Todos os Cargos
                 </DropdownMenuItem>
@@ -745,7 +739,7 @@ export function ListaConcursos({
                   <DropdownMenuItem
                     key={cargo as string}
                     onClick={() => setFiltroCargo(cargo as string)}
-                    className="cursor-pointer focus:bg-neutral-800 border-t rounded-none border-neutral-700/70 focus:text-white py-3 duration-200"
+                    className="cursor-pointer focus:bg-gray-100 dark:focus:bg-neutral-800 border-t rounded-none border-gray-100 dark:border-neutral-700/70 focus:text-gray-900 dark:focus:text-white py-3 duration-200 transition-colors"
                   >
                     {cargo as string}
                   </DropdownMenuItem>
@@ -758,10 +752,10 @@ export function ListaConcursos({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
-                className={`bg-neutral-900 cursor-pointer duration-300 hover:ring-[0.6px] ring-neutral-700 py-5 rounded-full px-4 border-none shadow-none ${
+                className={`bg-white dark:bg-neutral-900 cursor-pointer transition-all duration-300 hover:ring-[0.6px] ring-gray-300 dark:ring-neutral-700 py-5 rounded-full px-4 border border-gray-200 dark:border-none shadow-sm dark:shadow-none ${
                   filtroEscolaridade
-                    ? " text-neutral-300 hover:bg-neutral-900"
-                    : " text-neutral-500"
+                    ? " text-gray-900 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-900"
+                    : " text-gray-500 dark:text-neutral-500"
                 }`}
               >
                 <GraduationCap className="mr-1.5 h-4 w-4 shrink-0" />
@@ -770,14 +764,14 @@ export function ListaConcursos({
                 </span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-neutral-900 border border-neutral-800 text-neutral-300">
+            <DropdownMenuContent className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 text-gray-700 dark:text-neutral-300 transition-colors duration-300">
               <DropdownMenuGroup>
-                <DropdownMenuLabel className="text-neutral-500">
+                <DropdownMenuLabel className="text-gray-500 dark:text-neutral-500 transition-colors duration-300">
                   Nível Exigido
                 </DropdownMenuLabel>
                 <DropdownMenuItem
                   onClick={() => setFiltroEscolaridade(null)}
-                  className="cursor-pointer focus:bg-neutral-800 border-t rounded-none border-neutral-700/70 focus:text-white py-3 duration-200"
+                  className="cursor-pointer focus:bg-gray-100 dark:focus:bg-neutral-800 border-t rounded-none border-gray-100 dark:border-neutral-700/70 focus:text-gray-900 dark:focus:text-white py-3 duration-200 transition-colors"
                 >
                   Qualquer Escolaridade
                 </DropdownMenuItem>
@@ -785,7 +779,7 @@ export function ListaConcursos({
                   <DropdownMenuItem
                     key={nivel as string}
                     onClick={() => setFiltroEscolaridade(nivel as string)}
-                    className="cursor-pointer focus:bg-neutral-800 border-t rounded-none border-neutral-700/70 focus:text-white py-3 duration-200"
+                    className="cursor-pointer focus:bg-gray-100 dark:focus:bg-neutral-800 border-t rounded-none border-gray-100 dark:border-neutral-700/70 focus:text-gray-900 dark:focus:text-white py-3 duration-200 transition-colors"
                   >
                     {nivel as string}
                   </DropdownMenuItem>
@@ -798,10 +792,10 @@ export function ListaConcursos({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
-                className={`bg-neutral-900 hover:ring-[0.6px] ring-neutral-700 cursor-pointer duration-300 py-5 rounded-full px-4 border-none shadow-none ${
+                className={`bg-white dark:bg-neutral-900 transition-all duration-300 hover:ring-[0.6px] ring-gray-300 dark:ring-neutral-700 cursor-pointer py-5 rounded-full px-4 border border-gray-200 dark:border-none shadow-sm dark:shadow-none ${
                   filtroStatus
-                    ? "text-neutral-300 hover:bg-neutral-900"
-                    : " text-neutral-500"
+                    ? "text-gray-900 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-900"
+                    : " text-gray-500 dark:text-neutral-500"
                 }`}
               >
                 <CircleDashed className="mr-1.5 h-4 w-4 shrink-0" />
@@ -810,14 +804,14 @@ export function ListaConcursos({
                 </span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-neutral-900 border-neutral-800 text-neutral-300 border ">
+            <DropdownMenuContent className="bg-white dark:bg-neutral-900 border-gray-200 dark:border-neutral-800 text-gray-700 dark:text-neutral-300 border transition-colors duration-300">
               <DropdownMenuGroup>
-                <DropdownMenuLabel className="text-neutral-500">
+                <DropdownMenuLabel className="text-gray-500 dark:text-neutral-500 transition-colors duration-300">
                   Situação
                 </DropdownMenuLabel>
                 <DropdownMenuItem
                   onClick={() => setFiltroStatus(null)}
-                  className="cursor-pointer focus:bg-neutral-800 border-t rounded-none border-neutral-700/70 focus:text-white py-3 duration-200"
+                  className="cursor-pointer focus:bg-gray-100 dark:focus:bg-neutral-800 border-t rounded-none border-gray-100 dark:border-neutral-700/70 focus:text-gray-900 dark:focus:text-white py-3 duration-200 transition-colors"
                 >
                   Todos os Status
                 </DropdownMenuItem>
@@ -825,7 +819,7 @@ export function ListaConcursos({
                   <DropdownMenuItem
                     key={status as string}
                     onClick={() => setFiltroStatus(status as string)}
-                    className="cursor-pointer focus:bg-neutral-800 border-t rounded-none border-neutral-700/70 focus:text-white py-3 duration-200"
+                    className="cursor-pointer focus:bg-gray-100 dark:focus:bg-neutral-800 border-t rounded-none border-gray-100 dark:border-neutral-700/70 focus:text-gray-900 dark:focus:text-white py-3 duration-200 transition-colors"
                   >
                     {status as string}
                   </DropdownMenuItem>
@@ -838,10 +832,10 @@ export function ListaConcursos({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
-                className={`bg-neutral-900 cursor-pointer duration-300 py-5 hover:ring-[0.6px] ring-neutral-700 rounded-full px-4 border-none shadow-none ${
+                className={`bg-white dark:bg-neutral-900 cursor-pointer transition-all duration-300 py-5 hover:ring-[0.6px] ring-gray-300 dark:ring-neutral-700 rounded-full px-4 border border-gray-200 dark:border-none shadow-sm dark:shadow-none ${
                   filtroSalario
-                    ? "text-neutral-300 hover:bg-neutral-900"
-                    : " text-neutral-500"
+                    ? "text-gray-900 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-900"
+                    : " text-gray-500 dark:text-neutral-500"
                 }`}
               >
                 <CircleDollarSign className="mr-1.5 h-4 w-4 shrink-0" />
@@ -852,15 +846,15 @@ export function ListaConcursos({
                 </span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-neutral-900 border border-neutral-800 text-neutral-300 w-80 p-5 rounded-2xl shadow-2xl">
+            <DropdownMenuContent className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 text-gray-700 dark:text-neutral-300 w-80 p-5 rounded-2xl shadow-xl dark:shadow-2xl transition-colors duration-300">
               <div className="flex flex-col gap-6">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-semibold text-neutral-200">
+                  <span className="text-sm font-semibold text-gray-900 dark:text-neutral-200 transition-colors duration-300">
                     Faixa Salarial
                   </span>
                   <button
                     onClick={() => setFiltroSalario(null)}
-                    className="text-[11px] font-bold text-emerald-500 hover:text-emerald-400 transition-colors"
+                    className="text-[11px] font-bold text-[#009966] dark:text-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors duration-300"
                   >
                     Limpar
                   </button>
@@ -875,11 +869,13 @@ export function ListaConcursos({
                     className="py-2"
                   />
                 </div>
-                <div className="flex justify-between items-center text-xs font-medium text-neutral-400 bg-neutral-950 px-3 py-2 rounded-lg border border-neutral-800 shadow-inner">
+                <div className="flex justify-between items-center text-xs font-medium text-gray-600 dark:text-neutral-400 bg-gray-50 dark:bg-neutral-950 px-3 py-2 rounded-lg border border-gray-200 dark:border-neutral-800 shadow-inner transition-colors duration-300">
                   <span>
                     {formatarMoeda((filtroSalario || [0, sliderMax])[0])}
                   </span>
-                  <span className="text-neutral-600">-</span>
+                  <span className="text-gray-400 dark:text-neutral-600 transition-colors duration-300">
+                    -
+                  </span>
                   <span>
                     {formatarMoeda((filtroSalario || [0, sliderMax])[1])}
                   </span>
@@ -890,14 +886,13 @@ export function ListaConcursos({
         </div>
       </div>
 
-      {/* RENDERIZAÇÃO DOS CARDS */}
       {concursosFiltrados.length === 0 ? (
-        <div className="text-center p-16 bg-neutral-900 rounded-3xl border border-neutral-800">
-          <Building2 className="w-16 h-16 text-neutral-800 mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-neutral-300">
+        <div className="text-center p-16 bg-white dark:bg-neutral-900 rounded-3xl border border-gray-200 dark:border-neutral-800 transition-colors duration-300">
+          <Building2 className="w-16 h-16 text-gray-300 dark:text-neutral-800 mx-auto mb-4 transition-colors duration-300" />
+          <h3 className="text-xl font-bold text-gray-800 dark:text-neutral-300 transition-colors duration-300">
             Nenhum concurso encontrado.
           </h3>
-          <p className="text-neutral-500 mt-2">
+          <p className="text-gray-500 dark:text-neutral-500 mt-2 transition-colors duration-300">
             Verifique seus filtros ou pesquise por um termo diferente.
           </p>
         </div>
@@ -906,25 +901,25 @@ export function ListaConcursos({
           <SecaoConcursos
             titulo="Em Andamento (Inscrições Fechadas):"
             concursos={concursosInscricoesEncerradas}
-            badgeColor="bg-neutral-500/10 text-neutral-400 border border-neutral-500/20"
+            badgeColor="bg-gray-100 text-gray-600 border border-gray-200 dark:bg-neutral-500/10 dark:text-neutral-400 dark:border-neutral-500/20 transition-colors duration-300"
             lembretesAtivosIniciais={lembretesAtivosIniciais}
           />
           <SecaoConcursos
             titulo="Inscrições Abertas:"
             concursos={concursosAbertos}
-            badgeColor="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+            badgeColor="bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 transition-colors duration-300"
             lembretesAtivosIniciais={lembretesAtivosIniciais}
           />
           <SecaoConcursos
             titulo="Próximos Concursos:"
             concursos={concursosEmBreve}
-            badgeColor="bg-neutral-500/10 text-neutral-400 border border-neutral-500/20"
+            badgeColor="bg-gray-100 text-gray-600 border border-gray-200 dark:bg-neutral-500/10 dark:text-neutral-400 dark:border-neutral-500/20 transition-colors duration-300"
             lembretesAtivosIniciais={lembretesAtivosIniciais}
           />
           <SecaoConcursos
             titulo="Concursos Encerrados (Histórico):"
             concursos={concursosTotalmenteEncerrados}
-            badgeColor="bg-neutral-800 text-neutral-500 border border-neutral-700"
+            badgeColor="bg-gray-100 text-gray-500 border border-gray-200 dark:bg-neutral-800 dark:text-neutral-500 dark:border-neutral-700 transition-colors duration-300"
             lembretesAtivosIniciais={lembretesAtivosIniciais}
           />
         </div>

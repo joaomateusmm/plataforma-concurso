@@ -25,32 +25,32 @@ function TimeDisplay({ value }: { value: string }) {
   }, [isFlipping]);
 
   return (
-    <div className="relative flex flex-col items-center justify-center bg-[#111111] rounded-2xl w-50 h-32 md:w-58 md:h-56 transition-all perspective-1000">
-      <div className="absolute top-0 w-full h-1/2 overflow-hidden bg-[#111111] rounded-t-2xl flex items-end justify-center">
-        <span className="text-neutral-400 font-bold text-7xl md:text-9xl select-none translate-y-[50%]">
+    <div className="relative flex flex-col items-center justify-center bg-[#F1F3F5] dark:bg-[#111111] rounded-2xl w-50 h-32 md:w-58 md:h-56 transition-all perspective-1000">
+      <div className="absolute top-0 w-full h-1/2 overflow-hidden bg-[#F1F3F5] dark:bg-[#111111] rounded-t-2xl flex items-end justify-center">
+        <span className="text-neutral-400 dark:text-neutral-400 font-bold text-7xl md:text-9xl select-none translate-y-[50%]">
           {value}
         </span>
       </div>
 
-      <div className="absolute bottom-0 w-full h-1/2 overflow-hidden bg-[#111111] rounded-b-2xl flex items-start justify-center">
-        <span className="text-neutral-400 font-bold text-7xl md:text-9xl select-none -translate-y-[50%]">
+      <div className="absolute bottom-0 w-full h-1/2 overflow-hidden bg-[#F1F3F5] dark:bg-[#111111] rounded-b-2xl flex items-start justify-center">
+        <span className="text-neutral-400 dark:text-neutral-400 font-bold text-7xl md:text-9xl select-none -translate-y-[50%]">
           {isFlipping ? prevValue : value}
         </span>
       </div>
 
       <div
-        className={`absolute top-0 w-full h-1/2 overflow-hidden bg-[#111111] rounded-t-2xl flex items-end justify-center transform-origin-bottom ${
+        className={`absolute top-0 w-full h-1/2 overflow-hidden bg-[#F1F3F5] dark:bg-[#111111] rounded-t-2xl flex items-end justify-center transform-origin-bottom ${
           isFlipping ? "animate-flipTop" : ""
         }`}
         style={{ backfaceVisibility: "hidden", zIndex: 20 }}
       >
-        <span className="text-neutral-400 font-bold text-7xl md:text-9xl select-none translate-y-[50%]">
+        <span className="text-neutral-400 dark:text-neutral-400 font-bold text-7xl md:text-9xl select-none translate-y-[50%]">
           {isFlipping ? prevValue : value}
         </span>
       </div>
 
       <div
-        className={`absolute bottom-0 w-full h-1/2 overflow-hidden bg-[#111111] rounded-b-2xl flex items-start justify-center transform-origin-top ${
+        className={`absolute bottom-0 w-full h-1/2 overflow-hidden bg-[#F1F3F5] dark:bg-[#111111] rounded-b-2xl flex items-start justify-center transform-origin-top ${
           isFlipping ? "animate-flipBottom" : ""
         }`}
         style={{
@@ -59,12 +59,12 @@ function TimeDisplay({ value }: { value: string }) {
           zIndex: 10,
         }}
       >
-        <span className="text-neutral-400 font-bold text-7xl md:text-9xl select-none -translate-y-[50%]">
+        <span className="text-neutral-400 dark:text-neutral-400 font-bold text-7xl md:text-9xl select-none -translate-y-[50%]">
           {value}
         </span>
       </div>
 
-      <div className="absolute top-1/2 -translate-y-1/2 w-full h-1 md:h-1.5 bg-[#070707] z-30 shadow-inner pointer-events-none"></div>
+      <div className="absolute top-1/2 -translate-y-1/2 w-full h-1 md:h-1.5 bg-[#f9f9f9] dark:bg-[#070707] z-30 pointer-events-none"></div>
     </div>
   );
 }
@@ -85,7 +85,7 @@ export function Cronometro() {
   return (
     <div className="flex flex-col items-center animate-in fade-in duration-500">
       {/* TÍTULO OPCIONAL (Igual ao do Temporizador) */}
-      <p className="text-emerald-500 font-bold uppercase tracking-widest text-sm opacity-0 select-none">
+      <p className="text-[#009966] dark:text-emerald-500 font-bold uppercase tracking-widest text-sm opacity-0 select-none">
         Cronômetro
       </p>
 
@@ -107,7 +107,9 @@ export function Cronometro() {
         <button
           onClick={toggleStopwatch}
           className={`w-14 h-14 rounded-full flex cursor-pointer items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-xl ${
-            isStopwatchRunning ? "bg-black text-white" : "bg-white text-black"
+            isStopwatchRunning
+              ? "bg-white text-black dark:bg-black dark:text-white"
+              : "bg-[#1F2937] text-white dark:bg-white dark:text-black"
           }`}
         >
           {isStopwatchRunning ? (
@@ -119,10 +121,10 @@ export function Cronometro() {
 
         <button
           onClick={resetStopwatch}
-          className="w-14 h-14 rounded-full cursor-pointer bg-white/5 text-white flex items-center justify-center hover:bg-white/10 active:scale-95 transition-all border border-white/10"
+          className="w-14 h-14 rounded-full cursor-pointer bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200 active:scale-95 transition-all border border-gray-200 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 dark:border-white/10"
           title="Zerar Cronômetro"
         >
-          <RotateCcw className="w-5 h-5 text-gray-400 hover:text-white transition-colors" />
+          <RotateCcw className="w-5 h-5 text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors" />
         </button>
       </div>
     </div>
