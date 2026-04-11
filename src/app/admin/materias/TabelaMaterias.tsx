@@ -96,6 +96,10 @@ export function TabelaMaterias({ listaMaterias, materiaEditandoId }: any) {
             <th className="p-5 font-bold text-gray-500 text-xs uppercase tracking-wider">
               Nome da Matéria
             </th>
+            {/* NOVA COLUNA AQUI */}
+            <th className="p-5 font-bold text-gray-500 text-xs uppercase tracking-wider text-center">
+              Qtd. Assuntos
+            </th>
             <th className="p-5 font-bold text-gray-500 text-xs uppercase tracking-wider text-center w-32">
               Ações
             </th>
@@ -125,6 +129,12 @@ export function TabelaMaterias({ listaMaterias, materiaEditandoId }: any) {
                 <td className="p-5 text-sm font-medium text-gray-800">
                   {materia.nome}
                 </td>
+                {/* NOVO DADO AQUI */}
+                <td className="p-5 text-sm font-bold text-gray-600 text-center">
+                  <span className="bg-gray-100 px-3 py-1 rounded-full border border-gray-200">
+                    {materia.qtdAssuntos || 0}
+                  </span>
+                </td>
                 <td className="p-5 flex justify-center gap-2">
                   <Link
                     href={`/admin/materias?edit=${materia.id}`}
@@ -140,7 +150,8 @@ export function TabelaMaterias({ listaMaterias, materiaEditandoId }: any) {
 
           {listaMaterias.length === 0 && (
             <tr>
-              <td colSpan={4} className="p-10 text-center text-gray-500">
+              {/* Ajustado o colSpan para 5 pois agora temos mais uma coluna */}
+              <td colSpan={5} className="p-10 text-center text-gray-500">
                 Nenhuma matéria cadastrada ainda.
               </td>
             </tr>

@@ -185,3 +185,18 @@ export async function importarAssuntosJson(fileText: string) {
     };
   }
 }
+
+export async function exportarMateriasEAssuntos() {
+  try {
+    const listaMaterias = await db.select().from(materias);
+    const listaAssuntos = await db.select().from(assuntos);
+
+    return {
+      materias: listaMaterias,
+      assuntos: listaAssuntos,
+    };
+  } catch (error) {
+    console.error("Erro ao exportar matérias e assuntos:", error);
+    throw new Error("Falha ao buscar os dados.");
+  }
+}

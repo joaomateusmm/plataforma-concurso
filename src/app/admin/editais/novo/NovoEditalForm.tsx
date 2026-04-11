@@ -19,6 +19,8 @@ import {
   X,
   UploadCloud,
   FileJson,
+  Building2,
+  Copy,
 } from "lucide-react";
 import { criarEditalAdmin } from "@/actions/editais";
 
@@ -29,10 +31,13 @@ import type { OurFileRouter } from "@/app/api/uploadthing/core";
 // 2. GERA O HOOK TIPADO
 const { useUploadThing } = generateReactHelpers<OurFileRouter>();
 
-export default function NovoEditalForm({
+// 🚀 AQUI: Exportação Nomeada pura (SEM DEFAULT)
+export function NovoEditalForm({
   assuntosDb = [],
+  editaisDb = [],
 }: {
   assuntosDb?: any[];
+  editaisDb?: any[];
 }) {
   const router = useRouter();
 
@@ -43,9 +48,14 @@ export default function NovoEditalForm({
   // ESTADOS DOS ARQUIVOS
   const [thumbnailUrl, setThumbnailUrl] = useState("");
   const [pdfUrl, setPdfUrl] = useState("");
+  const [logoOrgao, setLogoOrgao] = useState("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+
+  // ESTADOS DO MODAL DE CLONAGEM
+  const [isCloneModalOpen, setIsCloneModalOpen] = useState(false);
+  const [cloneSearchTerm, setCloneSearchTerm] = useState("");
 
   // Referência para o input de ficheiro JSON escondido
   const jsonInputRef = useRef<HTMLInputElement>(null);
@@ -65,6 +75,42 @@ export default function NovoEditalForm({
   const setSelecionadosAtuais =
     abaAtiva === "basico" ? setAssuntosBasicos : setAssuntosEspecificos;
 
+  // --- LÓGICA DE CLONAR EDITAL EXISTENTE ---
+  const handleCloneEdital = (editalToClone: any) => {
+    setTitulo(`${editalToClone.titulo} (Cópia)`);
+    setBanca(editalToClone.banca || "");
+    setDescricao(editalToClone.descricao || "");
+    setThumbnailUrl(editalToClone.thumbnailUrl || "");
+    setLogoOrgao(editalToClone.logoOrgao || "");
+    setPdfUrl(editalToClone.pdfUrl || "");
+
+    const basicos: number[] = [];
+    const especificos: number[] = [];
+
+    if (Array.isArray(editalToClone.editalAssuntos)) {
+      editalToClone.editalAssuntos.forEach((rel: any) => {
+        if (rel.tipoConhecimento === "Básico") basicos.push(rel.assuntoId);
+        if (rel.tipoConhecimento === "Específico")
+          especificos.push(rel.assuntoId);
+      });
+    }
+
+    setAssuntosBasicos(basicos);
+    setAssuntosEspecificos(especificos);
+    setIsCloneModalOpen(false);
+
+    toast.success("Edital Clonado com Sucesso!", {
+      description: `Importados ${basicos.length} assuntos básicos e ${especificos.length} específicos.`,
+    });
+  };
+
+  const editaisFiltrados = editaisDb.filter(
+    (e) =>
+      e.titulo.toLowerCase().includes(cloneSearchTerm.toLowerCase()) ||
+      (e.banca &&
+        e.banca.toLowerCase().includes(cloneSearchTerm.toLowerCase())),
+  );
+
   // --- LÓGICA DE IMPORTAÇÃO JSON ---
   const handleJsonUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -75,7 +121,6 @@ export default function NovoEditalForm({
       try {
         const json = JSON.parse(event.target?.result as string);
 
-        // 1. Preenche campos de texto
         if (json.titulo) setTitulo(json.titulo);
         if (json.banca) setBanca(json.banca);
         if (json.descricao) setDescricao(json.descricao);
@@ -84,7 +129,6 @@ export default function NovoEditalForm({
         const especificosIds: number[] = [];
         const naoEncontrados: string[] = [];
 
-        // Função auxiliar para procurar o ID do assunto no banco
         const findAssuntoId = (assuntoNome: string, materiaNome?: string) => {
           const found = assuntosDb.find(
             (a) =>
@@ -98,7 +142,6 @@ export default function NovoEditalForm({
           return found ? found.id : null;
         };
 
-        // 2. Mapeia Conhecimentos Básicos
         if (Array.isArray(json.conhecimentosBasicos)) {
           json.conhecimentosBasicos.forEach((item: any) => {
             if (Array.isArray(item.assuntos)) {
@@ -111,7 +154,6 @@ export default function NovoEditalForm({
           });
         }
 
-        // 3. Mapeia Conhecimentos Específicos
         if (Array.isArray(json.conhecimentosEspecificos)) {
           json.conhecimentosEspecificos.forEach((item: any) => {
             if (Array.isArray(item.assuntos)) {
@@ -124,7 +166,6 @@ export default function NovoEditalForm({
           });
         }
 
-        // 4. Aplica os IDs encontrados aos estados
         setAssuntosBasicos(basicosIds);
         setAssuntosEspecificos(especificosIds);
 
@@ -132,16 +173,14 @@ export default function NovoEditalForm({
           description: `Mapeados ${basicosIds.length + especificosIds.length} assuntos automaticamente.`,
         });
 
-        // 5. Alerta caso algo tenha sido escrito com erro de digitação no JSON
         if (naoEncontrados.length > 0) {
           console.warn("Assuntos não encontrados no banco:", naoEncontrados);
           toast.warning(`${naoEncontrados.length} assuntos não encontrados.`, {
             description:
-              "Eles podem ter nomes diferentes no seu banco de dados. Veja o F12 (Console) para a lista.",
+              "Veja o F12 (Console) para a lista de itens não encontrados.",
             duration: 8000,
           });
         }
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (err) {
         toast.error("Erro ao ler JSON", {
           description: "O formato do arquivo é inválido.",
@@ -150,11 +189,32 @@ export default function NovoEditalForm({
     };
 
     reader.readAsText(file);
-    // Limpa o input para poder carregar o mesmo arquivo duas vezes se necessário
     e.target.value = "";
   };
 
-  // --- CONFIGURAÇÃO DO UPLOADTHING (IMAGEM) ---
+  // --- CONFIGURAÇÃO DO UPLOADTHING ---
+  const { startUpload: uploadLogo, isUploading: isUploadingLogo } =
+    useUploadThing("imageUploader", {
+      onClientUploadComplete: (res) => {
+        if (res && res[0]) {
+          setLogoOrgao(res[0].url);
+          toast.success("Logo enviada com sucesso!");
+        }
+      },
+      onUploadError: (error: Error) => {
+        toast.error(`Erro no upload: ${error.message}`);
+      },
+    });
+
+  const handleLogoSelect = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setLogoOrgao(URL.createObjectURL(file));
+    await uploadLogo([file]);
+  };
+
   const { startUpload: uploadImage, isUploading: isUploadingImage } =
     useUploadThing("imageUploader", {
       onClientUploadComplete: (res) => {
@@ -164,7 +224,7 @@ export default function NovoEditalForm({
         }
       },
       onUploadError: (error: Error) => {
-        toast.error(`Erro no upload da capa: ${error.message}`);
+        toast.error(`Erro no upload: ${error.message}`);
       },
     });
 
@@ -173,23 +233,20 @@ export default function NovoEditalForm({
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
-    const objectUrl = URL.createObjectURL(file);
-    setThumbnailUrl(objectUrl);
+    setThumbnailUrl(URL.createObjectURL(file));
     await uploadImage([file]);
   };
 
-  // --- CONFIGURAÇÃO DO UPLOADTHING (PDF) ---
   const { startUpload: uploadPdf, isUploading: isUploadingPdf } =
     useUploadThing("pdfUploader", {
       onClientUploadComplete: (res) => {
         if (res && res[0]) {
           setPdfUrl(res[0].url);
-          toast.success("Edital em PDF enviado com sucesso!");
+          toast.success("Edital em PDF enviado!");
         }
       },
       onUploadError: (error: Error) => {
-        toast.error(`Erro no upload do PDF: ${error.message}`);
+        toast.error(`Erro no upload: ${error.message}`);
       },
     });
 
@@ -198,15 +255,12 @@ export default function NovoEditalForm({
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
-    if (file.type !== "application/pdf") {
-      toast.error("Por favor, selecione apenas arquivos PDF.");
-      return;
-    }
+    if (file.type !== "application/pdf")
+      return toast.error("Apenas arquivos PDF.");
     await uploadPdf([file]);
   };
-  // --------------------------------------------------------------------
 
+  // --- LISTAGEM DE ASSUNTOS ---
   const isSearching = searchTerm.trim().length > 0;
 
   const assuntosAgrupados = useMemo(() => {
@@ -275,30 +329,26 @@ export default function NovoEditalForm({
 
   const handleSalvar = async (status: "Rascunho" | "Publicado") => {
     if (!titulo.trim())
-      return toast.error("Aviso", {
-        description: "O título do edital é obrigatório.",
-      });
-
+      return toast.error("Aviso", { description: "O título é obrigatório." });
     if (assuntosBasicos.length === 0 && assuntosEspecificos.length === 0) {
       return toast.error("Aviso", {
-        description: "Selecione pelo menos um assunto (Básico ou Específico).",
+        description: "Selecione pelo menos um assunto.",
       });
     }
-
-    if (isUploadingImage || isUploadingPdf) {
+    if (isUploadingImage || isUploadingPdf || isUploadingLogo) {
       return toast.warning("Aguarde", {
-        description: "Existem arquivos sendo enviados para o servidor.",
+        description: "Existem arquivos sendo enviados.",
       });
     }
 
     setIsSubmitting(true);
-
     try {
       const res = await criarEditalAdmin({
         titulo,
         banca,
         descricao,
         thumbnailUrl,
+        logoOrgao,
         pdfUrl,
         assuntosMapeados: {
           basico: assuntosBasicos,
@@ -342,44 +392,133 @@ export default function NovoEditalForm({
         className="hidden"
       />
 
+      {/* MODAL DE CLONAGEM DE EDITAL */}
+      {isCloneModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
+          <div className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+            <div className="p-6 border-b border-gray-100 dark:border-neutral-800 flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
+                  <Copy className="w-5 h-5 text-blue-500" /> Clonar Edital
+                  Existente
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-neutral-400 mt-1">
+                  Selecione um edital abaixo para copiar todos os dados e
+                  assuntos mapeados.
+                </p>
+              </div>
+              <button
+                onClick={() => setIsCloneModalOpen(false)}
+                className="p-2 bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700 text-gray-600 dark:text-neutral-300 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-4 border-b border-gray-100 dark:border-neutral-800 bg-gray-50 dark:bg-neutral-800/50">
+              <div className="relative">
+                <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Pesquisar por nome ou banca..."
+                  value={cloneSearchTerm}
+                  onChange={(e) => setCloneSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-2 hide-native-scroll">
+              {editaisFiltrados.length === 0 ? (
+                <p className="text-center text-gray-500 dark:text-neutral-400 py-8">
+                  Nenhum edital encontrado.
+                </p>
+              ) : (
+                editaisFiltrados.map((ed) => (
+                  <div
+                    key={ed.id}
+                    onClick={() => handleCloneEdital(ed)}
+                    className="p-4 border border-gray-100 dark:border-neutral-800 rounded-xl hover:border-blue-300 dark:hover:border-blue-500/50 hover:bg-blue-50/50 dark:hover:bg-blue-500/5 cursor-pointer transition-all flex items-center justify-between group"
+                  >
+                    <div className="flex items-center gap-4">
+                      {ed.logoOrgao ? (
+                        <img
+                          src={ed.logoOrgao}
+                          alt="Logo"
+                          className="w-10 h-10 object-contain bg-gray-100 dark:bg-neutral-800 rounded-lg p-1"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 bg-gray-100 dark:bg-neutral-800 rounded-lg flex items-center justify-center">
+                          <FileText className="w-5 h-5 text-gray-400" />
+                        </div>
+                      )}
+                      <div>
+                        <h4 className="font-bold text-gray-800 dark:text-white text-sm">
+                          {ed.titulo}
+                        </h4>
+                        <p className="text-xs text-gray-500 dark:text-neutral-400">
+                          {ed.banca || "Sem banca definida"}
+                        </p>
+                      </div>
+                    </div>
+                    <button className="text-sm font-bold text-blue-600 dark:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                      Clonar
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto space-y-8 animate-in mb-12 fade-in duration-500">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white border border-gray-200 p-8 rounded-3xl shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 p-8 rounded-3xl shadow-sm transition-colors duration-300">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-100 text-emerald-700 font-bold text-xs uppercase tracking-wider mb-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-bold text-xs uppercase tracking-wider mb-4 transition-colors duration-300">
               <ShieldAlert className="w-4 h-4" /> Área do Administrador
             </div>
-            <h1 className="text-3xl font-extrabold text-gray-900 flex items-center gap-3 mb-2">
-              <FileText className="w-8 h-8 text-emerald-600" />
+            <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white flex items-center gap-3 mb-2 transition-colors duration-300">
+              <FileText className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
               Cadastrar Novo Edital
             </h1>
-            <p className="text-gray-500">
+            <p className="text-gray-500 dark:text-neutral-400 transition-colors duration-300">
               Crie o mapeamento do edital dividindo as matérias em Conhecimentos
               Básicos e Específicos.
             </p>
           </div>
 
-          {/* BOTÃO PARA IMPORTAR JSON */}
-          <button
-            onClick={() => jsonInputRef.current?.click()}
-            className="flex items-center gap-2 px-5 py-3 rounded-xl bg-emerald-100 text-emerald-700 hover:bg-emerald-200 hover:text-emerald-800 font-bold border border-emerald-200 transition-all duration-300 shadow-sm"
-          >
-            <FileJson className="w-5 h-5" />
-            Importar via JSON
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsCloneModalOpen(true)}
+              className="flex items-center gap-2 px-5 py-3 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-500/20 font-bold border border-blue-200 dark:border-blue-500/20 transition-all duration-300 shadow-sm"
+            >
+              <Copy className="w-5 h-5" />
+              Clonar Edital
+            </button>
+
+            <button
+              onClick={() => jsonInputRef.current?.click()}
+              className="flex items-center gap-2 px-5 py-3 rounded-xl bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-500/30 font-bold border border-emerald-200 dark:border-emerald-500/30 transition-all duration-300 shadow-sm"
+            >
+              <FileJson className="w-5 h-5" />
+              Importar JSON
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* COLUNA ESQUERDA: INFORMAÇÕES E BOTÕES */}
           <div className="space-y-6 flex flex-col">
-            <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm flex-1">
-              <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-                <FileText className="w-5 h-5 text-emerald-600" /> Dados do
-                Edital
+            <div className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-3xl p-8 shadow-sm flex-1 transition-colors duration-300">
+              <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2 transition-colors duration-300">
+                <FileText className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />{" "}
+                Dados do Edital
               </h2>
 
               <div className="space-y-6">
                 <div className="flex flex-col gap-2">
-                  <label className="text-sm font-bold text-gray-500 uppercase tracking-wider">
+                  <label className="text-sm font-bold text-gray-500 dark:text-neutral-400 uppercase tracking-wider transition-colors duration-300">
                     Título do Edital *
                   </label>
                   <input
@@ -387,12 +526,12 @@ export default function NovoEditalForm({
                     value={titulo}
                     onChange={(e) => setTitulo(e.target.value)}
                     placeholder="Ex: Soldado PMCE 2026"
-                    className="w-full bg-gray-50 border border-gray-200 text-gray-900 px-4 py-3.5 rounded-xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition-all placeholder:text-gray-400"
+                    className="w-full bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 text-gray-900 dark:text-white px-4 py-3.5 rounded-xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-neutral-500"
                   />
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <label className="text-sm font-bold text-gray-500 uppercase tracking-wider">
+                  <label className="text-sm font-bold text-gray-500 dark:text-neutral-400 uppercase tracking-wider transition-colors duration-300">
                     Banca Organizadora
                   </label>
                   <input
@@ -400,43 +539,104 @@ export default function NovoEditalForm({
                     value={banca}
                     onChange={(e) => setBanca(e.target.value)}
                     placeholder="Ex: IDECAN, Cebraspe, FCC..."
-                    className="w-full bg-gray-50 border border-gray-200 text-gray-900 px-4 py-3.5 rounded-xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition-all placeholder:text-gray-400"
+                    className="w-full bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 text-gray-900 dark:text-white px-4 py-3.5 rounded-xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-neutral-500"
                   />
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <label className="text-sm font-bold text-gray-500 uppercase tracking-wider">
+                  <label className="text-sm font-bold text-gray-500 dark:text-neutral-400 uppercase tracking-wider transition-colors duration-300">
                     Descrição / Notas
                   </label>
                   <textarea
                     value={descricao}
                     onChange={(e) => setDescricao(e.target.value)}
                     placeholder="Informações adicionais sobre este edital..."
-                    className="w-full bg-gray-50 border border-gray-200 text-gray-900 px-4 py-3.5 rounded-xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition-all placeholder:text-gray-400 resize-none h-24"
+                    className="w-full bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 text-gray-900 dark:text-white px-4 py-3.5 rounded-xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-neutral-500 resize-none h-24"
                   />
                 </div>
 
-                {/* UPLOAD DE THUMBNAIL */}
-                <div className="flex flex-col gap-2 border-t border-gray-100 pt-6">
-                  <label className="text-sm font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                {/* NOVO CAMPO: UPLOAD DE LOGO DO ÓRGÃO */}
+                <div className="flex flex-col gap-2 border-t border-gray-100 dark:border-neutral-800 pt-6 transition-colors duration-300">
+                  <label className="text-sm font-bold text-gray-500 dark:text-neutral-400 uppercase tracking-wider flex items-center gap-2 transition-colors duration-300">
+                    <Building2 className="w-4 h-4" /> Logo do Órgão (PF, TJ,
+                    etc)
+                  </label>
+
+                  {logoOrgao ? (
+                    <div className="relative w-full h-32 rounded-2xl overflow-hidden border flex items-center justify-center border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800 group transition-colors duration-300">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={logoOrgao}
+                        alt="Logo"
+                        className="w-full h-full object-contain p-4 transition-transform group-hover:scale-105"
+                      />
+                      {isUploadingLogo && (
+                        <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                          <Loader2 className="w-8 h-8 animate-spin text-white" />
+                        </div>
+                      )}
+                      {!isUploadingLogo && (
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-30">
+                          <button
+                            type="button"
+                            onClick={() => setLogoOrgao("")}
+                            className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl font-bold transition-transform transform scale-95 group-hover:scale-100"
+                          >
+                            <X className="w-4 h-4" /> Remover Logo
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <label
+                      className={`flex flex-col items-center justify-center border-2 border-dashed border-gray-300 dark:border-neutral-700 rounded-2xl p-6 bg-gray-50 dark:bg-neutral-800 hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors duration-300 ${isUploadingLogo ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
+                    >
+                      {isUploadingLogo ? (
+                        <>
+                          <Loader2 className="w-6 h-6 animate-spin text-emerald-500 mb-2" />
+                          <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                            Preparando...
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-10 h-10 bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-full flex items-center justify-center mb-2 shadow-sm transition-colors duration-300">
+                            <Building2 className="w-5 h-5 text-gray-400 dark:text-neutral-500" />
+                          </div>
+                          <span className="text-sm font-bold text-gray-700 dark:text-neutral-300">
+                            Clique para escolher a Logo
+                          </span>
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleLogoSelect}
+                        disabled={isUploadingLogo}
+                      />
+                    </label>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-2 border-t border-gray-100 dark:border-neutral-800 pt-6 transition-colors duration-300">
+                  <label className="text-sm font-bold text-gray-500 dark:text-neutral-400 uppercase tracking-wider flex items-center gap-2 transition-colors duration-300">
                     <ImageIcon className="w-4 h-4" /> Capa do Edital
                   </label>
 
                   {thumbnailUrl ? (
-                    <div className="relative w-full h-48 rounded-2xl overflow-hidden border flex items-center justify-center border-gray-200 group">
+                    <div className="relative w-full h-48 rounded-2xl overflow-hidden border flex items-center justify-center border-gray-200 dark:border-neutral-700 group transition-colors duration-300">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={thumbnailUrl}
                         alt="Capa"
                         className="w-full h-full object-cover transition-transform group-hover:scale-105"
                       />
-
                       {isUploadingImage && (
                         <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50 backdrop-blur-sm">
                           <Loader2 className="w-8 h-8 animate-spin text-white" />
                         </div>
                       )}
-
                       {!isUploadingImage && (
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-30">
                           <button
@@ -451,28 +651,24 @@ export default function NovoEditalForm({
                     </div>
                   ) : (
                     <label
-                      className={`flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-2xl p-8 bg-gray-50 hover:bg-gray-100 transition-colors ${
-                        isUploadingImage
-                          ? "cursor-not-allowed opacity-50"
-                          : "cursor-pointer"
-                      }`}
+                      className={`flex flex-col items-center justify-center border-2 border-dashed border-gray-300 dark:border-neutral-700 rounded-2xl p-8 bg-gray-50 dark:bg-neutral-800 hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors duration-300 ${isUploadingImage ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
                     >
                       {isUploadingImage ? (
                         <>
                           <Loader2 className="w-8 h-8 animate-spin text-emerald-500 mb-3" />
-                          <span className="text-sm font-bold text-emerald-600">
+                          <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
                             Preparando...
                           </span>
                         </>
                       ) : (
                         <>
-                          <div className="w-12 h-12 bg-white border border-gray-200 rounded-full flex items-center justify-center mb-3 shadow-sm">
-                            <ImageIcon className="w-5 h-5 text-gray-400" />
+                          <div className="w-12 h-12 bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-full flex items-center justify-center mb-3 shadow-sm transition-colors duration-300">
+                            <ImageIcon className="w-5 h-5 text-gray-400 dark:text-neutral-500" />
                           </div>
-                          <span className="text-sm font-bold text-gray-700">
+                          <span className="text-sm font-bold text-gray-700 dark:text-neutral-300">
                             Clique para escolher uma imagem
                           </span>
-                          <span className="text-xs text-gray-400 mt-1">
+                          <span className="text-xs text-gray-400 dark:text-neutral-500 mt-1">
                             PNG, JPG ou WEBP (Max 4MB)
                           </span>
                         </>
@@ -488,37 +684,34 @@ export default function NovoEditalForm({
                   )}
                 </div>
 
-                {/* UPLOAD DE PDF */}
-                <div className="flex flex-col gap-2 border-t border-gray-100 pt-6">
-                  <label className="text-sm font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                <div className="flex flex-col gap-2 border-t border-gray-100 dark:border-neutral-800 pt-6 transition-colors duration-300">
+                  <label className="text-sm font-bold text-gray-500 dark:text-neutral-400 uppercase tracking-wider flex items-center gap-2 transition-colors duration-300">
                     <FileText className="w-4 h-4" /> Arquivo PDF do Edital
                   </label>
 
                   {pdfUrl ? (
-                    <div className="relative w-full p-4 rounded-2xl border border-emerald-200 bg-emerald-50 flex items-center justify-between group">
+                    <div className="relative w-full p-4 rounded-2xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-between group transition-colors duration-300">
                       <div className="flex items-center gap-4 overflow-hidden">
-                        <div className="w-12 h-12 bg-white rounded-xl shadow-sm border border-emerald-100 flex items-center justify-center shrink-0">
-                          <FileText className="w-6 h-6 text-emerald-600" />
+                        <div className="w-12 h-12 bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-emerald-100 dark:border-emerald-500/20 flex items-center justify-center shrink-0 transition-colors duration-300">
+                          <FileText className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
                         </div>
                         <div className="flex flex-col truncate">
-                          <span className="text-sm font-bold text-emerald-900 truncate">
+                          <span className="text-sm font-bold text-emerald-900 dark:text-emerald-100 truncate transition-colors duration-300">
                             Edital Anexado
                           </span>
                           <a
                             href={pdfUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs font-medium text-emerald-600 hover:text-emerald-700 hover:underline"
+                            className="text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 hover:underline transition-colors duration-300"
                           >
                             Visualizar Arquivo
                           </a>
                         </div>
                       </div>
-
                       {isUploadingPdf && (
-                        <Loader2 className="w-5 h-5 animate-spin text-emerald-600 shrink-0" />
+                        <Loader2 className="w-5 h-5 animate-spin text-emerald-600 dark:text-emerald-400 shrink-0" />
                       )}
-
                       {!isUploadingPdf && (
                         <button
                           type="button"
@@ -531,28 +724,24 @@ export default function NovoEditalForm({
                     </div>
                   ) : (
                     <label
-                      className={`flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-2xl p-8 bg-gray-50 hover:bg-gray-100 transition-colors ${
-                        isUploadingPdf
-                          ? "cursor-not-allowed opacity-50"
-                          : "cursor-pointer"
-                      }`}
+                      className={`flex flex-col items-center justify-center border-2 border-dashed border-gray-300 dark:border-neutral-700 rounded-2xl p-8 bg-gray-50 dark:bg-neutral-800 hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors duration-300 ${isUploadingPdf ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
                     >
                       {isUploadingPdf ? (
                         <>
                           <Loader2 className="w-8 h-8 animate-spin text-emerald-500 mb-3" />
-                          <span className="text-sm font-bold text-emerald-600">
+                          <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
                             Enviando PDF...
                           </span>
                         </>
                       ) : (
                         <>
-                          <div className="w-12 h-12 bg-white border border-gray-200 rounded-full flex items-center justify-center mb-3 shadow-sm">
-                            <UploadCloud className="w-5 h-5 text-gray-400" />
+                          <div className="w-12 h-12 bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-full flex items-center justify-center mb-3 shadow-sm transition-colors duration-300">
+                            <UploadCloud className="w-5 h-5 text-gray-400 dark:text-neutral-500" />
                           </div>
-                          <span className="text-sm font-bold text-gray-700">
+                          <span className="text-sm font-bold text-gray-700 dark:text-neutral-300">
                             Clique para anexar o PDF
                           </span>
-                          <span className="text-xs text-gray-400 mt-1">
+                          <span className="text-xs text-gray-400 dark:text-neutral-500 mt-1">
                             Apenas arquivos .PDF
                           </span>
                         </>
@@ -570,10 +759,15 @@ export default function NovoEditalForm({
               </div>
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm space-y-3">
+            <div className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-3xl p-6 shadow-sm space-y-3 transition-colors duration-300">
               <button
                 onClick={() => handleSalvar("Publicado")}
-                disabled={isSubmitting || isUploadingImage || isUploadingPdf}
+                disabled={
+                  isSubmitting ||
+                  isUploadingImage ||
+                  isUploadingPdf ||
+                  isUploadingLogo
+                }
                 className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-4 rounded-2xl font-extrabold shadow-md shadow-emerald-600/20 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? (
@@ -586,8 +780,13 @@ export default function NovoEditalForm({
 
               <button
                 onClick={() => handleSalvar("Rascunho")}
-                disabled={isSubmitting || isUploadingImage || isUploadingPdf}
-                className="w-full flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 px-6 py-4 rounded-2xl font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+                disabled={
+                  isSubmitting ||
+                  isUploadingImage ||
+                  isUploadingPdf ||
+                  isUploadingLogo
+                }
+                className="w-full flex items-center justify-center gap-2 bg-white dark:bg-neutral-800 hover:bg-gray-50 dark:hover:bg-neutral-700 text-gray-700 dark:text-neutral-200 border border-gray-200 dark:border-neutral-700 px-6 py-4 rounded-2xl font-bold transition-all disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
@@ -599,31 +798,32 @@ export default function NovoEditalForm({
             </div>
           </div>
 
-          {/* COLUNA DIREITA: MAPEAMENTO COM TABS (Básico / Específico) */}
+          {/* COLUNA DIREITA: MAPEAMENTO */}
           <div className="space-y-6 h-full flex flex-col">
-            <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm flex flex-col flex-1 h-200">
+            <div className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-3xl p-6 shadow-sm flex flex-col flex-1 h-200 transition-colors duration-300">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                  <Layers className="w-5 h-5 text-emerald-600" /> Mapeamento
+                <h2 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2 transition-colors duration-300">
+                  <Layers className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />{" "}
+                  Mapeamento
                 </h2>
-                <span className="text-[10px] bg-emerald-50 text-emerald-600 px-2 py-1 rounded-lg border border-emerald-200 font-bold">
+                <span className="text-[10px] bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-1 rounded-lg border border-emerald-200 dark:border-emerald-500/20 font-bold transition-colors duration-300">
                   Total: {totalGeral} Assuntos
                 </span>
               </div>
 
-              {/* TABS DE NAVEGAÇÃO */}
-              <div className="flex p-1 gap-2 bg-gray-100 rounded-xl mb-4 shrink-0">
+              {/* TABS */}
+              <div className="flex p-1 gap-2 bg-gray-100 dark:bg-neutral-800 rounded-xl mb-4 shrink-0 transition-colors duration-300">
                 <button
                   type="button"
                   onClick={() => setAbaAtiva("basico")}
                   className={`flex-1 flex cursor-pointer items-center justify-center gap-2 py-2.5 text-xs font-bold rounded-lg transition-all ${
                     abaAtiva === "basico"
-                      ? "bg-white text-emerald-700 shadow-sm border border-gray-200"
-                      : "text-gray-500 hover:text-gray-700"
+                      ? "bg-white dark:bg-neutral-700 text-emerald-700 dark:text-emerald-400 shadow-sm border border-gray-200 dark:border-neutral-600"
+                      : "text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-200"
                   }`}
                 >
                   <BookOpen className="w-4 h-4" /> Conhecimentos Básicos
-                  <span className="ml-1 px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 text-[9px]">
+                  <span className="ml-1 px-1.5 py-0.5 rounded bg-gray-100 dark:bg-neutral-800 text-gray-500 dark:text-neutral-400 text-[9px] transition-colors duration-300">
                     {assuntosBasicos.length}
                   </span>
                 </button>
@@ -632,26 +832,27 @@ export default function NovoEditalForm({
                   onClick={() => setAbaAtiva("especifico")}
                   className={`flex-1 flex cursor-pointer items-center justify-center gap-2 py-2.5 text-xs font-bold rounded-lg transition-all ${
                     abaAtiva === "especifico"
-                      ? "bg-white text-emerald-700 shadow-sm border border-gray-200"
-                      : "text-gray-500 hover:text-gray-700"
+                      ? "bg-white dark:bg-neutral-700 text-emerald-700 dark:text-emerald-400 shadow-sm border border-gray-200 dark:border-neutral-600"
+                      : "text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-200"
                   }`}
                 >
                   <BookMarked className="w-4 h-4" /> Conhecimentos Específicos
-                  <span className="ml-1 px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 text-[9px]">
+                  <span className="ml-1 px-1.5 py-0.5 rounded bg-gray-100 dark:bg-neutral-800 text-gray-500 dark:text-neutral-400 text-[9px] transition-colors duration-300">
                     {assuntosEspecificos.length}
                   </span>
                 </button>
               </div>
 
-              <div className="flex flex-col flex-1 bg-gray-50 border border-gray-200 rounded-2xl overflow-hidden min-h-0">
-                <div className="flex items-center px-4 h-12 shrink-0 border-b border-gray-200 bg-white">
-                  <Search className="w-4 h-4 text-gray-400 mr-2" />
+              {/* LISTA */}
+              <div className="flex flex-col flex-1 bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-2xl overflow-hidden min-h-0 transition-colors duration-300">
+                <div className="flex items-center px-4 h-12 shrink-0 border-b border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 transition-colors duration-300">
+                  <Search className="w-4 h-4 text-gray-400 dark:text-neutral-500 mr-2" />
                   <input
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder={`Pesquisar para adicionar em ${abaAtiva === "basico" ? "Básico" : "Específico"}...`}
-                    className="flex-1 bg-transparent border-none text-gray-900 text-sm focus:outline-none focus:ring-0 placeholder:text-gray-400"
+                    className="flex-1 bg-transparent border-none text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-0 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
                   />
                 </div>
 
@@ -662,7 +863,7 @@ export default function NovoEditalForm({
                   style={{ overscrollBehavior: "contain" }}
                 >
                   {Object.keys(assuntosAgrupados).length === 0 ? (
-                    <div className="py-8 text-center text-sm text-gray-500">
+                    <div className="py-8 text-center text-sm text-gray-500 dark:text-neutral-400">
                       Nenhum resultado encontrado.
                     </div>
                   ) : (
@@ -687,13 +888,13 @@ export default function NovoEditalForm({
                           return (
                             <div
                               key={materiaNome}
-                              className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm"
+                              className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-xl overflow-hidden shadow-sm transition-colors duration-300"
                             >
                               <div
                                 onClick={() =>
                                   toggleMateriaAccordion(materiaNome)
                                 }
-                                className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50 transition-colors"
+                                className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-800 transition-colors duration-300"
                               >
                                 <div className="flex items-center gap-3 flex-1">
                                   <button
@@ -705,8 +906,8 @@ export default function NovoEditalForm({
                                       todosSelecionados
                                         ? "bg-emerald-500 border-emerald-500 text-white"
                                         : selecionadosNestaMateria > 0
-                                          ? "bg-emerald-100 border-emerald-500 text-emerald-500"
-                                          : "border-gray-300 bg-white"
+                                          ? "bg-emerald-100 dark:bg-emerald-500/20 border-emerald-500 text-emerald-500 dark:text-emerald-400"
+                                          : "border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800"
                                     }`}
                                   >
                                     {(todosSelecionados ||
@@ -714,25 +915,23 @@ export default function NovoEditalForm({
                                       <Check className="w-3.5 h-3.5 stroke-3" />
                                     )}
                                   </button>
-                                  <span className="text-sm font-bold text-gray-700 truncate">
+                                  <span className="text-sm font-bold text-gray-700 dark:text-neutral-200 truncate transition-colors duration-300">
                                     {materiaNome}
                                   </span>
                                 </div>
                                 <div className="flex items-center gap-2 shrink-0">
-                                  <span className="text-[10px] font-bold text-gray-400">
+                                  <span className="text-[10px] font-bold text-gray-400 dark:text-neutral-500 transition-colors duration-300">
                                     {selecionadosNestaMateria}/
                                     {assuntosDaMateriaIds.length}
                                   </span>
                                   <ChevronDown
-                                    className={`w-4 h-4 text-gray-400 transition-transform ${
-                                      isExpanded ? "rotate-180" : ""
-                                    }`}
+                                    className={`w-4 h-4 text-gray-400 dark:text-neutral-500 transition-transform ${isExpanded ? "rotate-180" : ""}`}
                                   />
                                 </div>
                               </div>
 
                               {isExpanded && (
-                                <div className="flex flex-col border-t border-gray-100 bg-gray-50/50">
+                                <div className="flex flex-col border-t border-gray-100 dark:border-neutral-800 bg-gray-50/50 dark:bg-neutral-800/50 transition-colors duration-300">
                                   {assuntos.map((assunto) => {
                                     const isSelected =
                                       assuntosSelecionadosAtuais.includes(
@@ -745,13 +944,13 @@ export default function NovoEditalForm({
                                         onClick={() =>
                                           toggleAssunto(assunto.id)
                                         }
-                                        className="flex items-start gap-3 w-full text-left px-4 py-2.5 transition-colors hover:bg-gray-100 group"
+                                        className="flex items-start gap-3 w-full text-left px-4 py-2.5 transition-colors hover:bg-gray-100 dark:hover:bg-neutral-800 group"
                                       >
                                         <div
                                           className={`w-4 h-4 mt-0.5 rounded border shrink-0 flex items-center justify-center transition-colors ml-6 ${
                                             isSelected
                                               ? "bg-emerald-500 border-emerald-500 text-white"
-                                              : "border-gray-300 bg-white group-hover:border-emerald-300"
+                                              : "border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 group-hover:border-emerald-300 dark:group-hover:border-emerald-700"
                                           }`}
                                         >
                                           {isSelected && (
@@ -759,10 +958,10 @@ export default function NovoEditalForm({
                                           )}
                                         </div>
                                         <span
-                                          className={`wrap-break-word leading-snug text-[13px] ${
+                                          className={`wrap-break-word leading-snug text-[13px] transition-colors duration-300 ${
                                             isSelected
-                                              ? "text-gray-900 font-medium"
-                                              : "text-gray-500"
+                                              ? "text-gray-900 dark:text-white font-medium"
+                                              : "text-gray-500 dark:text-neutral-400"
                                           }`}
                                         >
                                           {assunto.nome}

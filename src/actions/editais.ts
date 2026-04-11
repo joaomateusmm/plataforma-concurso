@@ -6,13 +6,14 @@ import { editais, editalAssuntos } from "../db/schema";
 import { revalidatePath } from "next/cache";
 import { eq, desc } from "drizzle-orm";
 
-// 1. Adicionamos a thumbnailUrl e a pdfUrl na tipagem
+// 1. Adicionamos a thumbnailUrl, pdfUrl e agora a logoOrgao na tipagem
 interface CriarEditalParams {
   titulo: string;
   descricao: string;
   banca: string;
   thumbnailUrl?: string;
-  pdfUrl?: string; // <-- AQUI: NOVO CAMPO PARA O PDF
+  pdfUrl?: string;
+  logoOrgao?: string; // <-- AQUI: NOVO CAMPO PARA A LOGO DO ÓRGÃO
   assuntosMapeados: { basico: number[]; especifico: number[] };
   status: "Rascunho" | "Publicado";
 }
@@ -49,8 +50,9 @@ export async function criarEditalAdmin(params: CriarEditalParams) {
       titulo: params.titulo,
       descricao: params.descricao,
       banca: params.banca,
-      thumbnailUrl: params.thumbnailUrl, // <-- SALVANDO A IMAGEM NO BANCO
-      pdfUrl: params.pdfUrl, // <-- SALVANDO O PDF NO BANCO
+      thumbnailUrl: params.thumbnailUrl,
+      pdfUrl: params.pdfUrl,
+      logoOrgao: params.logoOrgao, // <-- SALVANDO A LOGO NO BANCO
       status: params.status,
     });
 
@@ -140,15 +142,16 @@ export async function atualizarEditalAdmin(
       };
     }
 
-    // 1. Atualiza os dados básicos do Edital (INCLUINDO THUMBNAIL E PDF)
+    // 1. Atualiza os dados básicos do Edital
     await db
       .update(editais)
       .set({
         titulo: params.titulo,
         descricao: params.descricao,
         banca: params.banca,
-        thumbnailUrl: params.thumbnailUrl, // <-- ATUALIZANDO A IMAGEM
-        pdfUrl: params.pdfUrl, // <-- ATUALIZANDO O PDF
+        thumbnailUrl: params.thumbnailUrl,
+        pdfUrl: params.pdfUrl,
+        logoOrgao: params.logoOrgao, // <-- ATUALIZANDO A LOGO NO BANCO
         status: params.status,
       })
       .where(eq(editais.id, id));

@@ -230,12 +230,24 @@ export default function EditaisAlunoPage() {
               {/* CONTEÚDO DO CARD */}
               <div className="relative z-10 p-6 flex-1 flex flex-col">
                 {/* Meta Header */}
-                <div className="flex justify-between items-start mb-5">
+                <div className="flex justify-between items-center mb-2">
                   {edital.banca && (
                     <span className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg border bg-gray-100/50 dark:bg-neutral-950/20 shadow-sm backdrop-blur-sm border-gray-200 dark:border-neutral-800 text-gray-600 dark:text-neutral-400 flex items-center gap-1.5 dark:shadow-neutral-950 transition-colors duration-300">
                       {edital.banca}
                     </span>
                   )}
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 overflow-hidden">
+                    {edital.logoOrgao ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={edital.logoOrgao}
+                        alt="Logo do Órgão"
+                        className="w-full h-full object-contain p-1.5"
+                      />
+                    ) : (
+                      <span></span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Título e Descrição */}

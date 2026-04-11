@@ -149,6 +149,7 @@ export const editais = pgTable("editais", {
   descricao: text("descricao"),
   banca: varchar("banca", { length: 100 }),
   thumbnailUrl: text("thumbnail_url"),
+  logoOrgao: text("logo_orgao"), // <--- NOVO CAMPO ADICIONADO AQUI
   status: varchar("status", { length: 50 }).default("Rascunho").notNull(),
   criadoEm: timestamp("criado_em").defaultNow(),
   pdfUrl: text("pdf_url"),
