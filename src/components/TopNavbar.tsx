@@ -1,8 +1,10 @@
 // src/components/TopNavbar.tsx
 "use client";
 
+import { useState } from "react"; // Importado useState
 import Link from "next/link";
 import Image from "next/image";
+import { X } from "lucide-react"; // Importado ícone X
 import SearchBar from "./SearchBar";
 import UpdatesNotification from "./UpdatesNotification";
 import UserNav from "./UserNav";
@@ -11,53 +13,68 @@ import { HeaderMiniTimer } from "./HeaderMiniTimer";
 import { ThemeToggle } from "./ThemeToggle";
 
 export default function TopNavbar() {
+  const [showBanner, setShowBanner] = useState(true); // Estado para controlar o banner
+
   return (
     <div className="fixed top-0 left-0 right-0 z-90 flex flex-col">
       {/* --- BANNER (NOTICE) --- */}
-      <div className="relative flex h-9 items-center justify-center overflow-hidden bg-neutral-900 dark:bg-neutral-950 px-4 transition-colors duration-300">
-        {/* BACKGROUND: Grainient */}
-        <div className="absolute inset-0 z-0 opacity-30">
-          <div style={{ width: "100%", height: "100%", position: "relative" }}>
-            <Grainient
-              color1="#9effa5"
-              color2="#07ab12"
-              color3="#0f4700"
-              timeSpeed={1}
-              colorBalance={0}
-              warpStrength={1}
-              warpFrequency={5}
-              warpSpeed={2}
-              warpAmplitude={50}
-              blendAngle={0}
-              blendSoftness={0.05}
-              rotationAmount={500}
-              noiseScale={2}
-              grainAmount={0.1}
-              grainScale={2}
-              grainAnimated={false}
-              contrast={1.5}
-              gamma={1}
-              saturation={1}
-              centerX={0}
-              centerY={0}
-              zoom={0.9}
-            />
+      {showBanner && (
+        <div className="relative flex h-9 items-center justify-center overflow-hidden bg-neutral-900 dark:bg-neutral-950 px-4 transition-all duration-300">
+          {/* BACKGROUND: Grainient */}
+          <div className="absolute inset-0 z-0 opacity-30">
+            <div
+              style={{ width: "100%", height: "100%", position: "relative" }}
+            >
+              <Grainient
+                color1="#9effa5"
+                color2="#07ab12"
+                color3="#0f4700"
+                timeSpeed={1}
+                colorBalance={0}
+                warpStrength={1}
+                warpFrequency={5}
+                warpSpeed={2}
+                warpAmplitude={50}
+                blendAngle={0}
+                blendSoftness={0.05}
+                rotationAmount={500}
+                noiseScale={2}
+                grainAmount={0.1}
+                grainScale={2}
+                grainAnimated={false}
+                contrast={1.5}
+                gamma={1}
+                saturation={1}
+                centerX={0}
+                centerY={0}
+                zoom={0.9}
+              />
+            </div>
           </div>
-        </div>
 
-        <div className="relative z-10 flex items-center gap-3 text-sm md:text-[13px]">
-          <span className="flex items-center gap-1 text-white/80 font-medium">
-            <span className="font-sans">
-              <a className="font-bold text-white">Promoção de inauguração!</a>{" "}
-              Adquira todas as funções da plataforma por{" "}
-              <a className=" font-bold text-white">50%</a> do valor! Válido até
-              06/06.
+          <div className="relative z-10 flex items-center gap-3 text-sm md:text-[13px]">
+            <span className="flex items-center gap-1 text-white/80 font-medium">
+              <span className="font-sans text-center">
+                <a className="font-bold text-white">Promoção de inauguração!</a>{" "}
+                Adquira todas as funções da plataforma por{" "}
+                <a className=" font-bold text-white">50%</a> do valor! Válido
+                até 06/06.
+              </span>
             </span>
-          </span>
-        </div>
-      </div>
+          </div>
 
-      {/* ADICIONADO "relative" AQUI NO HEADER */}
+          {/* BOTÃO FECHAR (X) */}
+          <button
+            onClick={() => setShowBanner(false)}
+            className="absolute right-4 z-20 p-1 rounded-full hover:bg-white/10 text-white/60 hover:text-white transition-all duration-200 cursor-pointer"
+            title="Fechar aviso"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* HEADER */}
       <header className="relative flex h-14 px-4 w-full justify-between items-center border-b border-gray-200 dark:border-neutral-800 bg-white/60 dark:bg-neutral-950/60 backdrop-blur-md transition-all duration-300">
         {/* LADO ESQUERDO: Logo */}
         <div className="flex gap-12 ml-4">
