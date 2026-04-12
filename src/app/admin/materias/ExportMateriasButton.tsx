@@ -36,6 +36,7 @@ export function ExportMateriasButton() {
       toast.success("JSON exportado com sucesso!", {
         description: "As matérias e assuntos foram baixados.",
       });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast.error("Erro", { description: "Falha ao exportar o JSON." });
     } finally {

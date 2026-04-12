@@ -1,6 +1,6 @@
 "use client";
 
-import { Upload, Loader2, FileJson } from "lucide-react";
+import { Loader2, FileJson } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner"; // Assumindo que você usa sonner para notificações
 import { importarQuestoesJson } from "../../../actions/questoes";
@@ -39,11 +39,11 @@ export function ImportJsonButton() {
           description: `${result.count} questões foram adicionadas ao banco de dados.`,
         });
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast.error("Erro", { description: "Falha ao ler o arquivo." });
     } finally {
       setIsImporting(false);
-      // Limpa o input para permitir enviar o mesmo arquivo de novo se necessário
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
@@ -61,12 +61,12 @@ export function ImportJsonButton() {
       <button
         onClick={() => fileInputRef.current?.click()}
         disabled={isImporting}
-        className="flex items-center gap-2 px-4 py-2 bg-neutral-900 border border-neutral-700 text-neutral-200 text-sm font-bold rounded-lg hover:bg-neutral-800 transition shadow-sm disabled:opacity-50"
+        className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 text-gray-700 dark:text-neutral-200 text-sm font-bold rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-800 transition-colors duration-300 shadow-sm disabled:opacity-50"
       >
         {isImporting ? (
-          <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />
+          <Loader2 className="w-4 h-4 animate-spin text-[#009966] dark:text-emerald-500 transition-colors duration-300" />
         ) : (
-          <FileJson className="w-4 h-4 text-emerald-500" />
+          <FileJson className="w-4 h-4 text-[#009966] dark:text-emerald-500 transition-colors duration-300" />
         )}
         {isImporting ? "Importando..." : "Importar JSON"}
       </button>

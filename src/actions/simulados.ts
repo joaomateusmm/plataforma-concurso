@@ -12,15 +12,17 @@ interface GerarSimuladoParams {
   bancasIds?: number[];
   materiasConfig?: { id: number; qtd: number }[];
   assuntosConfig?: { id: number; qtd: number }[];
+  estiloProva?: string; // "Objetiva" ou "Certo ou Errado"
+  tempoLimite?: number | null; // Tempo em minutos
 }
 
 interface ContarProps {
   bancasIds?: number[];
   materiasIds?: number[];
   assuntosIds?: number[];
+  estiloProva?: string;
 }
 
-// Função para gerar o ID alfanumérico no estilo "senha"
 function gerarIdAlfanumerico(tamanho = 15) {
   const caracteres =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -35,60 +37,42 @@ function gerarIdAlfanumerico(tamanho = 15) {
 
 export async function gerarSimuladoAleatorio(params: GerarSimuladoParams) {
   try {
-    let questoesSorteadas: { id: number }[] = [];
-    const promises = [];
+    const filtrosDb = [];
 
-    // Junta promessas de matérias inteiras
+    // 1. Filtros Globais (AND)
+    if (params.bancasIds && params.bancasIds.length > 0) {
+      filtrosDb.push(inArray(questoes.bancaId, params.bancasIds));
+    }
+
+    if (params.estiloProva) {
+      filtrosDb.push(eq(questoes.tipo, params.estiloProva));
+    }
+
+    // 2. Filtros Específicos (OR) - Matérias e Assuntos
+    const orConditions = [];
+
     if (params.materiasConfig && params.materiasConfig.length > 0) {
-      const matPromises = params.materiasConfig.map(async (config) => {
-        const filtros = [eq(questoes.materiaId, config.id)];
-        if (params.bancasIds && params.bancasIds.length > 0) {
-          filtros.push(inArray(questoes.bancaId, params.bancasIds));
-        }
-        return db
-          .select({ id: questoes.id })
-          .from(questoes)
-          .where(and(...filtros))
-          .orderBy(sql`RANDOM()`)
-          .limit(config.qtd);
-      });
-      promises.push(...matPromises);
+      const materiasIds = params.materiasConfig.map((m) => m.id);
+      orConditions.push(inArray(questoes.materiaId, materiasIds));
     }
 
-    // Junta promessas de assuntos específicos
     if (params.assuntosConfig && params.assuntosConfig.length > 0) {
-      const assPromises = params.assuntosConfig.map(async (config) => {
-        const filtros = [eq(questoes.assuntoId, config.id)];
-        if (params.bancasIds && params.bancasIds.length > 0) {
-          filtros.push(inArray(questoes.bancaId, params.bancasIds));
-        }
-        return db
-          .select({ id: questoes.id })
-          .from(questoes)
-          .where(and(...filtros))
-          .orderBy(sql`RANDOM()`)
-          .limit(config.qtd);
-      });
-      promises.push(...assPromises);
+      const assuntosIds = params.assuntosConfig.map((a) => a.id);
+      orConditions.push(inArray(questoes.assuntoId, assuntosIds));
     }
 
-    // Executa tudo ao mesmo tempo ou cai no puramente aleatório
-    if (promises.length > 0) {
-      const resultados = await Promise.all(promises);
-      questoesSorteadas = resultados.flat();
-    } else {
-      // MODO PURAMENTE ALEATÓRIO
-      const filtros = [];
-      if (params.bancasIds && params.bancasIds.length > 0) {
-        filtros.push(inArray(questoes.bancaId, params.bancasIds));
-      }
-      questoesSorteadas = await db
-        .select({ id: questoes.id })
-        .from(questoes)
-        .where(filtros.length > 0 ? and(...filtros) : undefined)
-        .orderBy(sql`RANDOM()`)
-        .limit(params.quantidadeTotal);
+    if (orConditions.length > 0) {
+      filtrosDb.push(or(...orConditions));
     }
+
+    // 3. BUSCA UNIFICADA (Resolve o bug do excesso de questões)
+    // Busca todas as questões que obedecem aos filtros e aplica o limite global
+    const questoesSorteadas = await db
+      .select({ id: questoes.id })
+      .from(questoes)
+      .where(filtrosDb.length > 0 ? and(...filtrosDb) : undefined)
+      .orderBy(sql`RANDOM()`)
+      .limit(params.quantidadeTotal);
 
     const idsUnicos = Array.from(new Set(questoesSorteadas.map((q) => q.id)));
 
@@ -99,26 +83,21 @@ export async function gerarSimuladoAleatorio(params: GerarSimuladoParams) {
       };
     }
 
-    // Geramos o ID customizado
     const customId = gerarIdAlfanumerico();
 
-    // 3. Criamos o "Cabeçalho" do Simulado com o novo ID e a quantidade REAL de questões encontradas
-    const novoSimulado = await db
-      .insert(simulados)
-      .values({
-        id: customId,
-        userId: params.userId,
-        titulo: params.titulo,
-        quantidadeQuestoes: idsUnicos.length,
-        status: "Pendente",
-      })
-      .returning({ id: simulados.id });
+    await db.insert(simulados).values({
+      id: customId,
+      userId: params.userId,
+      titulo: params.titulo,
+      // Agora idsUnicos nunca vai ultrapassar a quantidadeTotal!
+      quantidadeQuestoes: idsUnicos.length,
+      status: "Pendente",
+      estiloProva: params.estiloProva || "Objetiva",
+      tempoLimite: params.tempoLimite || null,
+    });
 
-    const simuladoId = novoSimulado[0].id;
-
-    // 4. Vinculamos as questões sorteadas a este novo simulado
     const vinculacoes = idsUnicos.map((questaoId) => ({
-      simuladoId: simuladoId,
+      simuladoId: customId,
       questaoId: questaoId,
     }));
 
@@ -126,8 +105,7 @@ export async function gerarSimuladoAleatorio(params: GerarSimuladoParams) {
 
     revalidatePath("/aluno/simulados");
 
-    // Retornamos o ID para o Front-end redirecionar o aluno direto para a prova
-    return { success: true, simuladoId: simuladoId };
+    return { success: true, simuladoId: customId };
   } catch (error) {
     console.error("Erro ao gerar simulado:", error);
     return { error: "Falha ao gerar o simulado. Tente novamente." };
@@ -139,7 +117,6 @@ export async function finalizarSimulado(
   respostas: Record<number, string>,
 ) {
   try {
-    // 1. Busca todas as questões deste simulado para corrigir
     const sqs = await db
       .select({
         sqId: simuladoQuestoes.id,
@@ -152,13 +129,11 @@ export async function finalizarSimulado(
 
     let acertos = 0;
 
-    // 2. Corrige questão por questão e atualiza no banco
     for (const sq of sqs) {
       const respostaDoAluno = respostas[sq.sqId] || null;
       let isCorreta = false;
 
       if (respostaDoAluno) {
-        // Compara a resposta do aluno com o gabarito oficial
         isCorreta = respostaDoAluno === sq.itemCorreto;
         if (isCorreta) acertos++;
       }
@@ -172,7 +147,6 @@ export async function finalizarSimulado(
         .where(eq(simuladoQuestoes.id, sq.sqId));
     }
 
-    // 3. Atualiza o status do Simulado Geral para "Concluido" e salva a nota
     await db
       .update(simulados)
       .set({
@@ -195,7 +169,7 @@ export async function obterMeusSimulados(userId: string) {
       .select()
       .from(simulados)
       .where(eq(simulados.userId, userId))
-      .orderBy(desc(simulados.criadoEm)); // Ordena do mais recente para o mais antigo
+      .orderBy(desc(simulados.criadoEm));
 
     return { success: true, simulados: lista };
   } catch (error) {
@@ -224,6 +198,11 @@ export async function contarQuestoesDisponiveis(filtros: ContarProps) {
       filtrosDb.push(inArray(questoes.bancaId, filtros.bancasIds));
     }
 
+    // AGORA COMPARA CORRETAMENTE COM O BANCO ("Objetiva" ou "Certo ou Errado")
+    if (filtros.estiloProva) {
+      filtrosDb.push(eq(questoes.tipo, filtros.estiloProva));
+    }
+
     const orConditions = [];
     if (filtros.materiasIds && filtros.materiasIds.length > 0) {
       orConditions.push(inArray(questoes.materiaId, filtros.materiasIds));
@@ -232,7 +211,6 @@ export async function contarQuestoesDisponiveis(filtros: ContarProps) {
       orConditions.push(inArray(questoes.assuntoId, filtros.assuntosIds));
     }
 
-    // Junta os ORs (Matérias OU Assuntos selecionados)
     if (orConditions.length > 0) {
       filtrosDb.push(or(...orConditions));
     }

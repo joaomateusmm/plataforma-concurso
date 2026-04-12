@@ -19,10 +19,23 @@ import {
   AlertCircle,
   ScanEye,
   X,
+  Clock,
 } from "lucide-react";
 import { finalizarSimulado } from "../../../../actions/simulados";
 import { HeaderMiniTimer } from "@/components/HeaderMiniTimer";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ThemeToggle";
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface ProvaClientProps {
   simulado: any;
@@ -37,18 +50,66 @@ export default function ProvaClient({ simulado, questoes }: ProvaClientProps) {
 
   // Estados Visuais
   const [isFocusMode, setIsFocusMode] = useState(false);
-  const [isMapVisible, setIsMapVisible] = useState(true); // <-- NOVO ESTADO AQUI
+  const [isMapVisible, setIsMapVisible] = useState(true);
+
+  // --- LÓGICA DE TEMPO PERSISTENTE ---
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [showTimeWarning, setShowTimeWarning] = useState(false);
 
   useEffect(() => {
-    if (isFocusMode) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
+    if (isConcluido || !simulado.tempoLimite) return;
+
+    const timerKey = `simulado_end_time_${simulado.id}`;
+    const now = Date.now();
+
+    let endTime = localStorage.getItem(timerKey);
+
+    if (!endTime) {
+      // Se não existe um tempo final salvo, criamos um agora
+      const durationInSeconds = simulado.tempoLimite * 60;
+      const newEndTime = now + durationInSeconds * 1000;
+      localStorage.setItem(timerKey, newEndTime.toString());
+      endTime = newEndTime.toString();
     }
-    return () => {
-      document.body.style.overflow = "unset";
+
+    const calculateTimeLeft = () => {
+      const remaining = Math.max(
+        0,
+        Math.floor((parseInt(endTime!) - Date.now()) / 1000),
+      );
+      setTimeLeft(remaining);
+
+      if (remaining <= 0) {
+        setShowTimeWarning(true);
+        return true; // Acabou
+      }
+      return false;
     };
-  }, [isFocusMode]);
+
+    // Cálculo inicial
+    const isOver = calculateTimeLeft();
+    if (isOver) return;
+
+    const interval = setInterval(() => {
+      const isOverNow = calculateTimeLeft();
+      if (isOverNow) clearInterval(interval);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [simulado.id, simulado.tempoLimite, isConcluido]);
+
+  // Limpa o storage ao finalizar
+  const clearTimerStorage = () => {
+    localStorage.removeItem(`simulado_end_time_${simulado.id}`);
+  };
+
+  const formatCountdown = (seconds: number) => {
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hrs > 0 ? hrs + ":" : ""}${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+  // -----------------------------------
 
   const [respostas, setRespostas] = useState<Record<number, string>>(() => {
     const initial: Record<number, string> = {};
@@ -78,7 +139,6 @@ export default function ProvaClient({ simulado, questoes }: ProvaClientProps) {
     setEliminated((prev) => {
       const current = prev[sqId] || [];
       const isCurrentlyEliminated = current.includes(opcao);
-
       if (!isCurrentlyEliminated) {
         setMarked((prevMarked) => {
           const currentMarked = prevMarked[sqId] || [];
@@ -88,7 +148,6 @@ export default function ProvaClient({ simulado, questoes }: ProvaClientProps) {
           };
         });
       }
-
       return {
         ...prev,
         [sqId]: isCurrentlyEliminated
@@ -102,7 +161,6 @@ export default function ProvaClient({ simulado, questoes }: ProvaClientProps) {
     setMarked((prev) => {
       const current = prev[sqId] || [];
       const isCurrentlyMarked = current.includes(opcao);
-
       if (!isCurrentlyMarked) {
         setEliminated((prevEliminated) => {
           const currentEliminated = prevEliminated[sqId] || [];
@@ -112,7 +170,6 @@ export default function ProvaClient({ simulado, questoes }: ProvaClientProps) {
           };
         });
       }
-
       return {
         ...prev,
         [sqId]: isCurrentlyMarked
@@ -159,21 +216,33 @@ export default function ProvaClient({ simulado, questoes }: ProvaClientProps) {
       toast.error("Erro", { description: result.error });
       setIsSubmitting(false);
     } else {
+      clearTimerStorage(); // Limpa o timer
       toast.success("Simulado Finalizado!", {
         description: `Você acertou ${result.acertos} questões!`,
       });
-
       setIsFocusMode(false);
       router.refresh();
     }
   };
+
+  // Prevenção de overflow no corpo quando em modo foco
+  useEffect(() => {
+    if (isFocusMode) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isFocusMode]);
 
   return (
     <div
       data-lenis-prevent={isFocusMode ? "true" : undefined}
       className={`text-gray-900 dark:text-neutral-300 font-sans pb-24 transition-all duration-300 ${
         isFocusMode
-          ? "fixed inset-0 z-[100] bg-white dark:bg-[#070707] overflow-y-auto h-dvh w-full"
+          ? "fixed inset-0 z-100 bg-white dark:bg-[#070707] overflow-y-auto h-dvh w-full"
           : "min-h-screen"
       }`}
     >
@@ -192,6 +261,8 @@ export default function ProvaClient({ simulado, questoes }: ProvaClientProps) {
         toggleFocusMode={() => setIsFocusMode(!isFocusMode)}
         isMapVisible={isMapVisible}
         toggleMap={() => setIsMapVisible(!isMapVisible)}
+        timeLeft={timeLeft}
+        formatCountdown={formatCountdown}
       />
 
       <main className="mx-auto max-w-7xl px-4 py-8 flex flex-col lg:flex-row gap-8 relative">
@@ -230,7 +301,6 @@ export default function ProvaClient({ simulado, questoes }: ProvaClientProps) {
           />
         </div>
 
-        {/* LÓGICA DE ESCONDER O MAPA AQUI */}
         {isMapVisible && (
           <aside className="w-full lg:w-72 shrink-0 lg:sticky lg:top-28 max-h-full overflow-y-auto flex flex-col gap-4 pb-4 animate-in slide-in-from-right-4 duration-300">
             <QuestionMap
@@ -239,7 +309,7 @@ export default function ProvaClient({ simulado, questoes }: ProvaClientProps) {
               currentIndex={currentIndex}
               isConcluido={isConcluido}
               onSelectQuestion={setCurrentIndex}
-              onClose={() => setIsMapVisible(false)} // Passamos a prop de fechar
+              onClose={() => setIsMapVisible(false)}
             />
 
             {!isConcluido && (
@@ -253,12 +323,46 @@ export default function ProvaClient({ simulado, questoes }: ProvaClientProps) {
           </aside>
         )}
       </main>
+
+      {/* DIÁLOGO DE TEMPO ESGOTADO */}
+      <AlertDialog open={showTimeWarning} onOpenChange={setShowTimeWarning}>
+        <AlertDialogContent className="bg-white dark:bg-neutral-900 border-gray-200 dark:border-neutral-800 rounded-3xl">
+          <AlertDialogHeader>
+            <div className="mx-auto w-16 h-16 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mb-4">
+              <Clock className="w-8 h-8 text-amber-600 dark:text-amber-500" />
+            </div>
+            <AlertDialogTitle className="text-center text-2xl font-bold">
+              Tempo Esgotado!
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-gray-500 dark:text-neutral-400">
+              O tempo limite definido para este simulado terminou. Deseja
+              finalizar a prova agora ou continuar respondendo?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-3 mt-4">
+            <AlertDialogCancel
+              onClick={() => setShowTimeWarning(false)}
+              className="flex-1 rounded-xl py-6 font-bold border-gray-200 dark:border-neutral-800"
+            >
+              Continuar Prova
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleFinalizar}
+              className="flex-1 rounded-xl py-6 font-bold bg-[#009966] hover:bg-[#007a52] dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white"
+            >
+              Finalizar Agora
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
 
+// ... (Subcomponentes ProvaHeader, ResultDashboard, QuestionCard, NavigationButtons, QuestionMap, FinalizeButton mantêm-se como no código anterior)
+
 // ==========================================
-// SUBCOMPONENTES (LÓGICA VISUAL ISOLADA)
+// SUBCOMPONENTES
 // ==========================================
 
 function ProvaHeader({
@@ -273,6 +377,8 @@ function ProvaHeader({
   toggleFocusMode,
   isMapVisible,
   toggleMap,
+  timeLeft,
+  formatCountdown,
 }: any) {
   return (
     <header className="sticky top-0 z-40 border-b border-gray-200 dark:border-neutral-800 rounded-t-2xl bg-white/80 dark:bg-neutral-950/80 backdrop-blur-xl transition-colors duration-300">
@@ -288,7 +394,6 @@ function ProvaHeader({
             <button
               onClick={onBack}
               className="p-2 hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-lg transition-colors duration-300 text-gray-500 hover:text-gray-900 dark:text-neutral-400 dark:hover:text-white"
-              title={isFocusMode ? "Sair do Modo Foco" : "Voltar"}
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -298,10 +403,21 @@ function ProvaHeader({
           </div>
 
           <div className="flex items-center gap-3">
-            {/* BOTÃO PARA MOSTRAR/ESCONDER MAPA */}
+            {/* EXIBIÇÃO DO CRONÓMETRO REGRESSIVO */}
+            {!isConcluido && timeLeft !== null && (
+              <div
+                title="Tempo de prova"
+                className={`inline-flex items-center gap-1.5 rounded-md bg-gray-100 dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 px-2.5 py-1.5 text-xs font-bold text-gray-700 dark:text-neutral-300 hover:bg-gray-200 dark:hover:bg-neutral-500/20 transition-colors duration-300${timeLeft <= 60 ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 animate-pulse" : ""}`}
+              >
+                <Clock className="w-4 h-4" />
+                {formatCountdown(timeLeft)}
+              </div>
+            )}
+
+            <ThemeToggle className="inline-flex items-center shadow-neutral-100/0 gap-1.5 rounded-md cursor-pointer bg-gray-100 dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 text-xs font-bold text-gray-700 dark:text-neutral-300 hover:bg-gray-200 dark:hover:bg-neutral-500/20 transition-colors duration-300" />
+
             <button
               onClick={toggleMap}
-              title={isMapVisible ? "Ocultar Mapa" : "Mostrar Mapa"}
               className={`inline-flex items-center gap-1.5 rounded-md cursor-pointer border px-2.5 py-1.5 text-xs font-bold transition-colors duration-300 ${
                 !isMapVisible
                   ? "bg-gray-900 border-gray-900 text-white dark:bg-white dark:border-neutral-300 dark:text-neutral-950 hover:bg-gray-800 dark:hover:bg-gray-100"
@@ -312,10 +428,8 @@ function ProvaHeader({
               <span className="hidden sm:inline">Mapa</span>
             </button>
 
-            {/* BOTÃO MODO FOCO DINÂMICO */}
             <button
               onClick={toggleFocusMode}
-              title={isFocusMode ? "Sair do Modo Foco" : "Ativar Modo Foco"}
               className={`inline-flex items-center gap-1.5 rounded-md cursor-pointer border px-2.5 py-1.5 text-xs font-bold transition-colors duration-300 ${
                 isFocusMode
                   ? "bg-gray-900 border-gray-900 text-white dark:bg-white dark:border-neutral-300 dark:text-neutral-950 hover:bg-gray-800 dark:hover:bg-gray-100"
@@ -331,7 +445,6 @@ function ProvaHeader({
             {!isConcluido && (
               <button
                 onClick={onAutoTest}
-                title="Auto Completar para Testes"
                 className="inline-flex items-center gap-1.5 rounded-md cursor-pointer bg-gray-100 dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 px-2.5 py-1.5 text-xs font-bold text-gray-700 dark:text-neutral-300 hover:bg-gray-200 dark:hover:bg-neutral-500/20 transition-colors duration-300"
               >
                 <TriangleAlert className="h-3.5 w-3.5" />
@@ -353,7 +466,6 @@ function ProvaHeader({
           </div>
         </div>
 
-        {/* Progress Bar */}
         <div className="flex items-center gap-3">
           <div className="h-1.5 flex-1 bg-gray-200 dark:bg-neutral-800 rounded-full overflow-hidden transition-colors duration-300">
             <div
@@ -375,7 +487,7 @@ function ResultDashboard({ acertos, totalCount }: any) {
   const erros = totalCount - acertos;
   return (
     <div className="mb-8 p-8 border border-gray-200 dark:border-neutral-800 rounded-3xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden bg-white dark:bg-transparent transition-colors duration-300">
-      <div className="absolute inset-0 bg-gradient-to-br from-[#009966]/5 dark:from-emerald-500/5 to-transparent pointer-events-none transition-colors duration-300" />
+      <div className="absolute inset-0 bg-linear-to-br from-[#009966]/5 dark:from-emerald-500/5 to-transparent pointer-events-none transition-colors duration-300" />
       <div className="relative z-10 text-center md:text-left">
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#009966]/10 dark:bg-emerald-500/10 text-[#009966] dark:text-emerald-400 font-bold text-sm border border-[#009966]/20 dark:border-emerald-500/20 mb-4 transition-colors duration-300">
           <Award className="w-4 h-4" /> Simulado Finalizado

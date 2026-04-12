@@ -25,7 +25,7 @@ export function DeleteButton({ id }: { id: number }) {
       <input type="hidden" name="id" value={id} />
       <button
         type="submit"
-        className="p-2 text-red-500 hover:bg-red-50 rounded-md transition-colors"
+        className="p-2 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-md transition-colors duration-300 cursor-pointer"
         title="Excluir Questão"
       >
         <Trash2 className="w-5 h-5" />

@@ -96,3 +96,62 @@ export async function exportarDicionarioIds() {
     assuntos: listaAssuntos,
   };
 }
+
+export async function editarQuestao(id: number, formData: FormData) {
+  const tipo = formData.get("tipo") as string;
+  const enunciado = formData.get("enunciado") as string;
+  const itemCorreto = formData.get("itemCorreto") as string;
+
+  const textoApoio = formData.get("textoApoio") as string;
+  const imagemApoio = formData.get("imagemApoio") as string;
+
+  const materiaId = parseInt(formData.get("materiaId") as string);
+  const assuntoId = parseInt(formData.get("assuntoId") as string);
+  const bancaId = parseInt(formData.get("bancaId") as string);
+
+  const arrayItensErrados = formData
+    .getAll("itensErrados")
+    .map((item) => (item as string).trim())
+    .filter((item) => item.length > 0);
+
+  try {
+    await db
+      .update(questoes)
+      .set({
+        tipo: tipo,
+        enunciado: enunciado,
+        itemCorreto: itemCorreto,
+        itensErrados: arrayItensErrados,
+        materiaId: materiaId,
+        assuntoId: assuntoId,
+        bancaId: bancaId,
+        textoApoio: textoApoio || null,
+        imagemApoio: imagemApoio || null,
+      })
+      .where(eq(questoes.id, id));
+
+    revalidatePath("/admin/questoes");
+    return { success: true };
+  } catch (error) {
+    console.error("Erro ao editar questão:", error);
+    return { error: "Ocorreu um erro ao atualizar a questão." };
+  }
+}
+
+export async function atualizarEnunciadoRapido(
+  id: number,
+  novoEnunciado: string,
+) {
+  try {
+    await db
+      .update(questoes)
+      .set({ enunciado: novoEnunciado })
+      .where(eq(questoes.id, id));
+
+    revalidatePath("/admin/questoes");
+    return { success: true };
+  } catch (error) {
+    console.error("Erro ao atualizar enunciado:", error);
+    return { error: "Falha ao atualizar o enunciado." };
+  }
+}
