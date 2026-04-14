@@ -51,31 +51,41 @@ export default function EditalClientView({
     );
 
     toast.success("Preparando o seu simulado...");
-
     router.push("/aluno/simulados/novo");
   };
 
+  // --- LÓGICA DE AGRUPAMENTO COM SUPORTE A EDIÇÃO E MESCLAGEM ---
   const agrupamentoBasico = useMemo(() => {
     const basicos = assuntosDb.filter((a) => a.tipo === "Básico");
     const grupos: Record<string, any[]> = {};
+
     basicos.forEach((assunto) => {
-      const materia = assunto.materiaNome || "Outros / Sem Matéria";
-      if (!grupos[materia]) grupos[materia] = [];
-      grupos[materia].push(assunto);
+      const nomeOficial = assunto.materiaNome || "Outros / Sem Matéria";
+      // Se houver um nome personalizado no edital, usamos ele (o que permite a mesclagem)
+      const nomeExibicao =
+        edital.nomesPersonalizados?.[nomeOficial] || nomeOficial;
+
+      if (!grupos[nomeExibicao]) grupos[nomeExibicao] = [];
+      grupos[nomeExibicao].push(assunto);
     });
     return grupos;
-  }, [assuntosDb]);
+  }, [assuntosDb, edital.nomesPersonalizados]);
 
   const agrupamentoEspecifico = useMemo(() => {
     const especificos = assuntosDb.filter((a) => a.tipo === "Específico");
     const grupos: Record<string, any[]> = {};
+
     especificos.forEach((assunto) => {
-      const materia = assunto.materiaNome || "Outros / Sem Matéria";
-      if (!grupos[materia]) grupos[materia] = [];
-      grupos[materia].push(assunto);
+      const nomeOficial = assunto.materiaNome || "Outros / Sem Matéria";
+      // Se houver um nome personalizado no edital, usamos ele (o que permite a mesclagem)
+      const nomeExibicao =
+        edital.nomesPersonalizados?.[nomeOficial] || nomeOficial;
+
+      if (!grupos[nomeExibicao]) grupos[nomeExibicao] = [];
+      grupos[nomeExibicao].push(assunto);
     });
     return grupos;
-  }, [assuntosDb]);
+  }, [assuntosDb, edital.nomesPersonalizados]);
 
   const toggleMateriaAccordion = (materiaNome: string) => {
     setExpandedMaterias((prev) =>
@@ -86,7 +96,13 @@ export default function EditalClientView({
   };
 
   const estatisticasGerais = useMemo(() => {
-    const materiasUnicas = new Set(assuntosDb.map((a) => a.materiaNome));
+    // Conta matérias únicas baseadas no nome de exibição (customizado ou não)
+    const nomesExibidos = assuntosDb.map((a) => {
+      const oficial = a.materiaNome || "Outros";
+      return edital.nomesPersonalizados?.[oficial] || oficial;
+    });
+    const materiasUnicas = new Set(nomesExibidos);
+
     return {
       totalMaterias: materiasUnicas.size,
       totalAssuntos: assuntosDb.length,
@@ -94,12 +110,18 @@ export default function EditalClientView({
       totalEspecificos: assuntosDb.filter((a) => a.tipo === "Específico")
         .length,
     };
-  }, [assuntosDb]);
+  }, [assuntosDb, edital.nomesPersonalizados]);
 
   const renderizarGrupo = (grupos: Record<string, any[]>) => {
+    // Ordenamos as chaves (nomes das matérias) alfabeticamente para ficar organizado
+    const materiasOrdenadas = Object.keys(grupos).sort((a, b) =>
+      a.localeCompare(b),
+    );
+
     return (
       <div className="flex flex-col gap-4">
-        {Object.entries(grupos).map(([materiaNome, assuntos]) => {
+        {materiasOrdenadas.map((materiaNome) => {
+          const assuntos = grupos[materiaNome];
           const isExpanded = expandedMaterias.includes(materiaNome);
           const quantidadeAssuntos = assuntos.length;
 
@@ -114,26 +136,32 @@ export default function EditalClientView({
             >
               <div
                 onClick={() => toggleMateriaAccordion(materiaNome)}
-                className="flex items-center justify-between p-3 cursor-pointer bg-white dark:bg-neutral-900 hover:bg-gray-50 dark:hover:bg-neutral-800/50 transition-colors duration-300"
+                className="flex items-center justify-between p-3.5 cursor-pointer bg-white dark:bg-neutral-900 hover:bg-gray-50 dark:hover:bg-neutral-800/50 transition-colors duration-300"
               >
                 <div className="flex items-center gap-4">
                   <h3
-                    className={`text-sm font-medium transition-colors duration-300 ${isExpanded ? "text-gray-900 dark:text-white" : "text-gray-600 dark:text-neutral-300"}`}
+                    className={`text-sm font- transition-colors duration-300 ${isExpanded ? "text-emerald-600 dark:text-emerald-400" : "text-gray-900 dark:text-white"}`}
                   >
                     {materiaNome}
                   </h3>
                 </div>
 
                 <div className="flex items-center gap-4">
-                  <button className="text-[11px] font-bold px-2.5 py-1 rounded bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 text-gray-500 dark:text-neutral-400 flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors duration-300">
-                    <LayersPlus className="w-4 h-4 text-[#009966]" />
-                    Criar Caderno de Questões
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCriarSimulado(assuntos);
+                    }}
+                    className="hidden sm:flex text-[11px] font-bold px-2.5 py-1.5 rounded bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 text-gray-500 dark:text-neutral-400 items-center gap-2 hover:bg-emerald-500/10 hover:text-emerald-600 hover:border-emerald-500/20 transition-all duration-300"
+                  >
+                    <LayersPlus className="w-3.5 h-3.5" />
+                    Caderno da Matéria
                   </button>
-                  <span className="text-[11px] font-bold px-2.5 py-1 rounded bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 text-gray-500 dark:text-neutral-400 transition-colors duration-300">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/20 transition-colors duration-300">
                     {quantidadeAssuntos} tópicos
                   </span>
                   <ChevronDown
-                    className={`w-5 h-5 text-gray-400 dark:text-neutral-500 transition-all duration-300 ${isExpanded ? "rotate-180 text-[#009966]" : ""}`}
+                    className={`w-5 h-5 text-gray-400 dark:text-neutral-500 transition-all duration-300 ${isExpanded ? "rotate-180 text-emerald-500" : ""}`}
                   />
                 </div>
               </div>
@@ -146,7 +174,7 @@ export default function EditalClientView({
                 }`}
               >
                 <div className="overflow-hidden">
-                  <div className="p-3 pt-0 border-t border-gray-100 dark:border-neutral-800/50 bg-gray-50/30 dark:bg-neutral-950/30 transition-colors duration-300">
+                  <div className="p-4 pt-0 border-t border-gray-100 dark:border-neutral-800/50 bg-gray-50/20 dark:bg-neutral-950/20">
                     <ul className="flex flex-col gap-1 mt-3">
                       {assuntos.map((assunto, index) => {
                         const temAulas =
@@ -157,22 +185,22 @@ export default function EditalClientView({
                         return (
                           <li
                             key={assunto.id}
-                            className="flex items-center justify-between gap-3 px-3 py-2 rounded-xl hover:bg-gray-100 dark:hover:bg-neutral-900 transition-colors duration-300 group cursor-default"
+                            className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl hover:bg-white dark:hover:bg-neutral-900 border border-transparent hover:border-gray-100 dark:hover:border-neutral-800 transition-all duration-300 group cursor-default"
                           >
-                            <span className="text-sm text-gray-500 dark:text-neutral-400 group-hover:text-gray-900 dark:group-hover:text-neutral-200 transition-colors duration-300 leading-relaxed">
-                              {index + 1} - {assunto.nome}
+                            <span className="text-sm text-gray-600 dark:text-neutral-400 group-hover:text-gray-900 dark:group-hover:text-neutral-200 transition-colors duration-300 leading-relaxed">
+                              <span className="font-mono text-xs opacity-50 mr-2">
+                                {(index + 1).toString().padStart(2, "0")}
+                              </span>
+                              {assunto.nome}
                             </span>
                             {temAulas && (
                               <div className="flex items-center gap-3 shrink-0">
-                                <span className="text-gray-300 dark:text-neutral-600 hidden sm:block">
-                                  ⟶
-                                </span>
                                 <Link
                                   href={`/aluno/materiais?assuntoId=${assunto.id}`}
-                                  className="text-[11px] cursor-pointer font-bold flex items-center gap-1.5 px-2.5 py-1 rounded hover:bg-emerald-500/10 hover:text-[#009966] dark:hover:text-emerald-400 border border-gray-200 dark:border-neutral-800 hover:border-emerald-500/30 transition-all duration-300 bg-gray-50 dark:bg-neutral-950 text-gray-500 dark:text-neutral-400"
+                                  className="text-[10px] font-extrabold flex items-center gap-1.5 px-2.5 py-1 rounded bg-white dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 text-gray-500 dark:text-neutral-400 hover:bg-[#009966] hover:text-white hover:border-[#009966] transition-all duration-300 shadow-sm"
                                 >
-                                  <Video className="h-3.5 w-3.5" />
-                                  Ver Aulas
+                                  <Video className="h-3 w-3" />
+                                  AULAS
                                 </Link>
                               </div>
                             )}
@@ -191,7 +219,7 @@ export default function EditalClientView({
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 mt-6 mb-12 animate-in fade-in duration-500 pb-24">
+    <div className="max-w-7xl mx-auto space-y-8 mt-6 mb-12 animate-in fade-in duration-500 pb-24 px-4 sm:px-0">
       <button
         onClick={() => router.push("/aluno/editais")}
         className="flex items-center gap-2 text-gray-500 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-300 font-medium text-sm w-fit"
@@ -211,21 +239,21 @@ export default function EditalClientView({
             unoptimized
             className="object-cover opacity-10 dark:opacity-35"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-white dark:from-neutral-900 via-white/80 dark:via-neutral-900/80 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-b from-white/50 dark:from-neutral-900/50 via-transparent to-white/50 dark:to-neutral-900/50" />
+          <div className="absolute inset-0 bg-linear-to-b from-white dark:from-neutral-900 via-white/80 dark:via-neutral-900/80 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-b from-white/50 dark:from-neutral-900/50 via-transparent to-white/50 dark:to-neutral-900/50" />
         </div>
 
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 dark:from-emerald-950 via-emerald-500/5 dark:via-emerald-500/10 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-linear-to-br from-emerald-50 dark:from-emerald-950 via-emerald-500/5 dark:via-emerald-500/10 to-transparent pointer-events-none" />
 
         <div className="relative z-10 flex-1">
           <div className="flex flex-wrap items-center gap-3 mb-4">
-            <span className="px-3 py-1.5 text-[10px] font-medium uppercase tracking-wider rounded-lg border bg-white/80 dark:bg-neutral-950/80 border-gray-200 dark:border-neutral-800 text-gray-500 dark:text-neutral-400 flex items-center gap-1.5 backdrop-blur-sm transition-colors duration-300">
+            <span className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg border bg-white/80 dark:bg-neutral-950/80 border-gray-200 dark:border-neutral-800 text-gray-500 dark:text-neutral-400 flex items-center gap-1.5 backdrop-blur-sm transition-colors duration-300">
               Edital Verticalizado
             </span>
             {edital.banca && (
-              <span className="px-3 py-1.5 gap-1 text-[10px] font-medium uppercase tracking-wider rounded-lg border bg-white/80 dark:bg-neutral-950/80 border-gray-200 dark:border-neutral-800 text-gray-500 dark:text-neutral-400 flex items-center backdrop-blur-sm transition-colors duration-300">
+              <span className="px-3 py-1.5 gap-1 text-[10px] font-bold uppercase tracking-wider rounded-lg border bg-white/80 dark:bg-neutral-950/80 border-gray-200 dark:border-neutral-800 text-gray-500 dark:text-neutral-400 flex items-center backdrop-blur-sm transition-colors duration-300">
                 Banca:
-                <span className="font-extrabold text-gray-900 dark:text-white">
+                <span className="text-gray-900 dark:text-white ml-1">
                   {edital.banca}
                 </span>
               </span>
@@ -236,39 +264,38 @@ export default function EditalClientView({
                 href={edital.pdfUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                download
-                className="px-3 py-1.5 text-[10px] cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-900/80 duration-300 font-medium uppercase tracking-wider rounded-lg border bg-white/80 dark:bg-neutral-950/80 border-gray-200 dark:border-neutral-800 text-gray-500 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-1.5 backdrop-blur-sm"
+                className="px-3 py-1.5 text-[10px] cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-900 duration-300 font-bold uppercase tracking-wider rounded-lg border bg-white/80 dark:bg-neutral-950/80 border-gray-200 dark:border-neutral-800 text-gray-500 dark:text-neutral-400 hover:text-[#009966] flex items-center gap-1.5 backdrop-blur-sm"
               >
-                <FileDown className="h-4 w-4 mr-1 text-[#009966]" /> Baixar PDF
+                <FileDown className="h-3.5 w-3.5 text-[#009966]" /> Baixar PDF
               </a>
             )}
 
             <button
               onClick={() => handleCriarSimulado()}
-              className="px-3 py-1.5 text-[10px] cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-900/80 duration-300 font-medium uppercase tracking-wider rounded-lg border bg-white/80 dark:bg-neutral-950/80 border-gray-200 dark:border-neutral-800 text-gray-500 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-1.5 backdrop-blur-sm"
+              className="px-3 py-1.5 text-[10px] cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-900 duration-300 font-bold uppercase tracking-wider rounded-lg border bg-white/80 dark:bg-neutral-950/80 border-gray-200 dark:border-neutral-800 text-gray-500 dark:text-neutral-400 hover:text-[#009966] flex items-center gap-1.5 backdrop-blur-sm"
             >
-              <CopyPlus className="h-4 w-4 mr-1 text-[#009966]" /> Criar
-              Simulado do Edital
+              <CopyPlus className="h-3.5 w-3.5 text-[#009966]" /> Criar Simulado
+              Completo
             </button>
           </div>
 
-          <h1 className="text-3xl font-medium mb-4 text-gray-900 dark:text-white tracking-tight leading-tight transition-colors duration-300">
+          <h1 className="text-3xl font-extrabold mb-4 text-gray-900 dark:text-white tracking-tight leading-tight transition-colors duration-300">
             {edital.titulo}
           </h1>
 
-          <p className="text-gray-600 dark:text-neutral-400 max-w-2xl text-sm leading-relaxed drop-shadow-md transition-colors duration-300">
+          <p className="text-gray-600 dark:text-neutral-400 max-w-2xl text-sm leading-relaxed transition-colors duration-300">
             {edital.descricao ||
               "Este é o mapeamento oficial dos assuntos cobrados neste concurso. Utilize esta estrutura como o seu guia principal de estudos."}
           </p>
         </div>
 
-        <div className="relative z-10 flex flex-col gap-4 min-w-60 shrink-0 bg-white/80 dark:bg-neutral-950/80 backdrop-blur-md p-4 rounded-2xl border border-gray-200 dark:border-neutral-800 shadow-2xl transition-colors duration-300">
-          <div className="grid grid-cols-2 gap-4">
+        <div className="relative z-10 flex flex-col gap-4 min-w-60 shrink-0 bg-white/50 dark:bg-neutral-950/50 backdrop-blur-md p-6 rounded-3xl border border-gray-200 dark:border-neutral-800 shadow-sm transition-colors duration-300">
+          <div className="grid grid-cols-2 gap-6">
             <div>
               <p className="text-[10px] font-bold text-gray-400 dark:text-neutral-500 uppercase tracking-wider mb-1">
                 Matérias
               </p>
-              <p className="text-2xl font-black text-gray-900 dark:text-white transition-colors duration-300">
+              <p className="text-3xl font-black text-gray-900 dark:text-white transition-colors duration-300">
                 {estatisticasGerais.totalMaterias}
               </p>
             </div>
@@ -276,7 +303,7 @@ export default function EditalClientView({
               <p className="text-[10px] font-bold text-gray-400 dark:text-neutral-500 uppercase tracking-wider mb-1">
                 Assuntos
               </p>
-              <p className="text-2xl font-black text-gray-900 dark:text-white transition-colors duration-300">
+              <p className="text-3xl font-black text-gray-900 dark:text-white transition-colors duration-300">
                 {estatisticasGerais.totalAssuntos}
               </p>
             </div>
@@ -284,14 +311,15 @@ export default function EditalClientView({
         </div>
       </div>
 
-      <div className="space-y-12">
+      <div className="space-y-16">
         {Object.keys(agrupamentoBasico).length > 0 && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between gap-3 mb-6 pb-4 border-b border-gray-200 dark:border-neutral-800 transition-colors duration-300">
-              <h2 className="text-xl font-medium text-gray-900 dark:text-white transition-colors duration-300">
-                Conhecimentos Básicos:
+            <div className="flex items-center justify-between gap-3 pb-4 border-b border-gray-200 dark:border-neutral-800 transition-colors duration-300">
+              <h2 className="text-xl text-gray-900 dark:text-white flex items-center gap-2">
+                <div className="w-1.5 h-6 bg-emerald-500 rounded-full" />
+                Conhecimentos Básicos
               </h2>
-              <span className="ml-2 px-2 py-1 rounded-md bg-gray-50 dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 text-gray-500 dark:text-neutral-500 text-[10px] font-bold transition-colors duration-300">
+              <span className="px-2 py-1 rounded-md bg-gray-50 dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 text-gray-500 dark:text-neutral-500 text-[10px] font-bold">
                 {estatisticasGerais.totalBasicos} Assuntos
               </span>
             </div>
@@ -301,11 +329,12 @@ export default function EditalClientView({
 
         {Object.keys(agrupamentoEspecifico).length > 0 && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between gap-3 mb-6 pb-4 border-b border-gray-200 dark:border-neutral-800 transition-colors duration-300">
-              <h2 className="text-xl font-medium text-gray-900 dark:text-white transition-colors duration-300">
-                Conhecimentos Específicos:
+            <div className="flex items-center justify-between gap-3 pb-4 border-b border-gray-200 dark:border-neutral-800 transition-colors duration-300">
+              <h2 className="text-xl text-gray-900 dark:text-white flex items-center gap-2">
+                <div className="w-1.5 h-6 bg-[#009966] rounded-full" />
+                Conhecimentos Específicos
               </h2>
-              <span className="ml-2 px-2 py-1 rounded-md bg-gray-50 dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 text-gray-500 dark:text-neutral-500 text-[10px] font-bold transition-colors duration-300">
+              <span className="px-2 py-1 rounded-md bg-gray-50 dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 text-gray-500 dark:text-neutral-500 text-[10px]">
                 {estatisticasGerais.totalEspecificos} Assuntos
               </span>
             </div>

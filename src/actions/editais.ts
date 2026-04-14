@@ -1,4 +1,3 @@
-// src/actions/editais.ts
 "use server";
 
 import { db } from "../db/index";
@@ -6,15 +5,16 @@ import { editais, editalAssuntos } from "../db/schema";
 import { revalidatePath } from "next/cache";
 import { eq, desc } from "drizzle-orm";
 
-// 1. Adicionamos a thumbnailUrl, pdfUrl e agora a logoOrgao na tipagem
 interface CriarEditalParams {
   titulo: string;
   descricao: string;
   banca: string;
+  ano?: number;
   thumbnailUrl?: string;
   pdfUrl?: string;
-  logoOrgao?: string; // <-- AQUI: NOVO CAMPO PARA A LOGO DO ÓRGÃO
+  logoOrgao?: string;
   assuntosMapeados: { basico: number[]; especifico: number[] };
+  nomesPersonalizados?: Record<string, string>; // <--- NOVO CAMPO AQUI
   status: "Rascunho" | "Publicado";
 }
 
@@ -50,9 +50,11 @@ export async function criarEditalAdmin(params: CriarEditalParams) {
       titulo: params.titulo,
       descricao: params.descricao,
       banca: params.banca,
+      ano: params.ano || null,
       thumbnailUrl: params.thumbnailUrl,
       pdfUrl: params.pdfUrl,
-      logoOrgao: params.logoOrgao, // <-- SALVANDO A LOGO NO BANCO
+      logoOrgao: params.logoOrgao,
+      nomesPersonalizados: params.nomesPersonalizados || {}, // <--- INSERINDO O MAPEAMENTO DE NOMES
       status: params.status,
     });
 
@@ -116,7 +118,7 @@ export async function obterEditaisPublicados() {
       .select()
       .from(editais)
       .where(eq(editais.status, "Publicado"))
-      .orderBy(desc(editais.criadoEm));
+      .orderBy(desc(editais.ano), desc(editais.criadoEm));
 
     return { success: true, editais: lista };
   } catch (error) {
@@ -142,24 +144,23 @@ export async function atualizarEditalAdmin(
       };
     }
 
-    // 1. Atualiza os dados básicos do Edital
     await db
       .update(editais)
       .set({
         titulo: params.titulo,
         descricao: params.descricao,
         banca: params.banca,
+        ano: params.ano || null,
         thumbnailUrl: params.thumbnailUrl,
         pdfUrl: params.pdfUrl,
-        logoOrgao: params.logoOrgao, // <-- ATUALIZANDO A LOGO NO BANCO
+        logoOrgao: params.logoOrgao,
+        nomesPersonalizados: params.nomesPersonalizados || {}, // <--- ATUALIZANDO O MAPEAMENTO DE NOMES
         status: params.status,
       })
       .where(eq(editais.id, id));
 
-    // 2. Remove as vinculações antigas
     await db.delete(editalAssuntos).where(eq(editalAssuntos.editalId, id));
 
-    // 3. Insere as novas vinculações
     const vinculacoesBasicas = params.assuntosMapeados.basico.map(
       (assuntoId) => ({
         editalId: id,

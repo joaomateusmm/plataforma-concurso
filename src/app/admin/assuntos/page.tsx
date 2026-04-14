@@ -9,7 +9,7 @@ import { redirect } from "next/navigation";
 import { MultiAssuntoForm } from "./MultiAssuntoForm";
 import { TabelaAssuntos } from "./TabelaAssuntos";
 import { ImportAssuntosJson } from "./ImportAssuntosJson";
-import { ExportAssuntosJson } from "./ExportAssuntosJson"; // <-- O nosso novo botão de exportação!
+import { ExportAssuntosJson } from "./ExportAssuntosJson";
 
 type Assunto = {
   id: number;
@@ -17,6 +17,7 @@ type Assunto = {
   materiaId: number | null;
 };
 
+// AQUI ESTÁ O EXPORT DEFAULT QUE O NEXT.JS ESTAVA PROCURANDO!
 export default async function GerenciarAssuntosPage(props: {
   searchParams: Promise<{ edit?: string }>;
 }) {
@@ -83,9 +84,9 @@ export default async function GerenciarAssuntosPage(props: {
             {assuntoEditando ? "Editar Assunto" : "Cadastrar Assuntos"}
           </h1>
 
-          {/* Agrupamos os botões num flex container para ficarem lado a lado */}
           {!assuntoEditando && (
             <div className="flex items-end justify-center flex-col gap-3">
+              {/* O NOME DA PROP FOI CORRIGIDO PARA listaAssuntos */}
               <ExportAssuntosJson listaAssuntos={listaAssuntos} />
               <ImportAssuntosJson />
             </div>

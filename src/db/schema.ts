@@ -128,8 +128,8 @@ export const simulados = pgTable("simulados", {
   quantidadeQuestoes: integer("quantidade_questoes").notNull(),
   status: varchar("status", { length: 50 }).default("Pendente").notNull(),
   acertos: integer("acertos").default(0),
-  estiloProva: varchar("estilo_prova", { length: 50 }).default("Todos"), // Pode ser: "Múltipla Escolha", "Certo/Errado", ou "Todos"
-  tempoLimite: integer("tempo_limite"), // Guardado em minutos (ex: 60, 120). Null se não tiver tempo.
+  estiloProva: varchar("estilo_prova", { length: 50 }).default("Todos"),
+  tempoLimite: integer("tempo_limite"),
 
   criadoEm: timestamp("criado_em").defaultNow(),
 });
@@ -151,8 +151,11 @@ export const editais = pgTable("editais", {
   titulo: varchar("titulo", { length: 255 }).notNull(),
   descricao: text("descricao"),
   banca: varchar("banca", { length: 100 }),
+  ano: integer("ano"), 
   thumbnailUrl: text("thumbnail_url"),
-  logoOrgao: text("logo_orgao"), // <--- NOVO CAMPO ADICIONADO AQUI
+  logoOrgao: text("logo_orgao"),
+  // 👇 NOVO CAMPO PARA OS NOMES CUSTOMIZADOS 👇
+  nomesPersonalizados: jsonb("nomes_personalizados").$type<Record<string, string>>().default({}),
   status: varchar("status", { length: 50 }).default("Rascunho").notNull(),
   criadoEm: timestamp("criado_em").defaultNow(),
   pdfUrl: text("pdf_url"),

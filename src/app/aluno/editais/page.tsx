@@ -68,7 +68,7 @@ export default function EditaisAlunoPage() {
     return Array.from(new Set(editais.map((e) => e.banca).filter(Boolean)));
   }, [editais]);
 
-  // Lógica de Filtragem
+  // 1. Lógica de Filtragem Base
   const editaisFiltrados = useMemo(() => {
     return editais.filter((e) => {
       const lowerSearch = searchTerm.toLowerCase();
@@ -82,6 +82,30 @@ export default function EditaisAlunoPage() {
       return matchSearch && matchBanca;
     });
   }, [editais, searchTerm, filtroBanca]);
+
+  // 2. LÓGICA DE AGRUPAMENTO POR ANO
+  const editaisAgrupadosPorAno = useMemo(() => {
+    const grupos: Record<string, any[]> = {};
+
+    editaisFiltrados.forEach((edital) => {
+      const ano = edital.ano ? edital.ano.toString() : "Sem Ano Definido";
+      if (!grupos[ano]) {
+        grupos[ano] = [];
+      }
+      grupos[ano].push(edital);
+    });
+
+    // Ordenar os anos decrescentemente (mais recente primeiro)
+    const anosOrdenados = Object.keys(grupos).sort((a, b) => {
+      // Se não tiver ano, vai pro final da lista
+      if (a === "Sem Ano Definido") return 1;
+      if (b === "Sem Ano Definido") return -1;
+      // Ordenação numérica decrescente
+      return parseInt(b) - parseInt(a);
+    });
+
+    return { grupos, anosOrdenados };
+  }, [editaisFiltrados]);
 
   if (isLoading) {
     return (
@@ -182,7 +206,7 @@ export default function EditaisAlunoPage() {
         </div>
       </div>
 
-      {/* LISTAGEM DE EDITAIS EM GRID */}
+      {/* LISTAGEM DE EDITAIS AGRUPADOS POR ANO */}
       {editaisFiltrados.length === 0 ? (
         <div className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-3xl p-16 text-center flex flex-col items-center justify-center shadow-sm transition-colors duration-300">
           <div className="w-20 h-20 bg-gray-50 dark:bg-neutral-950 border border-gray-100 dark:border-neutral-800 rounded-full flex items-center justify-center mb-6 transition-colors duration-300">
@@ -207,77 +231,97 @@ export default function EditaisAlunoPage() {
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {editaisFiltrados.map((edital) => (
-            <div
-              key={edital.id}
-              className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-3xl flex flex-col overflow-hidden hover:ring-1 hover:ring-gray-300 dark:hover:ring-neutral-700 transition-all duration-300 group relative min-h-80"
-            >
-              {edital.thumbnailUrl && (
-                <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-                  <Image
-                    src={edital.thumbnailUrl}
-                    alt={edital.titulo}
-                    fill
-                    unoptimized
-                    className="object-cover opacity-70 group-hover:scale-105 transition-transform duration-700"
-                  />
-                  <div className="absolute inset-0 bg-linear-to-r from-white dark:from-neutral-900 via-white/80 dark:via-neutral-900/80 to-transparent transition-colors duration-300" />
-                  <div className="absolute inset-0 bg-linear-to-t from-white dark:from-neutral-900 via-white/40 dark:via-neutral-900/40 to-transparent transition-colors duration-300" />
+        <div className="space-y-16">
+          {/* ITERA SOBRE OS ANOS ENCONTRADOS */}
+          {editaisAgrupadosPorAno.anosOrdenados.map((ano) => (
+            <div key={ano} className="space-y-6">
+              {/* TÍTULO DA SEÇÃO (ANO) */}
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight">
+                    {ano !== "Sem Ano Definido" ? `Concursos ${ano}` : ano}
+                  </h2>
                 </div>
-              )}
+                <div className="h-px bg-gray-200 dark:bg-neutral-800 flex-1 mt-1 transition-colors duration-300"></div>
+              </div>
 
-              {/* CONTEÚDO DO CARD */}
-              <div className="relative z-10 p-6 flex-1 flex flex-col">
-                {/* Meta Header */}
-                <div className="flex justify-between items-center mb-2">
-                  {edital.banca && (
-                    <span className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg border bg-gray-100/50 dark:bg-neutral-950/20 shadow-sm backdrop-blur-sm border-gray-200 dark:border-neutral-800 text-gray-600 dark:text-neutral-400 flex items-center gap-1.5 dark:shadow-neutral-950 transition-colors duration-300">
-                      {edital.banca}
-                    </span>
-                  )}
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 overflow-hidden">
-                    {edital.logoOrgao ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={edital.logoOrgao}
-                        alt="Logo do Órgão"
-                        className="w-full h-full object-contain p-1.5"
-                      />
-                    ) : (
-                      <span></span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Título e Descrição */}
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3 leading-tight group-hover:text-[#009966] dark:group-hover:text-emerald-400 transition-colors duration-300 drop-shadow-md">
-                  {edital.titulo}
-                </h3>
-
-                {edital.descricao ? (
-                  <p className="text-sm text-gray-600 dark:text-neutral-400 line-clamp-3 mb-6 leading-relaxed drop-shadow-sm transition-colors duration-300">
-                    {edital.descricao}
-                  </p>
-                ) : (
-                  <p className="text-sm text-gray-500 dark:text-neutral-600 italic mb-6 transition-colors duration-300">
-                    Sem descrição adicional fornecida para este edital.
-                  </p>
-                )}
-
-                <div className="mt-auto pt-6 border-t border-gray-200 dark:border-neutral-800/60 relative transition-colors duration-300">
-                  <Link
-                    href={`/aluno/editais/${edital.id}`}
-                    className="w-full flex items-center justify-between group/btn"
+              {/* GRID DE EDITAIS DESSE ANO */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {editaisAgrupadosPorAno.grupos[ano].map((edital) => (
+                  <div
+                    key={edital.id}
+                    className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-3xl flex flex-col overflow-hidden hover:ring-1 hover:ring-gray-300 dark:hover:ring-neutral-700 transition-all duration-300 group relative min-h-80"
                   >
-                    <span className="text-sm font-bold text-gray-700 dark:text-neutral-300 group-hover/btn:text-[#009966] dark:group-hover/btn:text-emerald-400 transition-colors duration-300">
-                      Explorar Edital
-                    </span>
-                    <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center group-hover/btn:bg-[#009966] dark:group-hover/btn:bg-emerald-500 group-hover/btn:text-white dark:group-hover/btn:text-neutral-950 text-gray-500 dark:text-neutral-400 transition-all duration-300 group-hover/btn:translate-x-1">
-                      <ArrowRight className="w-4 h-4" />
+                    {edital.thumbnailUrl && (
+                      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                        <Image
+                          src={edital.thumbnailUrl}
+                          alt={edital.titulo}
+                          fill
+                          unoptimized
+                          className="object-cover opacity-70 group-hover:scale-105 transition-transform duration-700"
+                        />
+                        <div className="absolute inset-0 bg-linear-to-r from-white dark:from-neutral-900 via-white/80 dark:via-neutral-900/80 to-transparent transition-colors duration-300" />
+                        <div className="absolute inset-0 bg-linear-to-t from-white dark:from-neutral-900 via-white/40 dark:via-neutral-900/40 to-transparent transition-colors duration-300" />
+                      </div>
+                    )}
+
+                    {/* CONTEÚDO DO CARD */}
+                    <div className="relative z-10 p-6 flex-1 flex flex-col">
+                      {/* Meta Header */}
+                      <div className="flex justify-between items-center mb-2">
+                        <div className="flex flex-wrap gap-2">
+                          {edital.banca && (
+                            <span className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg border bg-gray-100/50 dark:bg-neutral-950/20 shadow-sm backdrop-blur-sm border-gray-200 dark:border-neutral-800 text-gray-600 dark:text-neutral-400 flex items-center gap-1.5 dark:shadow-neutral-950 transition-colors duration-300">
+                              {edital.banca}
+                            </span>
+                          )}
+                        </div>
+                        <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 overflow-hidden">
+                          {edital.logoOrgao ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={edital.logoOrgao}
+                              alt="Logo do Órgão"
+                              className="w-full h-full object-contain p-1.5"
+                            />
+                          ) : (
+                            <span></span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Título e Descrição */}
+                      <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3 leading-tight group-hover:text-[#009966] dark:group-hover:text-emerald-400 transition-colors duration-300 drop-shadow-md">
+                        {edital.titulo}
+                      </h3>
+
+                      {edital.descricao ? (
+                        <p className="text-sm text-gray-600 dark:text-neutral-400 line-clamp-3 mb-6 leading-relaxed drop-shadow-sm transition-colors duration-300">
+                          {edital.descricao}
+                        </p>
+                      ) : (
+                        <p className="text-sm text-gray-500 dark:text-neutral-600 italic mb-6 transition-colors duration-300">
+                          Sem descrição adicional fornecida para este edital.
+                        </p>
+                      )}
+
+                      <div className="mt-auto pt-6 border-t border-gray-200 dark:border-neutral-800/60 relative transition-colors duration-300">
+                        <Link
+                          href={`/aluno/editais/${edital.id}`}
+                          className="w-full flex items-center justify-between group/btn"
+                        >
+                          <span className="text-sm font-bold text-gray-700 dark:text-neutral-300 group-hover/btn:text-[#009966] dark:group-hover/btn:text-emerald-400 transition-colors duration-300">
+                            Explorar Edital
+                          </span>
+                          <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center group-hover/btn:bg-[#009966] dark:group-hover/btn:bg-emerald-500 group-hover/btn:text-white dark:group-hover/btn:text-neutral-950 text-gray-500 dark:text-neutral-400 transition-all duration-300 group-hover/btn:translate-x-1">
+                            <ArrowRight className="w-4 h-4" />
+                          </div>
+                        </Link>
+                      </div>
                     </div>
-                  </Link>
-                </div>
+                  </div>
+                ))}
               </div>
             </div>
           ))}
