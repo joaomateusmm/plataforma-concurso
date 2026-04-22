@@ -85,15 +85,14 @@ const navItems2: NavItem[] = [
     status: "novo",
   },
   {
-    title: "Criar Caderno",
-    url: "/aluno/cadernos/novo",
-    icon: LayersPlus,
-    status: "em_breve",
-  },
-  {
     title: "Year in pixels",
     url: "/aluno/year-in-pixels",
     icon: Grid2x2Check,
+  },
+  {
+    title: "Criar Caderno",
+    url: "/aluno/cadernos/novo",
+    icon: LayersPlus,
     status: "em_breve",
   },
 ];

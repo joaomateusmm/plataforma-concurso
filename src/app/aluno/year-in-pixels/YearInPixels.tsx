@@ -1,9 +1,29 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useMemo, useEffect, useState } from "react";
-import { Info, Loader2 } from "lucide-react";
+import { Info, Loader2, Clock } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
-import { obterDadosYearInPixels } from "@/actions/estudos";
+import {
+  obterDadosYearInPixels,
+  registrarEstudoTempo,
+} from "@/actions/estudos";
+import { toast } from "sonner";
+
+function calcularLevelEstudo(minutosTotais: number): number {
+  if (minutosTotais <= 0) return 0;
+  if (minutosTotais < 60) return 1;
+  if (minutosTotais < 180) return 2;
+  if (minutosTotais < 300) return 3;
+  return 4;
+}
+
+function formatarTempo(minutosTotais: number): string {
+  if (minutosTotais === 0) return "0h 00m";
+  const h = Math.floor(minutosTotais / 60);
+  const m = minutosTotais % 60;
+  return `${h}h ${m.toString().padStart(2, "0")}m`;
+}
 
 export function YearInPixels() {
   const { data: session } = authClient.useSession();
@@ -12,33 +32,61 @@ export function YearInPixels() {
   const year = 2026;
 
   const [atividadesDoAno, setAtividadesDoAno] = useState<
-    Record<string, number>
+    Record<string, { level: number; tempoMinutos: number }>
   >({});
   const [isLoading, setIsLoading] = useState(true);
 
-  // 1. ESTADOS PARA O TOOLTIP INSTANTÂNEO
   const [hoveredDay, setHoveredDay] = useState<{
     date: string;
     level: number;
+    tempoMinutos: number;
     x: number;
     y: number;
   } | null>(null);
+
+  const [activeMenuDay, setActiveMenuDay] = useState<{
+    dateStr: string;
+    formatData: string;
+    currentTempoMinutos: number;
+    x: number;
+    y: number;
+  } | null>(null);
+
+  const [inputHoras, setInputHoras] = useState("");
+  const [inputMinutos, setInputMinutos] = useState("");
+
+  // PEGA O DIA DE HOJE PARA DESTACAR NA GRELHA
+  const hojeStr = useMemo(() => {
+    const hoje = new Date();
+    const mes = String(hoje.getMonth() + 1).padStart(2, "0");
+    const dia = String(hoje.getDate()).padStart(2, "0");
+    return `${hoje.getFullYear()}-${mes}-${dia}`;
+  }, []);
 
   useEffect(() => {
     const fetchDados = async () => {
       if (!userId) return;
 
       setIsLoading(true);
-      const res = await obterDadosYearInPixels(userId, year);
+      try {
+        const res = await obterDadosYearInPixels(userId, year);
 
-      if (res.success && res.data) {
-        const mapa: Record<string, number> = {};
-        res.data.forEach((item) => {
-          mapa[item.dataStr] = item.level;
-        });
-        setAtividadesDoAno(mapa);
+        if (res.success && res.data) {
+          const mapa: Record<string, { level: number; tempoMinutos: number }> =
+            {};
+          res.data.forEach((item: any) => {
+            mapa[item.dataStr] = {
+              level: item.level,
+              tempoMinutos: item.tempoMinutos || 0,
+            };
+          });
+          setAtividadesDoAno(mapa);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar pixels:", error);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
     fetchDados();
@@ -63,158 +111,284 @@ export function YearInPixels() {
       const dia = String(date.getDate()).padStart(2, "0");
       const dateStr = `${year}-${mes}-${dia}`;
 
-      const levelDoDia = atividadesDoAno[dateStr] || 0;
+      const atividadeDoDia = atividadesDoAno[dateStr] || {
+        level: 0,
+        tempoMinutos: 0,
+      };
 
       daysArray.push({
         date: date,
         dateStr: dateStr,
-        level: levelDoDia,
+        level: atividadeDoDia.level,
+        tempoMinutos: atividadeDoDia.tempoMinutos,
       });
     }
 
     return daysArray;
   }, [year, atividadesDoAno]);
 
-  const getLevelColor = (level: number) => {
+  const getLevelColor = (level: number, isToday: boolean) => {
+    let bg = "";
     switch (level) {
       case 1:
-        return "bg-emerald-950 border-emerald-900/50";
+        bg = "bg-emerald-950";
+        break;
       case 2:
-        return "bg-emerald-800 border-emerald-700/50";
+        bg = "bg-emerald-800";
+        break;
       case 3:
-        return "bg-emerald-500 border-emerald-400/50";
+        bg = "bg-emerald-500";
+        break;
       case 4:
-        return "bg-emerald-400 border-emerald-300/50 shadow-[0_0_8px_rgba(52,211,153,0.4)]";
+        bg = "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.4)]";
+        break;
       default:
-        return "bg-neutral-800/30 border-neutral-800";
+        bg = "bg-neutral-800/30";
+        break;
     }
+
+    // Se for o dia atual, aplica uma borda branca destacada
+    const border = isToday
+      ? "border-[1.5px] border-white/20 z-10 scale-110 shadow-[0_0_8px_rgba(255,255,255,0.1)]"
+      : level === 1
+        ? "border border-emerald-900/50"
+        : level === 2
+          ? "border border-emerald-700/50"
+          : level === 3
+            ? "border border-emerald-400/50"
+            : level === 4
+              ? "border border-emerald-300/50"
+              : "border border-neutral-800";
+
+    return `${bg} ${border}`;
   };
 
-  // 2. FUNÇÃO PARA TRADUZIR O NÍVEL EM TEXTO PARA O TOOLTIP
   const getLevelText = (level: number) => {
-    if (level === 0) return "Nenhum simulado";
+    if (level === 0) return "Nenhum registo";
     if (level === 1) return "Pouco estudo";
     if (level === 2) return "Estudo Razoável";
     if (level === 3) return "Muito estudo";
     return "Modo Turbo!";
   };
 
-  const months = [
-    "Jan",
-    "Fev",
-    "Mar",
-    "Abr",
-    "Mai",
-    "Jun",
-    "Jul",
-    "Ago",
-    "Set",
-    "Out",
-    "Nov",
-    "Dez",
-  ];
+  const handleSubmitTempo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!userId || !activeMenuDay)
+      return toast.error("Utilizador não autenticado.");
+
+    const h = parseInt(inputHoras) || 0;
+    const m = parseInt(inputMinutos) || 0;
+    const totalMinutos = h * 60 + m;
+    const levelCalculado = calcularLevelEstudo(totalMinutos);
+    const dateStr = activeMenuDay.dateStr;
+
+    const prevAtividades = { ...atividadesDoAno };
+    setAtividadesDoAno((curr) => ({
+      ...curr,
+      [dateStr]: { level: levelCalculado, tempoMinutos: totalMinutos },
+    }));
+    setActiveMenuDay(null);
+    setHoveredDay(null);
+
+    try {
+      const res = await registrarEstudoTempo(userId, dateStr, h, m);
+      if (res?.error) throw new Error(res.error);
+      toast.success("Tempo de estudo salvo!", { duration: 2000 });
+    } catch {
+      setAtividadesDoAno(prevAtividades);
+      toast.error("Erro ao salvar o registo. Tente novamente.");
+    }
+  };
 
   return (
-    <div className="p-6 bg-neutral-900 border border-neutral-800 rounded-2xl shadow-sm w-full overflow-x-auto custom-scrollbar relative">
+    <div className="bg-neutral-900 border border-neutral-800 rounded-2xl shadow-sm w-full relative overflow-hidden flex flex-col p-4 sm:p-6">
       {isLoading && (
-        <div className="absolute inset-0 bg-neutral-900/80 backdrop-blur-sm z-10 flex items-center justify-center rounded-2xl">
-          <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+        <div className="absolute top-4 right-6 flex items-center gap-2">
+          <Loader2 className="w-3.5 h-3.5 text-emerald-500 animate-spin" />
+          <span className="text-[10px] text-neutral-500 font-medium animate-pulse">
+            Sincronizando...
+          </span>
         </div>
       )}
 
-      {/* 3. O COMPONENTE TOOLTIP FLUTUANTE */}
-      {hoveredDay && (
+      {activeMenuDay && (
         <div
-          className="fixed z-50 pointer-events-none bg-neutral-950 border border-neutral-800 px-2 py-2 rounded-lg shadow-xl animate-in fade-in zoom-in-95 duration-100 flex flex-col gap-0.5"
+          className="fixed inset-0 z-40"
+          onClick={() => setActiveMenuDay(null)}
+        />
+      )}
+
+      {/* MENU FLUTUANTE */}
+      {activeMenuDay && (
+        <div
+          className="fixed z-50 bg-neutral-950 border border-neutral-800 p-3 rounded-xl shadow-2xl flex flex-col gap-2 w-52 animate-in fade-in zoom-in-95 duration-150"
+          style={{
+            left: `${activeMenuDay.x}px`,
+            top: `${activeMenuDay.y}px`,
+            transform: "translate(-50%, -105%)",
+          }}
+        >
+          <div className="flex items-center justify-between pb-2 mb-1 border-b border-neutral-800/80">
+            <span className="text-xs font-bold text-white">
+              {activeMenuDay.formatData}
+            </span>
+            <Clock className="w-3.5 h-3.5 text-neutral-500" />
+          </div>
+
+          <form onSubmit={handleSubmitTempo} className="flex flex-col gap-3">
+            <div className="flex gap-2">
+              <div className="flex flex-col flex-1">
+                <label className="text-[10px] text-neutral-500 mb-1 font-medium uppercase">
+                  Horas
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="24"
+                  value={inputHoras}
+                  onChange={(e) => setInputHoras(e.target.value)}
+                  className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  placeholder="0"
+                  autoFocus
+                />
+              </div>
+              <div className="flex flex-col flex-1">
+                <label className="text-[10px] text-neutral-500 mb-1 font-medium uppercase">
+                  Minutos
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="59"
+                  value={inputMinutos}
+                  onChange={(e) => setInputMinutos(e.target.value)}
+                  className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  placeholder="0"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full bg-[#009966] hover:bg-emerald-600 text-white font-bold text-xs py-2 rounded-lg transition-colors mt-1"
+            >
+              Salvar Tempo
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* TOOLTIP HOVER */}
+      {hoveredDay && !activeMenuDay && (
+        <div
+          className="fixed z-50 pointer-events-none bg-neutral-950 border border-neutral-800 px-3 py-2 rounded-lg shadow-xl animate-in fade-in zoom-in-95 duration-100 flex flex-col gap-0.5 items-center"
           style={{
             left: `${hoveredDay.x}px`,
             top: `${hoveredDay.y - 10}px`,
-            transform: "translate(-50%, -100%)", // Centraliza em cima do rato
+            transform: "translate(-50%, -100%)",
           }}
         >
-          <span className="text-[10px]  font-bold text-white whitespace-nowrap">
+          <span className="text-[11px] font-bold text-white whitespace-nowrap">
             {hoveredDay.date}
           </span>
-          <span className="text-[10px] font-medium text-emerald-400 whitespace-nowrap">
+          <span className="text-[10px] font-medium text-emerald-400 whitespace-nowrap flex items-center gap-1">
             {getLevelText(hoveredDay.level)}
+          </span>
+          <span className="text-[10px] text-neutral-400 mt-0.5 border-t border-neutral-800 pt-0.5 w-full text-center">
+            {formatarTempo(hoveredDay.tempoMinutos)}
           </span>
         </div>
       )}
 
-      <div className="min-w-212.5 relative">
-        <div className="flex text-xs font-semibold text-neutral-500 mb-2 ml-8 justify-between pr-4">
-          {months.map((month) => (
-            <span key={month}>{month}</span>
-          ))}
+      {/* ÁREA DA GRELHA - TOTALMENTE SEM SCROLL */}
+      <div className="flex gap-1.5 md:gap-2 w-full mb-6">
+        {/* COLUNA DOS DIAS DA SEMANA */}
+        <div className="grid grid-rows-7 gap-[2px] sm:gap-1 text-[8px] sm:text-[10px] font-medium text-neutral-500 pr-1 shrink-0">
+          <span className="flex items-center justify-end">Dom</span>
+          <span className="flex items-center justify-end">Seg</span>
+          <span className="flex items-center justify-end">Ter</span>
+          <span className="flex items-center justify-end">Qua</span>
+          <span className="flex items-center justify-end">Qui</span>
+          <span className="flex items-center justify-end">Sex</span>
+          <span className="flex items-center justify-end">Sáb</span>
         </div>
 
-        <div className="flex gap-2">
-          <div className="flex flex-col justify-between text-[10px] font-medium text-neutral-500 py-0 pr-1 h-33.75">
-            <span className="leading-none h-3.75 flex items-center">Dom</span>
-            <span className="leading-none h-3.75 flex items-center">Seg</span>
-            <span className="leading-none h-3.75 flex items-center">Ter</span>
-            <span className="leading-none h-3.75 flex items-center">Qua</span>
-            <span className="leading-none h-3.75 flex items-center">Qui</span>
-            <span className="leading-none h-3.75 flex items-center">Sex</span>
-            <span className="leading-none h-3.75 flex items-center">Sáb</span>
-          </div>
-
-          <div
-            className="grid-rows-7 grid-flow-col gap-1.5 h-auto inline-grid"
-            // Retiramos o hover global quando o rato sai da grelha
-            onMouseLeave={() => setHoveredDay(null)}
-          >
-            {days.map((day, index) => {
-              if (!day) {
-                return (
-                  <div
-                    key={`empty-${index}`}
-                    className="w-3.5 h-3.5 bg-transparent"
-                  />
-                );
-              }
-
-              const formatData = day.date.toLocaleDateString("pt-BR");
-
+        {/* GRELHA DOS PIXELS: min-w-0 forca a respeitar o container, esmagando-se de forma inteligente */}
+        <div
+          className="grid grid-rows-9 grid-flow-col gap-0.5 sm:gap-1 flex-1 min-w-0"
+          onMouseLeave={() => setHoveredDay(null)}
+        >
+          {days.map((day, index) => {
+            if (!day) {
               return (
                 <div
-                  key={index}
-                  // 4. ATUALIZAMOS A POSIÇÃO E OS DADOS NO MOUSE ENTER
-                  onMouseEnter={(e) => {
+                  key={`empty-${index}`}
+                  className="w-full aspect-square bg-transparent"
+                />
+              );
+            }
+
+            const formatData = day.date.toLocaleDateString("pt-BR");
+            const isToday = day.dateStr === hojeStr;
+
+            return (
+              <div
+                key={index}
+                onClick={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const h = Math.floor(day.tempoMinutos / 60);
+                  const m = day.tempoMinutos % 60;
+
+                  setInputHoras(h > 0 ? h.toString() : "");
+                  setInputMinutos(m > 0 ? m.toString() : "");
+
+                  setActiveMenuDay({
+                    dateStr: day.dateStr,
+                    formatData: formatData,
+                    currentTempoMinutos: day.tempoMinutos,
+                    x: rect.left + rect.width / 2,
+                    y: rect.top,
+                  });
+                }}
+                onMouseEnter={(e) => {
+                  if (!activeMenuDay) {
                     const rect = e.currentTarget.getBoundingClientRect();
                     setHoveredDay({
                       date: formatData,
                       level: day.level,
-                      x: rect.left + rect.width / 2, // Centro horizontal do bloco
-                      y: rect.top, // Topo do bloco
+                      tempoMinutos: day.tempoMinutos,
+                      x: rect.left + rect.width / 2,
+                      y: rect.top,
                     });
-                  }}
-                  className={`w-3.5 h-3.5 rounded-[3px] border transition-all duration-200 hover:scale-125 hover:ring-2 ring-neutral-500/50 ${getLevelColor(
-                    day.level,
-                  )}`}
-                />
-              );
-            })}
-          </div>
+                  }
+                }}
+                className={`w-4 h-4 rounded-[1px] md:rounded-[2px] cursor-pointer transition-all duration-200 hover:scale-125 hover:z-20 hover:ring-2 ring-neutral-500/50 ${getLevelColor(
+                  day.level,
+                  isToday,
+                )}`}
+              />
+            );
+          })}
         </div>
+      </div>
 
-        <div className="flex items-center justify-between mt-6">
-          <span className="text-xs text-neutral-500 flex items-center gap-1 transition-colors">
-            <Info className="w-3.5 h-3.5" />
-            Atividade baseada em simulados resolvidos.
-          </span>
+      {/* RODAPÉ E LEGENDA */}
+      <div className="flex flex-col sm:flex-row items-center justify-between pt-4 border-t border-neutral-800/50 gap-4 sm:gap-0 mt-auto">
+        <span className="text-[10px] sm:text-xs text-neutral-500 flex items-center gap-1 transition-colors text-center sm:text-left">
+          <Info className="w-3.5 h-3.5 shrink-0 hidden sm:block" />
+          Clique num dia para registar as horas manualmente.
+        </span>
 
-          <div className="flex items-center gap-2 text-xs text-neutral-500 font-medium">
-            <span>Menos</span>
-            <div className="flex gap-1.5">
-              <div className="w-[14px] h-[14px] rounded-[3px] border border-neutral-800 bg-neutral-800/30" />
-              <div className="w-[14px] h-[14px] rounded-[3px] border border-emerald-900/50 bg-emerald-950" />
-              <div className="w-[14px] h-[14px] rounded-[3px] border border-emerald-700/50 bg-emerald-800" />
-              <div className="w-[14px] h-[14px] rounded-[3px] border border-emerald-400/50 bg-emerald-500" />
-              <div className="w-[14px] h-[14px] rounded-[3px] border border-emerald-300/50 bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.4)]" />
-            </div>
-            <span>Mais</span>
+        <div className="flex items-center gap-2 text-[10px] sm:text-xs text-neutral-500 font-medium shrink-0">
+          <span>Menos</span>
+          <div className="flex gap-1 sm:gap-1.5">
+            <div className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 shrink-0 rounded-[2px] border border-neutral-800 bg-neutral-800/30" />
+            <div className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 shrink-0 rounded-[2px] border border-emerald-900/50 bg-emerald-950" />
+            <div className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 shrink-0 rounded-[2px] border border-emerald-700/50 bg-emerald-800" />
+            <div className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 shrink-0 rounded-[2px] border border-emerald-400/50 bg-emerald-500" />
+            <div className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 shrink-0 rounded-[2px] border border-emerald-300/50 bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.4)]" />
           </div>
+          <span>Mais</span>
         </div>
       </div>
     </div>

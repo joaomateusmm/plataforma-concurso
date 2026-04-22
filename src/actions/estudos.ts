@@ -1,58 +1,79 @@
+// src/actions/estudos.ts
 "use server";
 
 import { db } from "../db/index";
-import { simulados } from "../db/schema";
-import { eq, and, gte, lte } from "drizzle-orm";
+import { yearInPixels } from "../db/schema";
+import { eq, and } from "drizzle-orm";
 
 export async function obterDadosYearInPixels(userId: string, year: number) {
   try {
-    // 1. Definimos o início e o fim do ano escolhido
-    const dataInicio = new Date(year, 0, 1);
-    const dataFim = new Date(year, 11, 31, 23, 59, 59);
+    const dados = await db
+      .select()
+      .from(yearInPixels)
+      .where(eq(yearInPixels.userId, userId)); // Opcionalmente, pode filtrar apenas pelas datas do ano
 
-    // 2. Buscamos todos os simulados do aluno dentro deste ano
-    const historico = await db
-      .select({ criadoEm: simulados.criadoEm })
-      .from(simulados)
+    return { success: true, data: dados };
+  } catch (error) {
+    console.error("Erro ao buscar dados do Year in Pixels:", error);
+    return { error: "Falha ao carregar os dados." };
+  }
+}
+
+// Função auxiliar para calcular o nível da cor (ajuste os valores conforme quiser)
+function calcularLevelEstudo(minutosTotais: number): number {
+  if (minutosTotais <= 0) return 0;
+  if (minutosTotais < 60) return 1; // Menos de 1 hora
+  if (minutosTotais < 180) return 2; // De 1h até 3h
+  if (minutosTotais < 300) return 3; // De 3h até 5h
+  return 4; // Mais de 5 horas
+}
+
+export async function registrarEstudoTempo(
+  userId: string,
+  dateStr: string,
+  horas: number,
+  minutos: number,
+) {
+  try {
+    // Calcula o total em minutos e descobre qual será a cor
+    const totalMinutos = horas * 60 + minutos;
+    const levelCalculado = calcularLevelEstudo(totalMinutos);
+
+    // 1. Verifica se já existe um registo desse utilizador para esta data específica
+    const registroExistente = await db
+      .select()
+      .from(yearInPixels)
       .where(
-        and(
-          eq(simulados.userId, userId),
-          gte(simulados.criadoEm, dataInicio),
-          lte(simulados.criadoEm, dataFim),
-        ),
+        and(eq(yearInPixels.userId, userId), eq(yearInPixels.dataStr, dateStr)),
       );
 
-    // 3. Agrupamos os simulados por dia (Formato: "YYYY-MM-DD")
-    const mapaAtividades: Record<string, number> = {};
+    if (registroExistente.length > 0) {
+      // 2. Se existir, atualiza o tempo e o level
+      await db
+        .update(yearInPixels)
+        .set({
+          tempoMinutos: totalMinutos,
+          level: levelCalculado,
+        })
+        .where(eq(yearInPixels.id, registroExistente[0].id));
+    } else {
+      // 3. Se não existir, cria o registo completo
+      await db.insert(yearInPixels).values({
+        userId,
+        dataStr: dateStr,
+        tempoMinutos: totalMinutos,
+        level: levelCalculado,
+      });
+    }
 
-    historico.forEach((item) => {
-      if (!item.criadoEm) return;
-      // Converte a data para o formato de string simples, ex: "2026-04-08"
-      const dataStr = item.criadoEm.toISOString().split("T")[0];
-
-      // Soma +1 a cada simulado encontrado naquele dia
-      mapaAtividades[dataStr] = (mapaAtividades[dataStr] || 0) + 1;
-    });
-
-    // 4. Transformamos a contagem em "Níveis" de intensidade (1 a 4)
-    const resultado = Object.entries(mapaAtividades).map(
-      ([dataStr, quantidade]) => {
-        let level = 0;
-        if (quantidade >= 5)
-          level = 4; // Modo Turbo (5+ simulados)
-        else if (quantidade >= 3)
-          level = 3; // Muito estudo (3 ou 4 simulados)
-        else if (quantidade >= 2)
-          level = 2; // Estudo razoável (2 simulados)
-        else if (quantidade === 1) level = 1; // Pouco estudo (1 simulado)
-
-        return { dataStr, level };
-      },
-    );
-
-    return { success: true, data: resultado };
+    // Retornamos os dados novos para o front-end atualizar a tela otimisticamente
+    return {
+      success: true,
+      newLevel: levelCalculado,
+      tempoMinutos: totalMinutos,
+    };
   } catch (error) {
-    console.error("Erro ao buscar Year In Pixels:", error);
-    return { error: "Falha ao carregar o histórico de estudos." };
+    console.error("Erro ao registrar estudo manual:", error);
+    return { error: "Falha ao gravar no banco de dados." };
   }
 }

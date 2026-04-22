@@ -151,11 +151,13 @@ export const editais = pgTable("editais", {
   titulo: varchar("titulo", { length: 255 }).notNull(),
   descricao: text("descricao"),
   banca: varchar("banca", { length: 100 }),
-  ano: integer("ano"), 
+  ano: integer("ano"),
   thumbnailUrl: text("thumbnail_url"),
   logoOrgao: text("logo_orgao"),
   // 👇 NOVO CAMPO PARA OS NOMES CUSTOMIZADOS 👇
-  nomesPersonalizados: jsonb("nomes_personalizados").$type<Record<string, string>>().default({}),
+  nomesPersonalizados: jsonb("nomes_personalizados")
+    .$type<Record<string, string>>()
+    .default({}),
   status: varchar("status", { length: 50 }).default("Rascunho").notNull(),
   criadoEm: timestamp("criado_em").defaultNow(),
   pdfUrl: text("pdf_url"),
@@ -216,4 +218,14 @@ export const noticiaEditais = pgTable("noticia_editais", {
   editalId: varchar("edital_id", { length: 50 })
     .notNull()
     .references(() => editais.id, { onDelete: "cascade" }),
+});
+
+// src/db/schema.ts
+export const yearInPixels = pgTable("year_in_pixels", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
+  dataStr: varchar("data_str", { length: 10 }).notNull(), // Ex: "2026-05-17"
+  tempoMinutos: integer("tempo_minutos").default(0).notNull(), // <--- NOVO CAMPO: Guarda o tempo real
+  level: integer("level").default(0).notNull(), // Continua de 0 a 4, mas agora será calculado automaticamente
+  criadoEm: timestamp("criado_em").defaultNow(),
 });
